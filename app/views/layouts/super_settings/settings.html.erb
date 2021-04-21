@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Super Settings</title>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag if defined?(csp_meta_tag) %>
+
+    <%= super_settings_style_tag %>
+
+    <%= super_settings_javascript_tag %>
+  </head>
+
+  <body class="super_settings">
+    <header>
+      <h1 class="logo">
+        <%= application_header %>
+      </h1>
+    </header>
+    <div class="container">
+      <%= yield %>
+    </div>
+  </body>
+</html>

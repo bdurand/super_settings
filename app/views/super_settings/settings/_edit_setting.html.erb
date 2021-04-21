@@ -1,0 +1,42 @@
+<% identifier = (setting.id || SecureRandom.hex) %>
+<%= content_tag(:tr, id: "setting-#{identifier}", data: {id: setting.id, edited: true}, style: "background-color:#cef9ce;") do %>
+  <td class="text-truncate">
+    <%= text_field_tag "settings[#{identifier}][key]", setting.key, class: "form-control" %>
+  </td>
+
+  <td class="text-truncate js-setting-value">
+    <% value_field_name = "settings[#{identifier}][value]" %>
+    <% if setting.array? %>
+      <%= text_area_tag value_field_name, Array(setting.value).join("\n"), rows: 8, class: "form-control" %>
+    <% elsif setting.boolean? %>
+      <div class="form-check">
+        <%= check_box_tag value_field_name, "true", setting.value %>
+        <%= label_tag value_field_name, "Enabled" %>
+      </div>
+    <% elsif setting.datetime? %>
+      <%= datetime_field_tag value_field_name, setting.value, class: "form-control" %>
+    <% elsif setting.integer? %>
+      <%= number_field_tag value_field_name, setting.value, step: 1, class: "form-control" %>
+    <% elsif setting.float? %>
+      <%= number_field_tag value_field_name, setting.value, class: "form-control" %>
+    <% else %>
+      <%= text_field_tag value_field_name, setting.value, class: "form-control" %>
+    <% end %>
+
+    <% if setting.errors.any? %>
+      <% setting.errors.full_messages.each do |error_message| %>
+        <div class="container text-danger">
+          <%= error_message %>
+        </div>
+      <% end %>
+    <% end %>
+  </td>
+
+  <td class="text-truncate">
+    <%= select_tag "settings[#{identifier}][value_type]", options_for_select(SuperSettings::Setting::VALUE_TYPES, setting.value_type), class: "form-control js-setting-value-type" %>
+  </td>
+
+  <td class="text-nowrap align-right text-right">
+    <%= super_settings_icon_button(:slash, title: "Cancel", color: "darkorange", js_class: (setting.persisted? ? "js-cancel-setting" : "js-remove-setting")) %>
+  </td>
+<% end %>

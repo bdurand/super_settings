@@ -1,0 +1,32 @@
+<%= content_tag(:tr, id: "setting-#{setting.id}", data: {id: setting.id, key: setting.key, edited: (setting.deleted? ? true : nil)}) do %>
+  <td class="text-truncate">
+    <%= setting.key %>
+    <%= hidden_field_tag "settings[#{setting.id}][key]", setting.key %>
+  </td>
+
+  <td class="text-truncate">
+    <% if setting.value.blank? && !setting.boolean? %>
+      &nbsp;
+    <% elsif setting.array? %>
+      <% setting.value.each do |val| %>
+        <div><%= val %></div>
+      <% end %>
+    <% elsif setting.datetime? %>
+      <%= I18n.localize(setting.value, format: :long)%>
+    <% else %>
+      <%= setting.value %>
+    <% end %>
+  </td>
+
+  <td class="text-truncate">
+    <%= setting.value_type %>
+  </td>
+
+  <td class="text-nowrap align-right text-right">
+    <%= hidden_field_tag "settings[#{setting.id}][_delete]", (setting.deleted? ? 1 : nil), class: "form-control js-setting-deleted" %>
+
+    <%= super_settings_icon_button(:info, title: super_settings_setting_info(setting), color: "steelblue", js_class: "js-setting-info", style: {cursor: "help"}, url: SuperSettings::Configuration.instance.setting_info_link) %>
+    <%= super_settings_icon_button(:edit, title: "Edit", color: "darkgreen", js_class: "js-edit-setting") %>
+    <%= super_settings_icon_button(:trash, title: "Remove", color: "red", js_class: "js-remove-setting") %>
+  </td>
+<% end %>
