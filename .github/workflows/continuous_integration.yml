@@ -14,12 +14,16 @@ env:
   BUNDLE_RETRY: 3
 jobs:
   specs:
-    name: ${{ matrix.job }} ruby-${{ matrix.comob-ruby }} ${{ matrix.comob.rails }}
+    name: ${{ matrix.job }} ruby-${{ matrix.combo-ruby || ruby }} ${{ matrix.comob.rails }}
     runs-on: ubuntu-latest
+    defaults:
+      ruby: 2.7
     strategy:
       fail-fast: false
       matrix:
         combo:
+          - rails: "original"
+            ruby: "3.0"
           - rails: "6.1"
             ruby: "2.7"
           - rails: "6.0"
@@ -34,15 +38,14 @@ jobs:
             ruby: "2.4"
         job: [ rspec ]
         include:
-          - ruby: "2.7"
-            job: standardrb
+          - job: standardrb
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: set up Ruby ${{ matrix.combo.ruby }}
+      - name: set up Ruby ${{ matrix.combo.ruby || ruby }}
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ matrix.combo.ruby }}
+          ruby-version: ${{ matrix.combo.ruby || ruby }}
       - name: inject rails ${{ matrix.combo.rails }}
         if:   matrix.combo.rails != 'original' && matrix.combo.rails != null
         run: | # inject a specific version of rails into the Gemfile
