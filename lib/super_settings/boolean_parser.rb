@@ -10,7 +10,7 @@ module SuperSettings
       "false", :false,
       "FALSE", :FALSE,
       "off", :off,
-      "OFF", :OFF,
+      "OFF", :OFF
     ].to_set.freeze
     
     class << self

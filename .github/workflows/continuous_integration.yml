@@ -14,16 +14,14 @@ env:
   BUNDLE_RETRY: 3
 jobs:
   specs:
-    name: ${{ matrix.job }} ruby-${{ matrix.combo-ruby || matrix.ruby }} ${{ matrix.combo.rails }}
+    name: ${{ matrix.job }} ruby-${{ matrix.combo.ruby || matrix.ruby }} rails-${{ matrix.combo.rails }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         combo:
-          - rails: "original"
-            ruby: "3.0"
           - rails: "6.1"
-            ruby: "2.7"
+            ruby: "3.0"
           - rails: "6.0"
             ruby: "2.7"
           - rails: "5.2"
@@ -46,7 +44,7 @@ jobs:
         with:
           ruby-version: ${{ matrix.combo.ruby || matrix.ruby }}
       - name: inject rails ${{ matrix.combo.rails }}
-        if:   matrix.combo.rails != 'original' && matrix.combo.rails != null
+        if:   matrix.combo.rails != 'current' && matrix.combo.rails != null
         run: | # inject a specific version of rails into the Gemfile
           bundle update
           bundle exec appraisal generate
