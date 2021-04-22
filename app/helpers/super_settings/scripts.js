@@ -122,7 +122,7 @@
     enableSaveButton();
   }
 
-  function fetchSetting(action, id) {
+  function apiURL(action, id) {
     var url = document.location.pathname;
     if (url.endsWith("/")) {
       url = url.substring(0, url.length - 1);
@@ -133,8 +133,10 @@
     if (action) {
       url += "/" + action;
     }
+  }
 
-    fetch(url, {credentials: "same-origin", headers: new Headers({"Accept": "text/html"})})
+  function fetchSetting(action, id) {
+    fetch(apiURL(action, id), {credentials: "same-origin", headers: new Headers({"Accept": "text/html"})})
     .then(
       function(response) {
         if (response.ok) {
@@ -202,10 +204,7 @@
       filters.push(function(tr) {
         var val = tr.dataset.key;
         if (!val) {
-          var input = tr.querySelector("td input");
-          if (input) {
-            val = input.value
-          }
+          var input = tr.querySelector("td input")?.value
         }
         return (val && val.toUpperCase().indexOf(filter) > -1);
       });
