@@ -44,7 +44,7 @@ jobs:
       - name: set up Ruby ${{ matrix.combo.ruby || matrix.ruby }}
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ matrix.combo.ruby || ruby }}
+          ruby-version: ${{ matrix.combo.ruby || matrix.ruby }}
       - name: inject rails ${{ matrix.combo.rails }}
         if:   matrix.combo.rails != 'original' && matrix.combo.rails != null
         run: | # inject a specific version of rails into the Gemfile
