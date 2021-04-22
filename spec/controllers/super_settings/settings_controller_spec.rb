@@ -30,14 +30,14 @@ describe SuperSettings::SettingsController, type: :controller do
 
   describe "show" do
     it "should show a single setting" do
-      get :show, request_params(id: setting_1.id.to_s)
+      get :show, **request_params(id: setting_1.id.to_s)
       expect(response.status).to eq 200
       expect(response.content_type).to include "text/html"
     end
 
     it "should have a REST endpoint" do
       request.headers["Accept"] = "application/json"
-      get :show, request_params(id: setting_1.id.to_s)
+      get :show, **request_params(id: setting_1.id.to_s)
       expect(response.status).to eq 200
       expect(response.content_type).to include "application/json"
       expect(JSON.parse(response.body)).to eq JSON.parse(setting_1.to_json)
@@ -46,14 +46,14 @@ describe SuperSettings::SettingsController, type: :controller do
 
   describe "history" do
     it "should show setting's history" do
-      get :history, request_params(id: setting_1.id.to_s)
+      get :history, **request_params(id: setting_1.id.to_s)
       expect(response.status).to eq 200
       expect(response.content_type).to include "text/html"
     end
 
     it "should have a REST endpoint" do
       request.headers["Accept"] = "application/json"
-      get :history, request_params(id: setting_1.id.to_s)
+      get :history, **request_params(id: setting_1.id.to_s)
       expect(response.status).to eq 200
       expect(response.content_type).to include "application/json"
       expect(JSON.parse(response.body)).to eq setting_1.histories.collect { |s| JSON.parse(s.to_json) }
@@ -62,7 +62,7 @@ describe SuperSettings::SettingsController, type: :controller do
 
   describe "edit" do
     it "should load a form to edit a setting" do
-      get :edit, request_params(id: setting_1.id.to_s)
+      get :edit, **request_params(id: setting_1.id.to_s)
       expect(response.status).to eq 200
     end
   end
@@ -76,7 +76,7 @@ describe SuperSettings::SettingsController, type: :controller do
 
   describe "update" do
     it "should update settings" do
-      post :update, request_params({
+      post :update, **request_params({
         settings: {
           setting_1.id.to_s => {
             key: "string",
@@ -101,7 +101,7 @@ describe SuperSettings::SettingsController, type: :controller do
     end
 
     it "should not update any settings if there is an error" do
-      post :update, request_params({
+      post :update, **request_params({
         settings: {
           setting_1.id.to_s => {
             key: "string",
