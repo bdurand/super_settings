@@ -31,3 +31,12 @@ end
 SuperSettings::Setting.reset_column_information
 
 I18n.locale = :en
+
+# Needed to handle specs for Rails 4.2.
+def request_params(params)
+  if Rails.version.to_f < 5.0
+    params
+  else
+    {params: params}
+  end
+end

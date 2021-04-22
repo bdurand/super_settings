@@ -1,6 +1,7 @@
 .DS_Store
 .bundle/
 .rspec
+.ruby-version
 log/*.log
 pkg/
 spec/dummy/db/*.sqlite3

@@ -4,7 +4,6 @@ appraise "rails_4.2" do
   gem "rails", "~> 4.2.0"
   gem "sqlite3", "~> 1.3.0"
   gem "bundler", "~> 1.0"
-  gem "nokogiri", "~>1.10.10"
 end
 
 appraise "rails_5.0" do

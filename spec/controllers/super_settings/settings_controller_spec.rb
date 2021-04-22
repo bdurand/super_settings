@@ -30,14 +30,14 @@ describe SuperSettings::SettingsController, type: :controller do
 
   describe "show" do
     it "should show a single setting" do
-      get :show, params: {id: setting_1.id.to_s}
+      get :show, request_params(id: setting_1.id.to_s)
       expect(response.status).to eq 200
       expect(response.content_type).to include "text/html"
     end
 
     it "should have a REST endpoint" do
       request.headers["Accept"] = "application/json"
-      get :show, params: {id: setting_1.id.to_s}
+      get :show, request_params(id: setting_1.id.to_s)
       expect(response.status).to eq 200
       expect(response.content_type).to include "application/json"
       expect(JSON.parse(response.body)).to eq JSON.parse(setting_1.to_json)
@@ -46,14 +46,14 @@ describe SuperSettings::SettingsController, type: :controller do
 
   describe "history" do
     it "should show setting's history" do
-      get :history, params: {id: setting_1.id.to_s}
+      get :history, request_params(id: setting_1.id.to_s)
       expect(response.status).to eq 200
       expect(response.content_type).to include "text/html"
     end
 
     it "should have a REST endpoint" do
       request.headers["Accept"] = "application/json"
-      get :history, params: {id: setting_1.id.to_s}
+      get :history, request_params(id: setting_1.id.to_s)
       expect(response.status).to eq 200
       expect(response.content_type).to include "application/json"
       expect(JSON.parse(response.body)).to eq setting_1.histories.collect { |s| JSON.parse(s.to_json) }
@@ -62,36 +62,38 @@ describe SuperSettings::SettingsController, type: :controller do
 
   describe "edit" do
     it "should load a form to edit a setting" do
-      get :edit, params: {id: setting_1.id.to_s}
+      get :edit, request_params(id: setting_1.id.to_s)
       expect(response.status).to eq 200
     end
   end
 
   describe "new" do
     it "should load a form to create a setting" do
-      get :new, params: {id: setting_1.id.to_s}
+      get :new
       expect(response.status).to eq 200
     end
   end
 
   describe "update" do
     it "should update settings" do
-      post :update, params: {settings: {
-        setting_1.id.to_s => {
-          key: "string",
-          value: "new value",
-          value_type: "string"
-        },
-        setting_2.id.to_s => {
-          key: "integer",
-          _delete: "1"
-        },
-        "newrecord" => {
-          key: "newkey",
-          value: "44",
-          value_type: "integer"
+      post :update, request_params({
+        settings: {
+          setting_1.id.to_s => {
+            key: "string",
+            value: "new value",
+            value_type: "string"
+          },
+          setting_2.id.to_s => {
+            key: "integer",
+            _delete: "1"
+          },
+          "newrecord" => {
+            key: "newkey",
+            value: "44",
+            value_type: "integer"
+          }
         }
-      }}
+      })
       expect(response).to redirect_to(routes.url_helpers.index_path)
       expect(setting_1.reload.value).to eq "new value"
       expect(setting_2.reload.deleted?).to eq true
@@ -99,22 +101,24 @@ describe SuperSettings::SettingsController, type: :controller do
     end
 
     it "should not update any settings if there is an error" do
-      post :update, params: {settings: {
-        setting_1.id.to_s => {
-          key: "string",
-          value: "new value",
-          value_type: "string"
-        },
-        "newrecord" => {
-          key: "newkey",
-          value: "44",
-          value_type: "integer"
-        },
-        setting_2.id.to_s => {
-          key: "integer",
-          value_type: "invalid"
+      post :update, request_params({
+        settings: {
+          setting_1.id.to_s => {
+            key: "string",
+            value: "new value",
+            value_type: "string"
+          },
+          "newrecord" => {
+            key: "newkey",
+            value: "44",
+            value_type: "integer"
+          },
+          setting_2.id.to_s => {
+            key: "integer",
+            value_type: "invalid"
+          }
         }
-      }}
+      })
       expect(response.status).to eq 422
       expect(setting_1.reload.value).to eq "foobar"
       expect(SuperSettings::Setting.find_by(key: "newkey")).to eq nil
