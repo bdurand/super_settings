@@ -8,11 +8,13 @@ if defined?(Rails::Engine)
   require_relative "super_settings/engine"
   ActiveSupport.on_load(:active_record) do
     require_relative "super_settings/setting"
+    require_relative "super_settings/history"
   end
 else
   require "active_record"
   require "active_support/cache"
   require_relative "super_settings/setting"
+  require_relative "super_settings/history"
 end
 
 module SuperSettings

@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
+require_relative "application_record"
+
 module SuperSettings
-  class Setting < ActiveRecord::Base
+  class Setting < ApplicationRecord
 
     LAST_UPDATED_CACHE_KEY = "SuperSettings.last_updated_at"
 
@@ -18,37 +20,51 @@ module SuperSettings
 
     self.table_name = "super_settings"
 
-    scope :not_deleted, -> { where(deleted_at: nil) }
+    attr_accessor :changed_by
+
+    default_scope -> { where(deleted: false) }
+
+    scope :with_deleted, -> { unscope(where: :deleted) }
 
     # Scope to select just the date needed to load the setting values.
-    scope :value_data, -> { select([:id, :key, :value_type, :raw_value, :deleted_at]) }
+    scope :value_data, -> { select([:id, :key, :value_type, :raw_value, :deleted]) }
+
+    has_many :histories, class_name: "SuperSettings::History", foreign_key: :key, primary_key: :key
 
     validates :value_type, inclusion: {in: VALUE_TYPES}
     validates :key, presence: true, length: {maximum: 255}, uniqueness: true
     validates :raw_value, length: {maximum: 4096}
     validate { validate_parsable_value(raw_value) }
 
+    after_find :clear_changed_by
+    after_save :clear_changed_by
+
     before_save do
       self.raw_value = serialize(raw_value) unless array?
+      record_value_change
     end
 
     after_commit do
-      self.class.cache.delete(LAST_UPDATED_CACHE_KEY)
-      self.class.remove_from_cache(key)
-      if respond_to?(:saved_change_to_key) && saved_change_to_key? && respond_to?(:key_before_last_save)
-        self.class.remove_from_cache(key_before_last_save)
+      if self.class.cache
+        self.class.cache.delete(LAST_UPDATED_CACHE_KEY)
+        self.class.remove_from_cache(key)
+          if respond_to?(:saved_change_to_key) && saved_change_to_key? && respond_to?(:key_before_last_save)
+          self.class.remove_from_cache(key_before_last_save)
+        end
       end
     end
 
     class << self
       def last_updated_at
-        cache.fetch(LAST_UPDATED_CACHE_KEY) do
-          maximum(:updated_at)
+        fetch_from_cache(LAST_UPDATED_CACHE_KEY) do
+          with_deleted.maximum(:updated_at)
         end
       end
 
       def fetch(key)
-        cache.fetch(cache_key(key)) { not_deleted.value_data.find_by(key: key)&.value }
+        fetch_from_cache(cache_key(key)) do
+          value_data.find_by(key: key)&.value
+        end
       end
 
       def cache=(cache_store)
@@ -56,17 +72,25 @@ module SuperSettings
       end
 
       def cache
-        @cache ||= ActiveSupport::Cache::NullStore.new
+        @cache if defined?(@cache)
       end
 
       def remove_from_cache(key)
-        cache.delete(cache_key(key))
+        cache.delete(cache_key(key)) if cache
       end
 
       private
 
       def cache_key(key)
         "SuperSettings[#{key}]"
+      end
+
+      def fetch_from_cache(key, &block)
+        if cache
+          cache.fetch(key, &block)
+        else
+          block.call
+        end
       end
     end
 
@@ -107,11 +131,19 @@ module SuperSettings
     end
 
     def destroy!
-      update!(deleted_at: Time.now)
+      update!(deleted: true)
     end
     
-    def deleted?
-      deleted_at.present?
+    def as_json(options = nil)
+      {
+        id: id,
+        key: key,
+        value: value,
+        value_type: value_type,
+        description: description,
+        created_at: created_at,
+        updated_at: updated_at
+      }
     end
 
     private
@@ -127,7 +159,7 @@ module SuperSettings
       when FLOAT
         Float(value)
       when BOOLEAN
-        SuperSettings::BOOLEAN_PARSER.cast(value)
+        BOOLEAN_PARSER.cast(value)
       when DATETIME
         Time.parse(value).in_time_zone(Time.zone).freeze
       when ARRAY
@@ -163,6 +195,20 @@ module SuperSettings
           errors.add(:value, :invalid)
         end
       end
+    end
+
+    def record_value_change
+      return unless raw_value_changed? || deleted_changed? || key_changed?
+      history_attributes = {value: (deleted? ? nil : raw_value), deleted: deleted, changed_by: changed_by}
+      if new_record?
+        histories.build(history_attributes)
+      else
+        histories.create!(history_attributes)
+      end
+    end
+
+    def clear_changed_by
+      self.changed_by = nil
     end
 
   end

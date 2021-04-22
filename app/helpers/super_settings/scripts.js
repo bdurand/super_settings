@@ -31,14 +31,17 @@
   }
 
   function enableSaveButton() {
-    var disabled = true;
-    document.querySelectorAll("#settings-table tbody tr").forEach(function(element) {
-      if (element.dataset.edited) {
-        disabled = false;
-        return;
-      }
-    });
-    document.querySelector("#save-settings").disabled = disabled;
+    var saveButton = document.querySelector("#save-settings");
+    if (saveButton) {
+      var disabled = true;
+      document.querySelectorAll("#settings-table tbody tr").forEach(function(element) {
+        if (element.dataset.edited) {
+          disabled = false;
+          return;
+        }
+      });
+      document.querySelector("#save-settings").disabled = disabled;
+    }
   }
 
   function getFieldValueInput(settingRow) {
@@ -120,16 +123,18 @@
   }
 
   function fetchSetting(action, id) {
-    var root = document.location.pathname;
-    if (!root.endsWith("/")) {
-      root += "/";
+    var url = document.location.pathname;
+    if (url.endsWith("/")) {
+      url = url.substring(0, url.length - 1);
     }
-    var url = root + "settings/" + action;
     if (id) {
       url += "/" + id;
     }
+    if (action) {
+      url += "/" + action;
+    }
 
-    fetch(url, {credentials: "same-origin"})
+    fetch(url, {credentials: "same-origin", headers: new Headers({"Accept": "text/html"})})
     .then(
       function(response) {
         if (response.ok) {
@@ -162,7 +167,7 @@
     event.preventDefault();
     var id = event.target.closest("tr").dataset.id;
     tr = event.target.closest("tr");
-    fetchSetting("show", id);
+    fetchSetting(null, id);
   }
 
   function removeSetting(event) {
@@ -231,13 +236,49 @@
     }
   }
 
+  function applyFilter() {
+    var filter = document.querySelector("#filter");
+    if (filter) {
+      filter.dispatchEvent(new Event("input"));
+    }
+  }
+
+  function addFilterParam(event) {
+    var filter = document.querySelector("#filter").value;
+    if (filter == "") {
+      return;
+    }
+
+    var url = this.href;
+    var targetParts = url.split("#", 2);
+    url = targetParts[0];
+    var target = targetParts[1];
+    var queryParts = url.split("?", 2);
+    var url = queryParts[0];
+    var query = queryParts[1];
+    var params = (query ? query.split("&") : []);
+
+    url += "?filter=" + escape(filter);
+    params.forEach(function(p) {
+      if (!p.startsWith("filter=")) {
+        url += "&" + p;
+      }
+    });
+    if (target) {
+      url += "#" + target;
+    }
+
+    this.href = url
+  }
+
   docReady(function() {
     addListener(document.querySelector("#filter"), "input", filterSettings);
     addListener(document.querySelector("#add-setting"), "click", addSetting);
     addListeners(document.querySelectorAll(".js-remove-setting"), "click", removeSetting);
     addListeners(document.querySelectorAll(".js-edit-setting"), "click", editSetting);
     addListeners(document.querySelectorAll(".js-cancel-setting"), "click", restoreSetting);
-    document.querySelector("#filter").dispatchEvent(new Event("input"));
+    addListeners(document.querySelectorAll(".js-setting-info"), "click", addFilterParam);
+    applyFilter();
     dismissFlash();
     enableSaveButton();
   })

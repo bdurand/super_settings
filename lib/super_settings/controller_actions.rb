@@ -7,32 +7,38 @@ module SuperSettings
 
     included do
       layout "super_settings/settings"
-      helper SuperSettings::SettingsHelper
+      helper SettingsHelper
     end
 
     def index
-      @settings = SuperSettings::Setting.not_deleted.order(:key)
-      render :index
+      @settings = Setting.order(:key)
+      respond_to do |format|
+        format.json { render json: @settings.as_json }
+        format.html { render :index }
+      end
     end
 
     def show
-      setting = SuperSettings::Setting.find(params[:id])
-      render partial: "super_settings/settings/setting", locals: {setting: setting}
+      setting = Setting.find(params[:id])
+      respond_to do |format|
+        format.json { render json: setting.as_json }
+        format.html { render partial: "super_settings/settings/setting", locals: {setting: setting} }
+      end
     end
 
     def edit
-      setting = SuperSettings::Setting.find(params[:id])
+      setting = Setting.find(params[:id])
       render partial: "super_settings/settings/edit_setting", locals: {setting: setting}
     end
 
     def new
-      render partial: "super_settings/settings/edit_setting", locals: {setting: SuperSettings::Setting.new}
+      render partial: "super_settings/settings/edit_setting", locals: {setting: Setting.new}
     end
 
     def update
       all_valid, changed = update_settings
       if all_valid
-        SuperSettings::Setting.transaction do
+        Setting.transaction do
           changed.values.each do |setting|
             unless setting.save
               all_valid = false
@@ -43,14 +49,41 @@ module SuperSettings
       end
 
       if all_valid
-        flash[:notice] = "Settings saved"
-        redirect_params = {}
-        redirect_params[:filter] = params[:filter] if params[:filter].present?
-        redirect_to super_settings.root_url(redirect_params)
+        respond_to do |format|
+          format.json { render json: {success: true} }
+          format.html do
+            flash[:notice] = "Settings saved"
+            redirect_params = {}
+            redirect_params[:filter] = params[:filter] if params[:filter].present?
+            redirect_to super_settings.index_url(redirect_params)
+          end
+        end
       else
-        @settings = all_settings_with_errors(changed)
-        flash.now[:alert] = "Settings not saved"
-        render :index, status: :unprocessable_entity
+        respond_to do |format|
+          format.json do
+            errors = {}
+            changed.each do |setting|
+              if setting.errors.any?
+                errors[setting[key]] = setting.errors.full_messages
+              end
+            end
+            render json: {success: false, errors: errors}, status: :unprocessable_entity
+          end
+          format.html do
+            @settings = all_settings_with_errors(changed)
+            flash.now[:alert] = "Settings not saved"
+            render :index, status: :unprocessable_entity
+          end
+        end
+      end
+    end
+
+    def history
+      @setting = Setting.find(params[:id])
+      @histories = @setting.histories.order(id: :desc).limit(50).offset(params[:offset])
+      respond_to do |format|
+        format.json { render json: @histories.as_json }
+        format.html { render :history }
       end
     end
 
@@ -58,23 +91,26 @@ module SuperSettings
 
     def update_settings
       changed = {}
+      changed_by = get_changed_by_value
       all_valid = true
       params[:settings].values.each do |setting_params|
         next if setting_params[:key].blank?
         next if setting_params[:value_type].blank? && setting_params[:_delete].blank?
 
-        setting = SuperSettings::Setting.find_by(key: setting_params[:key])
+        setting = Setting.with_deleted.find_by(key: setting_params[:key])
         unless setting
           next if setting_params[:_delete].present?
-          setting = SuperSettings::Setting.new(key: setting_params[:key])
+          setting = Setting.new(key: setting_params[:key])
         end
 
         if setting_params[:_delete].present?
-          setting.deleted_at = Time.now
+          setting.deleted = true
+          setting.changed_by = changed_by
         elsif setting_params.include?(:value_type)
           setting.value_type = setting_params[:value_type]
           setting.value = (setting.boolean? ? setting_params[:value].present? : setting_params[:value])
-          setting.deleted_at = nil if setting.deleted?
+          setting.deleted = false if setting.deleted?
+          setting.changed_by = changed_by
           all_valid &= setting.valid?
         end
         changed[setting.key] = setting
@@ -84,7 +120,7 @@ module SuperSettings
 
     def all_settings_with_errors(changed)
       settings = changed.values.select(&:new_record?)
-      SuperSettings::Setting.not_deleted.order(:key).each do |setting|
+      Setting.order(:key).each do |setting|
         if changed.include?(setting.key)
           settings << changed[setting.key]
         else
@@ -92,6 +128,11 @@ module SuperSettings
         end
       end
       settings
+    end
+
+    def get_changed_by_value
+      method_name = Configuration.instance.settings_controller_changed_by_method
+      send(method_name) if method_name
     end
 
   end

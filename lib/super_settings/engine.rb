@@ -9,18 +9,19 @@ module SuperSettings
     isolate_namespace SuperSettings
 
     config.after_initialize do
-      configuration = SuperSettings::Configuration.instance
+      configuration = Configuration.instance
       configuration.call
 
-      klass = Class.new(configuration.settings_controller_superclass)
+      application_controller_class = (configuration.settings_controller_superclass || ApplicationController)
+      klass = Class.new(application_controller_class)
       SuperSettings.const_set(:SettingsController, klass)
-      klass.include(SuperSettings::ControllerActions)
+      klass.include(ControllerActions)
       if configuration.settings_controller_definition
-        klass.instance_eval(&configuration.settings_controller_definition)
+        klass.class_eval(&configuration.settings_controller_definition)
       end
 
       if configuration.setting_model_definition
-        SuperSettings::Setting.instance_eval(&configuration.setting_model_definition)
+        Setting.class_eval(&configuration.setting_model_definition)
       end
     end
 

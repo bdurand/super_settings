@@ -1,0 +1,38 @@
+<h3>
+  <%= link_to super_settings.index_path(filter: params[:filter]), title: "Settings" do %>
+    &#11013;
+  <% end %>
+  Setting Change Log:
+  <%= @setting.key %>
+</h3>
+
+<table class="table table-striped" id="settings-table">
+  <thead>
+    <tr>
+      <th scope="col" class="text-nowrap">Time</th>
+      <th scope="col" class="text-truncate">Value</th>
+      <th scope="col" class="text-truncate">Changed By</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @histories.each do |history| %>
+      <tr>
+        <td>
+          <%= I18n.localize(history.created_at, format: :long)%>
+        </td>
+
+        <td>
+          <div style="white-space:pre;"><%= history.value %></div>
+        </td>
+
+        <td>
+          <% if history.changed_by.present? %>
+            <%= history.changed_by_display %>
+          <% else %>
+            <em>n/a</em>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

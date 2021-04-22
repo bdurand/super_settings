@@ -10,12 +10,21 @@ class CreateSuperSettings < ActiveRecord::Migration[4.2]
       t.string :description, limit: 4096, null: true
       t.datetime :updated_at, null: false
       t.datetime :created_at, null: false
-      t.datetime :deleted_at, null: true
+      t.boolean :deleted, default: false
+    end
+
+    create_table :super_settings_histories do |t|
+      t.string :key, null: false, limit: 255, index: true
+      t.string :changed_by, limit: 150, null: true, index: true
+      t.string :value, limit: 4096, null: true
+      t.boolean :deleted, default: false
+      t.datetime :created_at, null: false
     end
   end
 
   def down
     drop_table :super_settings
+    drop_table :super_settings_histories
   end
 
 end

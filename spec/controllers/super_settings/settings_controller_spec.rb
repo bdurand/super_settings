@@ -17,6 +17,15 @@ describe SuperSettings::SettingsController, type: :controller do
     it "should show all settings" do
       get :index
       expect(response.status).to eq 200
+      expect(response.content_type).to eq "text/html; charset=utf-8"
+    end
+
+    it "should have a REST endoint" do
+      request.headers["Accept"] = "application/json"
+      get :index
+      expect(response.status).to eq 200
+      expect(response.content_type).to eq "application/json; charset=utf-8"
+      expect(JSON.parse(response.body)).to eq [setting_6, setting_4, setting_5, setting_3, setting_2, setting_1].collect { |s| JSON.parse(s.to_json) }
     end
   end
 
@@ -24,6 +33,31 @@ describe SuperSettings::SettingsController, type: :controller do
     it "should show a single setting" do
       get :show, params: {id: setting_1.id.to_s}
       expect(response.status).to eq 200
+      expect(response.content_type).to eq "text/html; charset=utf-8"
+    end
+
+    it "should have a REST endpoint" do
+      request.headers["Accept"] = "application/json"
+      get :show, params: {id: setting_1.id.to_s}
+      expect(response.status).to eq 200
+      expect(response.content_type).to eq "application/json; charset=utf-8"
+      expect(JSON.parse(response.body)).to eq JSON.parse(setting_1.to_json)
+    end
+  end
+
+  describe "history" do
+    it "should show setting's history" do
+      get :history, params: {id: setting_1.id.to_s}
+      expect(response.status).to eq 200
+      expect(response.content_type).to eq "text/html; charset=utf-8"
+    end
+
+    it "should have a REST endpoint" do
+      request.headers["Accept"] = "application/json"
+      get :history, params: {id: setting_1.id.to_s}
+      expect(response.status).to eq 200
+      expect(response.content_type).to eq "application/json; charset=utf-8"
+      expect(JSON.parse(response.body)).to eq setting_1.histories.collect { |s| JSON.parse(s.to_json) }
     end
   end
 
@@ -59,7 +93,7 @@ describe SuperSettings::SettingsController, type: :controller do
           value_type: "integer"
         }
       }}
-      expect(response).to redirect_to(routes.url_helpers.root_path)
+      expect(response).to redirect_to(routes.url_helpers.index_path)
       expect(setting_1.reload.value).to eq "new value"
       expect(setting_2.reload.deleted?).to eq true
       expect(SuperSettings::Setting.find_by(key: "newkey").value).to eq 44

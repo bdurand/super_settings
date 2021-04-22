@@ -17,7 +17,7 @@ module SuperSettings
     def load
       values = {}
       start_time = Time.now
-      finder = SuperSettings::Setting.value_data.not_deleted
+      finder = Setting.value_data
       finder.each do |setting|
         values[setting.key] = setting.value
       end
@@ -33,7 +33,7 @@ module SuperSettings
       value = @cache[key]
       if value.nil? && !@cache.include?(key)
         start_time = Time.now
-        value = SuperSettings::Setting.fetch(key)
+        value = Setting.fetch(key)
         @lock.synchronize do
           @last_refreshed = start_time
           @cache[key] = value
@@ -75,7 +75,7 @@ module SuperSettings
       end
 
       begin
-        last_db_update = SuperSettings::Setting.last_updated_at
+        last_db_update = Setting.last_updated_at
         if last_db_update.nil? || last_db_update >= last_refresh_time - 1
           merge_load(last_refresh_time)
         end
@@ -96,7 +96,7 @@ module SuperSettings
     def merge_load(last_refresh_time)
       values = {}
       start_time = Time.now
-      finder = SuperSettings::Setting.value_data.where("updated_at >= ?", last_refresh_time - 1)
+      finder = Setting.with_deleted.value_data.where("updated_at >= ?", last_refresh_time - 1)
       finder.each do |setting|
         values[setting.key] = setting.value
       end

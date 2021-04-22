@@ -59,7 +59,7 @@ module SuperSettings
     end
 
     def application_header
-      config = SuperSettings::Configuration.instance
+      config = Configuration.instance
       name = (config.application_name || "Application")
       content = "#{name} Settings"
       if config.application_logo.present?

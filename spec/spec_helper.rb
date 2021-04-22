@@ -12,7 +12,8 @@ RSpec.configure do |config|
   end
 
   config.before do
-    SuperSettings::Setting.destroy_all
+    SuperSettings::Setting.with_deleted.destroy_all
+    SuperSettings::History.destroy_all
     SuperSettings.clear_cache
     Rails.cache.clear if defined?(Rails.cache) && Rails.cache.respond_to?(:clear)
   end

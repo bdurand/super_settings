@@ -7,7 +7,7 @@ describe SuperSettings::LocalCache do
 
   before do
     SuperSettings::Setting.create!(key: "key.1", value: 1, value_type: :integer)
-    SuperSettings::Setting.create!(key: "key.2", value: 2, value_type: :integer, deleted_at: Time.now)
+    SuperSettings::Setting.create!(key: "key.2", value: 2, value_type: :integer, deleted: true)
     SuperSettings::Setting.create!(key: "key.3", value: 3, value_type: :integer)
   end
 
@@ -67,9 +67,9 @@ describe SuperSettings::LocalCache do
 
     it "should load updated records" do
       cache.load
-      SuperSettings::Setting.find_by(key: "key.1").update!(value: 10)
-      SuperSettings::Setting.find_by(key: "key.2").update!(deleted_at: nil)
-      SuperSettings::Setting.find_by(key: "key.3").update!(deleted_at: Time.now)
+      SuperSettings::Setting.with_deleted.find_by(key: "key.1").update!(value: 10)
+      SuperSettings::Setting.with_deleted.find_by(key: "key.2").update!(deleted: false)
+      SuperSettings::Setting.with_deleted.find_by(key: "key.3").update!(deleted: true)
       expect(cache["key.1"]).to eq 1
       expect(cache["key.2"]).to eq 2
       expect(cache["key.3"]).to eq 3

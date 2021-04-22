@@ -9,12 +9,18 @@ SuperSettings.configure do |config|
     before_action do
       logger.debug("Overridden controller definition")
     end
+
+    def current_user
+      "Test User"
+    end
   end
-  
+
   config.setting_model_definition do
     before_save do
       logger.debug("Overridden model definition")
     end
   end
+
+  config.settings_controller_changed_by_method = :current_user
 
 end

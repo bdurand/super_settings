@@ -2,13 +2,13 @@
 
 SuperSettings::Engine.routes.draw do
 
-  root controller: :settings, action: :index
-
   controller :settings do
-    post "settings", action: :update, as: :update
-    get "settings/show/:id", action: :show
-    get "settings/edit/:id", action: :edit
-    get "settings/new", action: :new
+    get "", action: :index, as: :index
+    post "", action: :update, as: :update
+    get "new", action: :new, format: "html"
+    get ":id", action: :show
+    get ":id/edit", action: :edit, format: "html"
+    get ":id/history", action: :history, as: :history
   end
 
 end

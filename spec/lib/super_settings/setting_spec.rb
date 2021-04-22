@@ -4,6 +4,10 @@ require_relative "../../spec_helper"
 
 describe SuperSettings::Setting do
 
+  after do
+    SuperSettings::Setting.cache = nil
+  end
+
   describe "value type" do
     describe "string" do
       it "should identify as a string" do
@@ -195,7 +199,7 @@ describe SuperSettings::Setting do
 
   describe "deleted" do
     it "should return a nil value for deleted records" do
-      setting = SuperSettings::Setting.new(key: "test", value: "foobar", deleted_at: Time.now)
+      setting = SuperSettings::Setting.new(key: "test", value: "foobar", deleted: true)
       expect(setting.deleted?).to eq true
       expect(setting.value).to eq nil
     end
@@ -225,7 +229,7 @@ describe SuperSettings::Setting do
     it "should have the last updated handle deleted records" do
       setting_1 = SuperSettings::Setting.create!(key: "test1", value: "foobar", updated_at: 10.seconds.ago)
       setting_2 = SuperSettings::Setting.create!(key: "test2", value: "foobar", updated_at: 5.seconds.ago)
-      setting_1.update!(deleted_at: Time.now)
+      setting_1.update!(deleted: true)
       expect(SuperSettings::Setting.last_updated_at).to eq setting_1.reload.updated_at
     end
   end
@@ -241,7 +245,7 @@ describe SuperSettings::Setting do
     end
 
     it "should not fetch a deleted value" do
-      setting = SuperSettings::Setting.create!(key: "test", value: "foobar", deleted_at: Time.now)
+      setting = SuperSettings::Setting.create!(key: "test", value: "foobar", deleted: true)
       expect(SuperSettings::Setting.fetch("test")).to eq nil
     end
 
@@ -257,6 +261,58 @@ describe SuperSettings::Setting do
       setting.update_columns(key: "newkey")
       expect(SuperSettings::Setting.fetch("test")).to eq "blipblap"
       expect(SuperSettings::Setting.fetch("newkey")).to eq "blipblap"
+    end
+  end
+
+  describe "as_json" do
+    it "should serialize the setting" do
+      setting = SuperSettings::Setting.create!(key: "test", value: "foobar", description: "Test")
+      expect(setting.as_json).to eq({
+        id: setting.id,
+        key: setting.key,
+        value: setting.value,
+        value_type: setting.value_type,
+        description: setting.description,
+        created_at: setting.created_at,
+        updated_at: setting.updated_at
+      })
+    end
+  end
+
+  describe "histories" do
+    it "should create a history record for each change in value" do
+      setting = SuperSettings::Setting.create!(key: "test", value: "foobar")
+      setting.update!(value: "bizbaz")
+      setting.update!(description: "test value")
+      setting.touch
+      setting.update!(value: "newvalue")
+      histories = setting.histories.order(id: :desc)
+      expect(histories.collect(&:value)).to eq ["newvalue", "bizbaz", "foobar"]
+    end
+
+    it "should create a history record when the deleted flag is changed" do
+      setting = SuperSettings::Setting.create!(key: "test", value: "foobar")
+      setting.update!(value: "bizbaz")
+      setting.update!(deleted: true)
+      setting.update!(deleted: false)
+      histories = setting.histories.order(id: :desc)
+      expect(histories.collect(&:value)).to eq ["bizbaz", nil, "bizbaz", "foobar"]
+      expect(histories.collect(&:deleted?)).to eq [false, true, false, false]
+    end
+
+    it "should create a history record if the key is changed" do
+      setting = SuperSettings::Setting.create!(key: "test", value: "foobar")
+      setting.update!(key: "newkey")
+      expect(SuperSettings::History.where(key: "newkey").collect(&:value)).to eq ["foobar"]
+      expect(SuperSettings::History.where(key: "test").collect(&:value)).to eq ["foobar"]
+    end
+
+    it "should assign the changed_by attribute to the history record and clear the attribute" do
+      setting = SuperSettings::Setting.create!(key: "test", value: "foobar", changed_by: "Joe")
+      setting.update!(value: "bizbaz")
+      setting.update!(value: "newvalue", changed_by: "John")
+      histories = setting.histories.order(id: :desc)
+      expect(histories.collect(&:changed_by)).to eq ["John", nil, "Joe"]
     end
   end
 
