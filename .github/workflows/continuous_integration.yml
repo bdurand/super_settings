@@ -16,8 +16,6 @@ jobs:
   specs:
     name: ${{ matrix.job }} ruby-${{ matrix.combo-ruby || matrix.ruby }} ${{ matrix.combo.rails }}
     runs-on: ubuntu-latest
-    defaults:
-      ruby: "2.7"
     strategy:
       fail-fast: false
       matrix:
@@ -39,6 +37,7 @@ jobs:
         job: [ rspec ]
         include:
           - job: standardrb
+            ruby: "2.7"
     steps:
       - name: checkout
         uses: actions/checkout@v2
