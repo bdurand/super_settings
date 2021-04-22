@@ -1,0 +1,51 @@
+name: Continuous Integration
+on:
+  push:
+    branches:
+      - master
+      - actions-*
+    tags:
+      - v*
+  pull_request:
+env:
+  BUNDLE_CLEAN: "true"
+  BUNDLE_PATH: vendor/bundle
+  BUNDLE_JOBS: 3
+  BUNDLE_RETRY: 3
+jobs:
+  specs:
+    name: ${{ matrix.job }} ruby-${{ matrix.ruby }} ${{ matrix.sidekiq && format('sidekiq-{0}', matrix.sidekiq) }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        combo:
+          - rails: "6.1"
+            ruby: "2.7"
+          - rails: "5.2"
+            ruby: "2.6"
+        job: [ rspec ]
+        # include:
+        #   - ruby: "2.7"
+        #     job: standardrb
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.combo.ruby }}
+      - name: inject rails ${{ matrix.combo.rails }}
+        if:   matrix.combo.rails != 'original' && matrix.combo.rails != null
+        run: | # inject a specific version of rails into the Gemfile
+          bundle update
+          bundle exec appraisal generate
+          bundle config set gemfile "gemfiles/rails_${{ matrix.combo.rails }}.gemfile"
+      - name: install dependencies
+        run:  bundle install
+      - name: specs
+        if:   matrix.job == 'rspec'
+        run:  bundle exec rake spec
+      - name: standardrb
+        if:   matrix.job == 'standardrb'
+        run:  bundle exec rake standard
