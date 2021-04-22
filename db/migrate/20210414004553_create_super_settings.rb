@@ -1,7 +1,12 @@
 # frozen_string_literal: true
 
-class CreateSuperSettings < ActiveRecord::Migration[4.2]
+# Needed for the super_settings gem to maintain backward compatibility with Rails 4.2
+migration_class = ActiveRecord::Migration
+if migration_class.respond_to?(:[])
+  migration_class = migration_class[4.2]
+end
 
+class CreateSuperSettings < migration_class
   def up
     create_table :super_settings do |t|
       t.string :key, null: false, limit: 255, index: {unique: true}
@@ -26,5 +31,4 @@ class CreateSuperSettings < ActiveRecord::Migration[4.2]
     drop_table :super_settings
     drop_table :super_settings_histories
   end
-
 end

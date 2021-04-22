@@ -5,7 +5,6 @@ require_relative "setting"
 
 module SuperSettings
   class Engine < Rails::Engine
-
     isolate_namespace SuperSettings
 
     config.after_initialize do
@@ -24,6 +23,5 @@ module SuperSettings
         Setting.class_eval(&configuration.setting_model_definition)
       end
     end
-
   end
 end

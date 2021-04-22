@@ -2,16 +2,14 @@
 
 module SuperSettings
   module SettingsHelper
-
-    ICON_SVG = Dir.glob(File.join(__dir__, "images", "*.svg")).inject({}) do |cache, file|
+    ICON_SVG = Dir.glob(File.join(__dir__, "images", "*.svg")).each_with_object({}) do |file, cache|
       cache[File.basename(file, ".svg")] = File.read(file).chomp
-      cache
     end.freeze
 
     ICON_BUTTON_STYLE = HashWithIndifferentAccess.new(
-      cursor: "pointer",
-      width: "1.5rem",
-      height: "1.5rem",
+      :cursor => "pointer",
+      :width => "1.5rem",
+      :height => "1.5rem",
       "min-width" => "20px",
       "min-height" => "20px",
       "margin-top" => "0.25rem",
@@ -42,7 +40,7 @@ module SuperSettings
       if options[:color].present?
         svg = svg.gsub("currentColor", options[:color])
       end
-      css = DEFAULT_ICON_STYLE.merge(options[:style] || {}).map { |name, value| "#{name}:#{value}"}.join("; ")
+      css = DEFAULT_ICON_STYLE.merge(options[:style] || {}).map { |name, value| "#{name}:#{value}" }.join("; ")
       options = {alt: ""}.merge(options).merge(style: css)
       image_tag("data:image/svg+xml;utf8,#{svg}", options)
     end
@@ -51,10 +49,10 @@ module SuperSettings
       "Created: #{I18n.localize(setting.created_at, format: :long)}\nUpdated: #{I18n.localize(setting.updated_at, format: :long)}"
     end
 
-    def super_settings_icon_button(icon, url: nil, title:, color:, js_class:, style: {})
-      url = '#' if url.blank?
+    def super_settings_icon_button(icon, title:, color:, js_class:, url: nil, style: {})
+      url = "#" if url.blank?
       link_to(url, class: js_class, title: title) do
-        super_settings_icon(icon, color: color, style: ICON_BUTTON_STYLE.merge(style));
+        super_settings_icon(icon, color: color, style: ICON_BUTTON_STYLE.merge(style))
       end
     end
 
@@ -71,6 +69,5 @@ module SuperSettings
         content
       end
     end
-
   end
 end

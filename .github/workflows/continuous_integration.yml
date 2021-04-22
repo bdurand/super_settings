@@ -1,0 +1,64 @@
+name: Continuous Integration
+on:
+  push:
+    branches:
+      - master
+      - actions-*
+    tags:
+      - v*
+  pull_request:
+env:
+  BUNDLE_CLEAN: "true"
+  BUNDLE_PATH: vendor/bundle
+  BUNDLE_JOBS: 3
+  BUNDLE_RETRY: 3
+jobs:
+  specs:
+    name: ${{ matrix.job }} ruby-${{ matrix.combo.ruby || matrix.ruby }} ${{ matrix.combo.rails && format('rails-{0}', matrix.combo.rails) }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        combo:
+          - rails: "latest"
+            ruby: "3.0"
+          - rails: "6.1"
+            ruby: "2.7"
+          - rails: "6.0"
+            ruby: "2.7"
+          - rails: "5.2"
+            ruby: "2.6"
+          - rails: "5.1"
+            ruby: "2.6"
+          - rails: "5.0"
+            ruby: "2.5"
+          - rails: "4.2"
+            ruby: "2.4"
+            bundler: "1.17.3"
+        job: [ rspec ]
+        include:
+          - job: standardrb
+            ruby: "2.7"
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: set up Ruby ${{ matrix.combo.ruby || matrix.ruby }}
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.combo.ruby || matrix.ruby }}
+      - name: setup bundler
+        run: |
+          if [ "${{ matrix.combo.bundler }}" != "" ]; then
+            gem uninstall bundler --all
+            gem install bundler --no-document --version ${{ matrix.combo.bundler }}
+          fi
+          if [ "${{ matrix.combo.rails }}" != "latest" && "${{ matrix.combo.rails }}" != "" ]; then
+            bundle config set gemfile "gemfiles/rails_${{ matrix.combo.rails }}.gemfile"
+          fi
+          bundle update
+      - name: specs
+        if:   matrix.job == 'rspec'
+        run:  bundle exec rake spec
+      - name: standardrb
+        if:   matrix.job == 'standardrb'
+        run:  bundle exec rake standard

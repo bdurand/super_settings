@@ -52,22 +52,7 @@
     return input;
   }
 
-  function changeSettingType(event) {
-    var valueTypeMenu = event.target;
-    var settingRow = valueTypeMenu.closest("tr");
-    var type = valueTypeMenu.options[valueTypeMenu.selectedIndex].value;
-    var input = getFieldValueInput(settingRow)
-    var fieldName = input.name;
-    var fieldValue = input.value;
-    if (input.type === "checkbox") {
-      if (input.checked) {
-        fieldValue = input.value;
-      } else {
-        fieldValue = null;
-      }
-    }
-    var fieldId = fieldName.replace(/[\[\]]+/g, "_").replace(/_$/, "");
-
+  function settingInputHTML(type, fieldId, fieldName) {
     var html = null;
     if (type === "array") {
       html = '<textarea name="' + fieldName + '" id="' + fieldId + '" rows="8" class="form-control"></textarea>';
@@ -89,9 +74,27 @@
       }
       html += ">";
     }
+    return html;
+  }
+
+  function changeSettingType(event) {
+    var valueTypeMenu = event.target;
+    var settingRow = valueTypeMenu.closest("tr");
+    var type = valueTypeMenu.options[valueTypeMenu.selectedIndex].value;
+    var input = getFieldValueInput(settingRow)
+    var fieldName = input.name;
+    var fieldValue = input.value;
+    if (input.type === "checkbox") {
+      if (input.checked) {
+        fieldValue = input.value;
+      } else {
+        fieldValue = null;
+      }
+    }
+    var fieldId = fieldName.replace(/[\[\]]+/g, "_").replace(/_$/, "");
 
     input.remove();
-    settingRow.querySelector(".js-setting-value").innerHTML = html;
+    settingRow.querySelector(".js-setting-value").innerHTML = settingInputHTML(type, fieldId, fieldName);
     input = getFieldValueInput(settingRow);
     if (type === "boolean") {
       input.checked = fieldValue;
@@ -122,7 +125,7 @@
     enableSaveButton();
   }
 
-  function fetchSetting(action, id) {
+  function apiURL(action, id) {
     var url = document.location.pathname;
     if (url.endsWith("/")) {
       url = url.substring(0, url.length - 1);
@@ -133,8 +136,11 @@
     if (action) {
       url += "/" + action;
     }
+    return url;
+  }
 
-    fetch(url, {credentials: "same-origin", headers: new Headers({"Accept": "text/html"})})
+  function fetchSetting(action, id) {
+    fetch(apiURL(action, id), {credentials: "same-origin", headers: new Headers({"Accept": "text/html"})})
     .then(
       function(response) {
         if (response.ok) {
@@ -202,10 +208,7 @@
       filters.push(function(tr) {
         var val = tr.dataset.key;
         if (!val) {
-          var input = tr.querySelector("td input");
-          if (input) {
-            val = input.value
-          }
+          var input = tr.querySelector("td input")?.value
         }
         return (val && val.toUpperCase().indexOf(filter) > -1);
       });

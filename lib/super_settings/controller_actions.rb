@@ -2,7 +2,6 @@
 
 module SuperSettings
   module ControllerActions
-
     extend ActiveSupport::Concern
 
     included do
@@ -121,10 +120,10 @@ module SuperSettings
     def all_settings_with_errors(changed)
       settings = changed.values.select(&:new_record?)
       Setting.order(:key).each do |setting|
-        if changed.include?(setting.key)
-          settings << changed[setting.key]
+        settings << if changed.include?(setting.key)
+          changed[setting.key]
         else
-          settings << setting
+          setting
         end
       end
       settings
@@ -134,6 +133,5 @@ module SuperSettings
       method_name = Configuration.instance.settings_controller_changed_by_method
       send(method_name) if method_name
     end
-
   end
 end

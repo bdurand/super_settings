@@ -11,7 +11,6 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema.define(version: 2021_04_14_004553) do
-
   create_table "super_settings", force: :cascade do |t|
     t.string "key", limit: 255, null: false
     t.string "value_type", limit: 30, default: "string", null: false
@@ -32,5 +31,4 @@ ActiveRecord::Schema.define(version: 2021_04_14_004553) do
     t.index ["changed_by"], name: "index_super_settings_histories_on_changed_by"
     t.index ["key"], name: "index_super_settings_histories_on_key"
   end
-
 end

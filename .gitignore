@@ -1,6 +1,9 @@
 .DS_Store
 .bundle/
 .rspec
+.ruby-version
+Gemfile.lock
+gemfiles/*.gemfile.lock
 log/*.log
 pkg/
 spec/dummy/db/*.sqlite3
