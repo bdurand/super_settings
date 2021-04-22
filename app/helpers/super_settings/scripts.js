@@ -52,22 +52,7 @@
     return input;
   }
 
-  function changeSettingType(event) {
-    var valueTypeMenu = event.target;
-    var settingRow = valueTypeMenu.closest("tr");
-    var type = valueTypeMenu.options[valueTypeMenu.selectedIndex].value;
-    var input = getFieldValueInput(settingRow)
-    var fieldName = input.name;
-    var fieldValue = input.value;
-    if (input.type === "checkbox") {
-      if (input.checked) {
-        fieldValue = input.value;
-      } else {
-        fieldValue = null;
-      }
-    }
-    var fieldId = fieldName.replace(/[\[\]]+/g, "_").replace(/_$/, "");
-
+  function settingInputHTML(type, fieldId, fieldName) {
     var html = null;
     if (type === "array") {
       html = '<textarea name="' + fieldName + '" id="' + fieldId + '" rows="8" class="form-control"></textarea>';
@@ -89,9 +74,27 @@
       }
       html += ">";
     }
+    return html;
+  }
+
+  function changeSettingType(event) {
+    var valueTypeMenu = event.target;
+    var settingRow = valueTypeMenu.closest("tr");
+    var type = valueTypeMenu.options[valueTypeMenu.selectedIndex].value;
+    var input = getFieldValueInput(settingRow)
+    var fieldName = input.name;
+    var fieldValue = input.value;
+    if (input.type === "checkbox") {
+      if (input.checked) {
+        fieldValue = input.value;
+      } else {
+        fieldValue = null;
+      }
+    }
+    var fieldId = fieldName.replace(/[\[\]]+/g, "_").replace(/_$/, "");
 
     input.remove();
-    settingRow.querySelector(".js-setting-value").innerHTML = html;
+    settingRow.querySelector(".js-setting-value").innerHTML = settingInputHTML(type, fieldId, fieldName);
     input = getFieldValueInput(settingRow);
     if (type === "boolean") {
       input.checked = fieldValue;
@@ -133,6 +136,7 @@
     if (action) {
       url += "/" + action;
     }
+    return url;
   }
 
   function fetchSetting(action, id) {
