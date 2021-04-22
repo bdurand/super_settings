@@ -34,6 +34,7 @@ jobs:
             ruby: "2.5"
           - rails: "4.2"
             ruby: "2.4"
+            bundler: "1.17"
         job: [ rspec ]
         include:
           - job: standardrb
@@ -45,12 +46,16 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.combo.ruby || matrix.ruby }}
-      - name: inject rails ${{ matrix.combo.rails }}
-        if:   matrix.combo.rails != 'latest' && matrix.combo.rails != null
-        run: | # inject a specific version of rails into the Gemfile
-          bundle config set gemfile "gemfiles/rails_${{ matrix.combo.rails }}.gemfile"
-      - name: install dependencies
-        run:  bundle update
+      - name: setup bundler
+        run: |
+          if [ "${{ matrix.combo.bundler }}" != "" ]; then
+            gem uninstall bundler --all
+            gem install bundler --no-document --version ${{ matrix.combo.bundler }}
+          fi
+          if [ "${{ matrix.combo.rails }}" != "latest" && "${{ matrix.combo.rails }}" != "" ]; then
+            bundle config set gemfile "gemfiles/rails_${{ matrix.combo.rails }}.gemfile"
+          fi
+          bundle update
       - name: specs
         if:   matrix.job == 'rspec'
         run:  bundle exec rake spec
