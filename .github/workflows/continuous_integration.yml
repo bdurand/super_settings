@@ -14,7 +14,7 @@ env:
   BUNDLE_RETRY: 3
 jobs:
   specs:
-    name: ${{ matrix.job }} ruby-${{ matrix.combo-ruby || ruby }} ${{ matrix.comob.rails }}
+    name: ${{ matrix.job }} ruby-${{ matrix.combo-ruby || matrix.ruby }} ${{ matrix.combo.rails }}
     runs-on: ubuntu-latest
     defaults:
       ruby: 2.7

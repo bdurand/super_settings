@@ -1,3 +1,5 @@
+[![Continuous Integration](https://github.com/bdurand/super_settings/actions/workflows/continuous_integration.yml/badge.svg)](https://github.com/bdurand/super_settings/actions/workflows/continuous_integration.yml)
+
 # SuperSettings
 Short description and motivation.
 
