@@ -2,7 +2,6 @@
 
 module SuperSettings
   class LocalCache
-
     attr_reader :ttl
 
     def initialize(ttl:)

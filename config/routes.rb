@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 SuperSettings::Engine.routes.draw do
-
   controller :settings do
     get "", action: :index, as: :index
     post "", action: :update, as: :update
@@ -10,5 +9,4 @@ SuperSettings::Engine.routes.draw do
     get ":id/edit", action: :edit, format: "html"
     get ":id/history", action: :history, as: :history
   end
-
 end

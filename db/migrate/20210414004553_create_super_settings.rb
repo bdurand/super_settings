@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class CreateSuperSettings < ActiveRecord::Migration[4.2]
-
   def up
     create_table :super_settings do |t|
       t.string :key, null: false, limit: 255, index: {unique: true}
@@ -26,5 +25,4 @@ class CreateSuperSettings < ActiveRecord::Migration[4.2]
     drop_table :super_settings
     drop_table :super_settings_histories
   end
-
 end

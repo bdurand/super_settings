@@ -3,7 +3,6 @@
 require_relative "../../spec_helper"
 
 describe SuperSettings::Setting do
-
   after do
     SuperSettings::Setting.cache = nil
   end
@@ -315,5 +314,4 @@ describe SuperSettings::Setting do
       expect(histories.collect(&:changed_by)).to eq ["John", nil, "Joe"]
     end
   end
-
 end

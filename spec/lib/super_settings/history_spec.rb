@@ -3,7 +3,6 @@
 require_relative "../../spec_helper"
 
 describe SuperSettings::History do
-
   describe "as_json" do
     it "should serialize the record" do
       history = SuperSettings::History.new(key: "test", value: "foobar", changed_by: "Mary", created_at: Time.now)
@@ -15,5 +14,4 @@ describe SuperSettings::History do
       })
     end
   end
-
 end

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "super_settings/boolean_parser"
 require_relative "super_settings/configuration"
 require_relative "super_settings/local_cache"
 require_relative "super_settings/version"
@@ -18,10 +19,7 @@ else
 end
 
 module SuperSettings
-
   DEFAULT_CACHE_TTL = 5.0
-
-  BOOLEAN_PARSER = ActiveModel::Type::Boolean.new
 
   class << self
     def ttl=(value)
@@ -45,7 +43,7 @@ module SuperSettings
 
     def enabled?(key, default = false)
       val = local_cache[key]
-      val.nil? ? BOOLEAN_PARSER.cast(default) : !!val
+      val.nil? ? BooleanParser.cast(default) : !!val
     end
 
     def datetime(key, default = nil)
@@ -84,5 +82,4 @@ module SuperSettings
       @local_cache ||= LocalCache.new(ttl: DEFAULT_CACHE_TTL)
     end
   end
-
 end

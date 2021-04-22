@@ -4,7 +4,6 @@ require_relative "application_record"
 
 module SuperSettings
   class Setting < ApplicationRecord
-
     LAST_UPDATED_CACHE_KEY = "SuperSettings.last_updated_at"
 
     STRING = "string"
@@ -48,7 +47,7 @@ module SuperSettings
       if self.class.cache
         self.class.cache.delete(LAST_UPDATED_CACHE_KEY)
         self.class.remove_from_cache(key)
-          if respond_to?(:saved_change_to_key) && saved_change_to_key? && respond_to?(:key_before_last_save)
+        if respond_to?(:saved_change_to_key) && saved_change_to_key? && respond_to?(:key_before_last_save)
           self.class.remove_from_cache(key_before_last_save)
         end
       end
@@ -67,16 +66,14 @@ module SuperSettings
         end
       end
 
-      def cache=(cache_store)
-        @cache = cache_store
-      end
+      attr_writer :cache
 
       def cache
         @cache if defined?(@cache)
       end
 
       def remove_from_cache(key)
-        cache.delete(cache_key(key)) if cache
+        cache&.delete(cache_key(key))
       end
 
       private
@@ -133,7 +130,7 @@ module SuperSettings
     def destroy!
       update!(deleted: true)
     end
-    
+
     def as_json(options = nil)
       {
         id: id,
@@ -159,7 +156,7 @@ module SuperSettings
       when FLOAT
         Float(value)
       when BOOLEAN
-        BOOLEAN_PARSER.cast(value)
+        BooleanParser.cast(value)
       when DATETIME
         Time.parse(value).in_time_zone(Time.zone).freeze
       when ARRAY
@@ -210,6 +207,5 @@ module SuperSettings
     def clear_changed_by
       self.changed_by = nil
     end
-
   end
 end

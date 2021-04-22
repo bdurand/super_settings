@@ -14,7 +14,7 @@ env:
   BUNDLE_RETRY: 3
 jobs:
   specs:
-    name: ${{ matrix.job }} ruby-${{ matrix.ruby }} ${{ matrix.sidekiq && format('sidekiq-{0}', matrix.sidekiq) }}
+    name: ${{ matrix.job }} ruby-${{ matrix.comob-ruby }} ${{ matrix.comob.rails }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -22,16 +22,24 @@ jobs:
         combo:
           - rails: "6.1"
             ruby: "2.7"
+          - rails: "6.0"
+            ruby: "2.7"
           - rails: "5.2"
             ruby: "2.6"
+          - rails: "5.1"
+            ruby: "2.6"
+          - rails: "5.0"
+            ruby: "2.5"
+          - rails: "4.2"
+            ruby: "2.4"
         job: [ rspec ]
-        # include:
-        #   - ruby: "2.7"
-        #     job: standardrb
+        include:
+          - ruby: "2.7"
+            job: standardrb
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: set up Ruby
+      - name: set up Ruby ${{ matrix.combo.ruby }}
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.combo.ruby }}
