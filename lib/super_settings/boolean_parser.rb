@@ -2,6 +2,7 @@
 
 module SuperSettings
   class BooleanParser
+    # rubocop:disable Lint/BooleanSymbol
     FALSE_VALUES = [
       false, 0,
       "0", :"0",
@@ -12,7 +13,8 @@ module SuperSettings
       "off", :off,
       "OFF", :OFF
     ].to_set.freeze
-    
+    # rubocop:enable Lint/BooleanSymbol
+
     class << self
       def cast(value)
         if value == false

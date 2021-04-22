@@ -14,7 +14,7 @@ env:
   BUNDLE_RETRY: 3
 jobs:
   specs:
-    name: ${{ matrix.job }} ruby-${{ matrix.combo.ruby || matrix.ruby }} rails-${{ matrix.combo.rails }}
+    name: ${{ matrix.job }} ruby-${{ matrix.combo.ruby || matrix.ruby }} ${{ matrix.combo.rails && format('rails-{0}', matrix.combo.rails) }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
