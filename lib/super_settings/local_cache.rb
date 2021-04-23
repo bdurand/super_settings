@@ -6,28 +6,12 @@ module SuperSettings
 
     def initialize(ttl:)
       @ttl = ttl
-      @cache = {}
       @lock = Mutex.new
-      @last_refreshed = nil
-      @next_check_at = Time.now + @ttl
-      @refreshing = false
-    end
-
-    def load
-      values = {}
-      start_time = Time.now
-      finder = Setting.value_data
-      finder.each do |setting|
-        values[setting.key] = setting.value
-      end
-      @lock.synchronize do
-        @last_refreshed = start_time
-        @cache = values
-      end
+      reset
     end
 
     def [](key)
-      refresh if Time.now >= @next_check_at
+      ensure_cache_up_to_date!
       key = key.to_s
       value = @cache[key]
       if value.nil? && !@cache.include?(key)
@@ -35,14 +19,10 @@ module SuperSettings
         value = Setting.fetch(key)
         @lock.synchronize do
           @last_refreshed = start_time
-          @cache[key] = value
+          @cache = @cache.merge(key => value).freeze
         end
       end
       value
-    end
-
-    def inspect
-      @cache.inspect
     end
 
     def include?(key)
@@ -50,14 +30,34 @@ module SuperSettings
     end
 
     def size
+      ensure_cache_up_to_date!
       @cache.size
     end
 
-    def clear
+    def to_h
+      ensure_cache_up_to_date!
+      @cache
+    end
+
+    def loaded?
+      !!@last_refreshed
+    end
+
+    def load_settings
       @lock.synchronize do
-        @cache = {}
-        @last_refreshed = nil
+        @refreshing = true
         @next_check_at = Time.now + @ttl
+      end
+      begin
+        values = {}
+        start_time = Time.now
+        finder = Setting.value_data
+        finder.each do |setting|
+          values[setting.key] = setting.value
+        end
+        set_cache_values(start_time) { values }
+      ensure
+        @refreshing = false
       end
     end
 
@@ -83,6 +83,15 @@ module SuperSettings
       end
     end
 
+    def reset
+      @lock.synchronize do
+        @cache = {}.freeze
+        @last_refreshed = nil
+        @next_check_at = Time.now + @ttl
+        @refreshing = false
+      end
+    end
+
     def ttl=(seconds)
       @lock.synchronize do
         @ttl = seconds
@@ -99,9 +108,27 @@ module SuperSettings
       finder.each do |setting|
         values[setting.key] = setting.value
       end
+      set_cache_values(start_time) { @cache.merge(values) }
+    end
+
+    def ensure_cache_up_to_date!
+      if @last_refreshed.nil?
+        # Abort if another thread has already calling load_settings
+        previous_cache_id = @cache.object_id
+        @lock.synchronize do
+          return unless previous_cache_id == @cache.object_id
+        end
+        load_settings
+      elsif Time.now >= @next_check_at
+        refresh
+      end
+    end
+
+    def set_cache_values(refreshed_at_time, &block)
       @lock.synchronize do
-        @last_refreshed = start_time
-        @cache = @cache.merge(values)
+        @last_refreshed = refreshed_at_time
+        @refreshing = false
+        @cache = block.call.freeze
       end
     end
   end

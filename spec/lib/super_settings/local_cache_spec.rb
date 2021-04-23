@@ -12,10 +12,11 @@ describe SuperSettings::LocalCache do
   end
 
   describe "get key" do
-    it "should lazy load a key" do
-      expect(cache.size).to eq 0
+    it "should lazy load the cache" do
+      expect(cache.loaded?).to eq false
       expect(cache["key.1"]).to eq 1
-      expect(cache.size).to eq 1
+      expect(cache.loaded?).to eq true
+      expect(cache.size).to eq 2
       expect(cache).to include("key.1")
     end
 
@@ -28,10 +29,11 @@ describe SuperSettings::LocalCache do
       expect(cache["key.1"]).to eq 10
     end
 
-    it "should cache miossing keys" do
+    it "should cache missing keys" do
+      cache.load_settings
       cache.ttl = 0.1
       expect(cache["key.4"]).to eq nil
-      expect(cache.size).to eq 1
+      expect(cache.size).to eq 3
       expect(cache).to include("key.4")
 
       SuperSettings::Setting.create!(key: "key.4", value: 4, value_type: :integer)
@@ -42,7 +44,7 @@ describe SuperSettings::LocalCache do
 
   describe "load" do
     it "should load all non-deleted keys" do
-      cache.load
+      cache.load_settings
       expect(cache.size).to eq 2
       expect(cache).to include("key.1")
       expect(cache).to_not include("key.2")
@@ -50,33 +52,44 @@ describe SuperSettings::LocalCache do
     end
   end
 
-  describe "clear" do
-    it "should clear the cache" do
-      cache.load
-      cache.clear
-      expect(cache.size).to eq 0
-      expect(cache["key.1"]).to eq 1
-    end
-  end
-
   describe "refresh" do
     it "should do nothing if no settings are loaded" do
       expect(SuperSettings::Setting).to_not receive(:last_updated_at)
-      expect(cache.size).to eq 0
+      expect(cache.loaded?).to eq false
     end
 
     it "should load updated records" do
-      cache.load
+      cache.load_settings
       SuperSettings::Setting.with_deleted.find_by(key: "key.1").update!(value: 10)
       SuperSettings::Setting.with_deleted.find_by(key: "key.2").update!(deleted: false)
       SuperSettings::Setting.with_deleted.find_by(key: "key.3").update!(deleted: true)
+      SuperSettings::Setting.create!(key: "key.4", value: 4, value_type: :integer)
       expect(cache["key.1"]).to eq 1
       expect(cache["key.2"]).to eq 2
       expect(cache["key.3"]).to eq 3
       cache.refresh
+      expect(cache.size).to eq 4
       expect(cache["key.1"]).to eq 10
       expect(cache["key.2"]).to eq 2
       expect(cache["key.3"]).to eq nil
+      expect(cache["key.4"]).to eq 4
+    end
+  end
+
+  describe "reset" do
+    it "should clear out the existing cache" do
+      cache.load_settings
+      expect(cache.size).to eq 2
+      cache.reset
+      expect(cache.loaded?).to eq false
+    end
+  end
+
+  describe "to_h" do
+    it "should return a loaded frozeh hash" do
+      hash = cache.to_h
+      expect(hash).to eq("key.1" => 1, "key.3" => 3)
+      expect(hash).to be_frozen
     end
   end
 end

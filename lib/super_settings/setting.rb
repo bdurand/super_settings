@@ -28,7 +28,7 @@ module SuperSettings
     # Scope to select just the date needed to load the setting values.
     scope :value_data, -> { select([:id, :key, :value_type, :raw_value, :deleted]) }
 
-    has_many :histories, class_name: "SuperSettings::History", foreign_key: :key, primary_key: :key
+    has_many :histories, class_name: "History", foreign_key: :key, primary_key: :key
 
     validates :value_type, inclusion: {in: VALUE_TYPES}
     validates :key, presence: true, length: {maximum: 255}, uniqueness: true

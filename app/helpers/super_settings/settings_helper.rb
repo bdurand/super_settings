@@ -56,10 +56,13 @@ module SuperSettings
       end
     end
 
+    def application_name
+      config.application_name || "Application"
+    end
+
     def application_header
       config = Configuration.instance
-      name = (config.application_name || "Application")
-      content = "#{name} Settings"
+      content = "#{application_name} Settings"
       if config.application_logo.present?
         content = image_tag(config.application_logo).concat(content)
       end

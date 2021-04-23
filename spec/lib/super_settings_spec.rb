@@ -3,23 +3,23 @@
 require_relative "../spec_helper"
 
 describe SuperSettings do
-  describe "load" do
+  describe "load_settings" do
     it "should load the cache" do
-      expect_any_instance_of(SuperSettings::LocalCache).to receive(:load)
-      SuperSettings.load
+      expect_any_instance_of(SuperSettings::LocalCache).to receive(:load_settings)
+      SuperSettings.load_settings
     end
   end
 
-  describe "refresh" do
+  describe "refresh_settings" do
     it "should refresh the cache" do
       expect_any_instance_of(SuperSettings::LocalCache).to receive(:refresh)
-      SuperSettings.refresh
+      SuperSettings.refresh_settings
     end
   end
 
   describe "clear_cache" do
-    it "should clear the cache" do
-      expect_any_instance_of(SuperSettings::LocalCache).to receive(:clear).and_call_original
+    it "should refresh the cache" do
+      expect_any_instance_of(SuperSettings::LocalCache).to receive(:reset)
       SuperSettings.clear_cache
     end
   end
@@ -96,6 +96,57 @@ describe SuperSettings do
     it "should return a default if the key is not defined" do
       expect(SuperSettings.array("key")).to eq []
       expect(SuperSettings.array("key", ["bar", "baz"])).to eq ["bar", "baz"]
+    end
+  end
+
+  describe "hash" do
+    before do
+      SuperSettings::Setting.create!(key: "A1.B1.C1", value: "foo")
+      SuperSettings::Setting.create!(key: "A1.B1.C2", value: "bar")
+      SuperSettings::Setting.create!(key: "A1.B2", value: 2, value_type: :integer)
+      SuperSettings::Setting.create!(key: "A2.B1.C1", value: "bip")
+      SuperSettings::Setting.create!(key: "A2.B1.C2", value: nil)
+    end
+
+    it "should return a nested hash from all the settings if no key is provided" do
+      expect(SuperSettings.hash).to eq({
+        "A1" => {
+          "B1" => {
+            "C1" => "foo",
+            "C2" => "bar"
+          },
+          "B2" => 2
+        },
+        "A2" => {
+          "B1" => {
+            "C1" => "bip"
+          }
+        }
+      })
+    end
+
+    it "should return a nested hash from settings matching the key" do
+      expect(SuperSettings.hash(:A1)).to eq({
+        "B1" => {
+          "C1" => "foo",
+          "C2" => "bar"
+        },
+        "B2" => 2
+      })
+
+      expect(SuperSettings.hash("A1.B1")).to eq({
+        "C1" => "foo",
+        "C2" => "bar"
+      })
+    end
+
+    it "should not return an empty hash value if there is a matching setting key" do
+      expect(SuperSettings.hash("A1.B1.C1")).to eq({})
+    end
+
+    it "should return a default if the keys are not defined" do
+      expect(SuperSettings.hash("A3")).to eq({})
+      expect(SuperSettings.hash("A3", {"foo" => "bar"})).to eq({"foo" => "bar"})
     end
   end
 end
