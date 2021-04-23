@@ -44,43 +44,23 @@ module SuperSettings
     end
 
     after_commit do
-      if self.class.cache
-        self.class.cache.delete(LAST_UPDATED_CACHE_KEY)
-        self.class.remove_from_cache(key)
-        if respond_to?(:saved_change_to_key) && saved_change_to_key? && respond_to?(:key_before_last_save)
-          self.class.remove_from_cache(key_before_last_save)
-        end
-      end
+      self.class.cache&.delete(LAST_UPDATED_CACHE_KEY)
     end
 
     class << self
-      def last_updated_at
-        fetch_from_cache(LAST_UPDATED_CACHE_KEY) do
-          with_deleted.maximum(:updated_at)
-        end
-      end
-
-      def fetch(key)
-        fetch_from_cache(cache_key(key)) do
-          value_data.find_by(key: key)&.value
-        end
-      end
-
       attr_writer :cache
 
       def cache
         @cache if defined?(@cache)
       end
 
-      def remove_from_cache(key)
-        cache&.delete(cache_key(key))
+      def last_updated_at
+        fetch_from_cache(LAST_UPDATED_CACHE_KEY) do
+          with_deleted.maximum(:updated_at)
+        end
       end
-
+ 
       private
-
-      def cache_key(key)
-        "SuperSettings[#{key}]"
-      end
 
       def fetch_from_cache(key, &block)
         if cache

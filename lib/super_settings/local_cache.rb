@@ -2,6 +2,9 @@
 
 module SuperSettings
   class LocalCache
+    NOT_DEFINED = Object.new.freeze
+    private_constant :NOT_DEFINED
+    
     attr_reader :ttl
 
     def initialize(ttl:)
@@ -16,13 +19,14 @@ module SuperSettings
       value = @cache[key]
       if value.nil? && !@cache.include?(key)
         start_time = Time.now
-        value = Setting.fetch(key)
+        setting = Setting.find_by(key: key)
+        value = (setting ? setting.value : NOT_DEFINED)
         @lock.synchronize do
           @last_refreshed = start_time
           @cache = @cache.merge(key => value).freeze
         end
       end
-      value
+      (value == NOT_DEFINED ? nil : value)
     end
 
     def include?(key)
@@ -36,7 +40,7 @@ module SuperSettings
 
     def to_h
       ensure_cache_up_to_date!
-      @cache
+      @cache.reject { |key, value| value == NOT_DEFINED }
     end
 
     def loaded?
@@ -106,7 +110,11 @@ module SuperSettings
       start_time = Time.now
       finder = Setting.with_deleted.value_data.where("updated_at >= ?", last_refresh_time - 1)
       finder.each do |setting|
-        values[setting.key] = setting.value
+        if setting.deleted?
+          values[setting.key] = NOT_DEFINED
+        else
+          values[setting.key] = setting.value
+        end
       end
       set_cache_values(start_time) { @cache.merge(values) }
     end

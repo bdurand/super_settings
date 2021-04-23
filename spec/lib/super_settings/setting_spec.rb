@@ -233,36 +233,6 @@ describe SuperSettings::Setting do
     end
   end
 
-  describe "fetch" do
-    it "should not fetch a value without a matching key" do
-      expect(SuperSettings::Setting.fetch("test")).to eq nil
-    end
-
-    it "should fetch a value without a cache" do
-      setting = SuperSettings::Setting.create!(key: "test", value: "foobar")
-      expect(SuperSettings::Setting.fetch("test")).to eq "foobar"
-    end
-
-    it "should not fetch a deleted value" do
-      setting = SuperSettings::Setting.create!(key: "test", value: "foobar", deleted: true)
-      expect(SuperSettings::Setting.fetch("test")).to eq nil
-    end
-
-    it "should fetch a value from the cache" do
-      cache = ActiveSupport::Cache::MemoryStore.new
-      SuperSettings::Setting.cache = cache
-      setting = SuperSettings::Setting.create!(key: "test", value: "foobar")
-      expect(SuperSettings::Setting.fetch("test")).to eq "foobar"
-      setting.update_column(:raw_value, "bizbaz")
-      expect(SuperSettings::Setting.fetch("test")).to eq "foobar"
-      setting.update(raw_value: "blipblap")
-      expect(SuperSettings::Setting.fetch("test")).to eq "blipblap"
-      setting.update_columns(key: "newkey")
-      expect(SuperSettings::Setting.fetch("test")).to eq "blipblap"
-      expect(SuperSettings::Setting.fetch("newkey")).to eq "blipblap"
-    end
-  end
-
   describe "as_json" do
     it "should serialize the setting" do
       setting = SuperSettings::Setting.create!(key: "test", value: "foobar", description: "Test")

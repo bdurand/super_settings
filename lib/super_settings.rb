@@ -27,41 +27,41 @@ module SuperSettings
       local_cache.ttl = value
     end
 
-    def get(key, default = nil)
+    def get(key, default: nil)
       val = local_cache[key]
       val.nil? ? default : val.to_s
     end
 
-    def integer(key, default = nil)
+    def integer(key, default: nil)
       val = local_cache[key]
       (val.nil? ? default : val)&.to_i
     end
 
-    def float(key, default = nil)
+    def float(key, default: nil)
       val = local_cache[key]
       (val.nil? ? default : val)&.to_f
     end
 
-    def enabled?(key, default = false)
+    def enabled?(key, default: false)
       val = local_cache[key]
       val.nil? ? BooleanParser.cast(default) : !!val
     end
 
-    def datetime(key, default = nil)
+    def datetime(key, default: nil)
       val = local_cache[key]
       (val.nil? ? default : val)&.to_time
     end
 
-    def array(key, default = nil)
+    def array(key, default: nil)
       val = local_cache[key]
       Array(val.nil? ? default : val).map { |v| v&.to_s }
     end
 
-    def hash(key = nil, default = nil)
+    def hash(key = nil, default: nil, delimiter: ".")
       flattened = local_cache.to_h
       root_key = ""
       if key.present?
-        root_key = "#{key}."
+        root_key = "#{key}#{delimiter}"
         reduced_hash = {}
         flattened.each do |k, v|
           if k.start_with?(root_key)
@@ -77,7 +77,7 @@ module SuperSettings
 
       structured = {}
       flattened.each do |key, value|
-        set_nested_hash_value(structured, key, value) unless value.nil?
+        set_nested_hash_value(structured, key, value, delimiter)
       end
       structured
     end
@@ -104,15 +104,15 @@ module SuperSettings
       @local_cache ||= LocalCache.new(ttl: DEFAULT_CACHE_TTL)
     end
 
-    def set_nested_hash_value(hash, key, value)
-      key, sub_key = key.split(".", 2)
+    def set_nested_hash_value(hash, key, value, delimiter)
+      key, sub_key = key.split(delimiter, 2)
       if sub_key
         sub_hash = hash[key]
         unless sub_hash.is_a?(Hash)
           sub_hash = {}
           hash[key] = sub_hash
         end
-        set_nested_hash_value(sub_hash, sub_key, value)
+        set_nested_hash_value(sub_hash, sub_key, value, delimiter)
       else
         hash[key] = value
       end

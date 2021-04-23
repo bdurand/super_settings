@@ -86,10 +86,15 @@ describe SuperSettings::LocalCache do
   end
 
   describe "to_h" do
-    it "should return a loaded frozeh hash" do
-      hash = cache.to_h
-      expect(hash).to eq("key.1" => 1, "key.3" => 3)
-      expect(hash).to be_frozen
+    it "should return a hash loaded with all the settings" do
+      expect(cache.to_h).to eq("key.1" => 1, "key.3" => 3)
+    end
+
+    it "should include keys with nil values, but not undefined keys" do
+      SuperSettings::Setting.create!(key: "key.4", value: nil, value_type: :integer)
+      SuperSettings::Setting.with_deleted.find_by(key: "key.3").update!(deleted: true)
+      cache["key.5"]
+      expect(cache.to_h).to eq("key.1" => 1, "key.4" => nil)
     end
   end
 end
