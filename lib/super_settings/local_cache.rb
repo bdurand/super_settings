@@ -4,7 +4,7 @@ module SuperSettings
   class LocalCache
     NOT_DEFINED = Object.new.freeze
     private_constant :NOT_DEFINED
-    
+
     attr_reader :ttl
 
     def initialize(ttl:)
@@ -110,10 +110,10 @@ module SuperSettings
       start_time = Time.now
       finder = Setting.with_deleted.value_data.where("updated_at >= ?", last_refresh_time - 1)
       finder.each do |setting|
-        if setting.deleted?
-          values[setting.key] = NOT_DEFINED
+        values[setting.key] = if setting.deleted?
+          NOT_DEFINED
         else
-          values[setting.key] = setting.value
+          setting.value
         end
       end
       set_cache_values(start_time) { @cache.merge(values) }
