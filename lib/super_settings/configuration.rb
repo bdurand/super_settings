@@ -6,7 +6,39 @@ module SuperSettings
   class Configuration
     include Singleton
 
-    attr_accessor :settings_controller_superclass, :application_name, :application_logo, :application_link, :settings_controller_changed_by_method
+    class Controller
+      attr_reader :enhancement
+      attr_accessor :superclass, :application_name, :application_logo, :application_link
+      
+      def enhance(&block)
+        @enhancement = block
+      end
+      
+      def define_changed_by(&block)
+        @changed_by_block = block
+      end
+      
+      def changed_by(controller)
+        if defined?(@changed_by_block) && @changed_by_block
+          controller.instance_eval(&@changed_by_block)
+        end
+      end
+    end
+
+    class Model
+      attr_reader :enhancement
+            
+      def enhance(&block)
+        @enhancement = block
+      end
+    end
+    
+    attr_reader :model, :controller
+    
+    def initialize
+      @model = Model.new
+      @controller = Controller.new
+    end
 
     def defer(&block)
       @block = block
@@ -15,22 +47,6 @@ module SuperSettings
     def call
       @block&.call(self)
       @block = nil
-    end
-
-    def setting_model_definition(&block)
-      if block
-        @setting_model_definition = block
-      elsif defined?(@setting_model_definition)
-        @setting_model_definition
-      end
-    end
-
-    def settings_controller_definition(&block)
-      if block
-        @settings_controller_definition = block
-      elsif defined?(@settings_controller_definition)
-        @settings_controller_definition
-      end
     end
   end
 end

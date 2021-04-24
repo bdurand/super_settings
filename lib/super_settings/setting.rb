@@ -31,7 +31,7 @@ module SuperSettings
     has_many :histories, class_name: "History", foreign_key: :key, primary_key: :key
 
     validates :value_type, inclusion: {in: VALUE_TYPES}
-    validates :key, presence: true, length: {maximum: 255}, uniqueness: true
+    validates :key, presence: true, length: {maximum: 190}, uniqueness: true
     validates :raw_value, length: {maximum: 4096}
     validate { validate_parsable_value(raw_value) }
 
@@ -59,7 +59,7 @@ module SuperSettings
           with_deleted.maximum(:updated_at)
         end
       end
- 
+
       private
 
       def fetch_from_cache(key, &block)

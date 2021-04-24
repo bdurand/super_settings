@@ -35,7 +35,7 @@ module SuperSettings
     end
 
     def update
-      all_valid, changed = update_settings
+      all_valid, changed = update_super_settings
       if all_valid
         Setting.transaction do
           changed.values.each do |setting|
@@ -69,7 +69,7 @@ module SuperSettings
             render json: {success: false, errors: errors}, status: :unprocessable_entity
           end
           format.html do
-            @settings = all_settings_with_errors(changed)
+            @settings = all_super_settings_with_errors(changed)
             flash.now[:alert] = "Settings not saved"
             render :index, status: :unprocessable_entity
           end
@@ -88,9 +88,9 @@ module SuperSettings
 
     private
 
-    def update_settings
+    def update_super_settings
       changed = {}
-      changed_by = get_changed_by_value
+      changed_by = Configuration.instance.controller.changed_by(self)
       all_valid = true
       params[:settings].values.each do |setting_params|
         next if setting_params[:key].blank?
@@ -117,7 +117,7 @@ module SuperSettings
       [all_valid, changed]
     end
 
-    def all_settings_with_errors(changed)
+    def all_super_settings_with_errors(changed)
       settings = changed.values.select(&:new_record?)
       Setting.order(:key).each do |setting|
         settings << if changed.include?(setting.key)
@@ -127,11 +127,6 @@ module SuperSettings
         end
       end
       settings
-    end
-
-    def get_changed_by_value
-      method_name = Configuration.instance.settings_controller_changed_by_method
-      send(method_name) if method_name
     end
   end
 end

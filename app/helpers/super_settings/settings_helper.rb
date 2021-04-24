@@ -45,10 +45,6 @@ module SuperSettings
       image_tag("data:image/svg+xml;utf8,#{svg}", options)
     end
 
-    def super_settings_setting_info(setting)
-      "Created: #{I18n.localize(setting.created_at, format: :long)}\nUpdated: #{I18n.localize(setting.updated_at, format: :long)}"
-    end
-
     def super_settings_icon_button(icon, title:, color:, js_class:, url: nil, style: {})
       url = "#" if url.blank?
       link_to(url, class: js_class, title: title) do
@@ -56,13 +52,13 @@ module SuperSettings
       end
     end
 
-    def application_name
-      config.application_name || "Application"
+    def super_settings_application_name
+      Configuration.instance.controller.application_name || "Application"
     end
 
-    def application_header
-      config = Configuration.instance
-      content = "#{application_name} Settings"
+    def super_settings_application_header
+      config = Configuration.instance.controller
+      content = "#{super_settings_application_name} Settings"
       if config.application_logo.present?
         content = image_tag(config.application_logo).concat(content)
       end

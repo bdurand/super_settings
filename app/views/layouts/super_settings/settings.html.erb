@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <%= content_tag :title, "#{application_name} Settings"%>
+    <%= content_tag :title, "#{super_settings_application_name} Settings"%>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag if defined?(csp_meta_tag) %>
 
@@ -13,7 +13,7 @@
   <body class="super_settings">
     <header>
       <h1 class="logo">
-        <%= application_header %>
+        <%= super_settings_application_header %>
       </h1>
     </header>
     <div class="container">

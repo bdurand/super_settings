@@ -25,8 +25,8 @@
   <td class="text-nowrap align-right text-right">
     <%= hidden_field_tag "settings[#{setting.id}][_delete]", (setting.deleted? ? 1 : nil), class: "form-control js-setting-deleted" %>
 
-    <%= super_settings_icon_button(:info, title: super_settings_setting_info(setting), color: "steelblue", js_class: "js-setting-info", url: super_settings.history_path(setting.id)) %>
-    <%= super_settings_icon_button(:edit, title: "Edit", color: "darkgreen", js_class: "js-edit-setting") %>
-    <%= super_settings_icon_button(:trash, title: "Remove", color: "red", js_class: "js-remove-setting") %>
+    <%= super_settings_icon_button(:info, title: "#{setting.key} Info", color: "steelblue", js_class: "js-setting-info", url: super_settings.history_path(setting.id)) %>
+    <%= super_settings_icon_button(:edit, title: "Edit #{setting.key}", color: "darkgreen", js_class: "js-edit-setting") %>
+    <%= super_settings_icon_button(:trash, title: "Remove #{setting.key}", color: "red", js_class: "js-remove-setting") %>
   </td>
 <% end %>

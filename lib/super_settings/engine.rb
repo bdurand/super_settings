@@ -9,19 +9,18 @@ module SuperSettings
       configuration.call
 
       ActiveSupport.on_load(:action_controller) do
-        application_controller_class = (configuration.settings_controller_superclass || ApplicationController)
-        klass = Class.new(application_controller_class)
+        klass = Class.new(configuration.controller.superclass || ApplicationController)
         SuperSettings.const_set(:SettingsController, klass)
         klass.include(ControllerActions)
-        if configuration.settings_controller_definition
-          klass.class_eval(&configuration.settings_controller_definition)
+        if configuration.controller.enhancement
+          klass.class_eval(&configuration.controller.enhancement)
         end
       end
 
       ActiveSupport.on_load(:active_record) do
         puts "ENGINE<br>"
-        if configuration.setting_model_definition
-          Setting.class_eval(&configuration.setting_model_definition)
+        if configuration.model.enhancement
+          Setting.class_eval(&configuration.model.enhancement)
         end
 
         if Setting.table_exists?

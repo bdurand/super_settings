@@ -94,7 +94,7 @@ describe SuperSettings::SettingsController, type: :controller do
           }
         }
       })
-      expect(response).to redirect_to(routes.url_helpers.index_path)
+      expect(response).to redirect_to(routes.url_for(host: "test.host", controller: "super_settings/settings", action: :index))
       expect(setting_1.reload.value).to eq "new value"
       expect(setting_2.reload.deleted?).to eq true
       expect(SuperSettings::Setting.find_by(key: "newkey").value).to eq 44
