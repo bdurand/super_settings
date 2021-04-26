@@ -25,5 +25,11 @@ unless ENV["SUPER_SETTINGS_NO_OVERRIDES"].present?
         logger.debug("Overridden model definition")
       end
     end
+
+    config.model.enhance_history do
+      before_save do
+        logger.debug("Overridden history definition")
+      end
+    end
   end
 end

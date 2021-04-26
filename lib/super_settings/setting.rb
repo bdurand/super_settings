@@ -48,11 +48,7 @@ module SuperSettings
     end
 
     class << self
-      attr_writer :cache
-
-      def cache
-        @cache if defined?(@cache)
-      end
+      attr_accessor :cache
 
       def last_updated_at
         fetch_from_cache(LAST_UPDATED_CACHE_KEY) do
@@ -111,6 +107,7 @@ module SuperSettings
       update!(deleted: true)
     end
 
+    # Serialize to a hash that is used for rendering JSON responses.
     def as_json(options = nil)
       {
         id: id,

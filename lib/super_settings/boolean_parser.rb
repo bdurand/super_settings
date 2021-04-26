@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Backport of logic in ActiveModel::Types::BooleanParser.
 module SuperSettings
   class BooleanParser
     # rubocop:disable Lint/BooleanSymbol

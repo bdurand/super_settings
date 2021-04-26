@@ -98,6 +98,10 @@ module SuperSettings
       Configuration.instance.defer(&block)
     end
 
+    def loaded?
+      local_cache.loaded?
+    end
+
     private
 
     def local_cache

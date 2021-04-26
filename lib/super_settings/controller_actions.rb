@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 
 module SuperSettings
+  # Module used to build the SuperSettings::Settings controller. This controller is defined
+  # at runtime since it is assumed that the superclass will be one of the application's own
+  # base controller classes since the application will want to define authentication and
+  # authorization criteria.
+  #
+  # The controller is built by extending the class defined by the Configuration objecgt and
+  # then mixing in this module.
   module ControllerActions
     extend ActiveSupport::Concern
 
@@ -34,6 +41,7 @@ module SuperSettings
       render partial: "super_settings/settings/edit_setting", locals: {setting: Setting.new}
     end
 
+    # The update operation uses a transaction to atomically update all settings at once.
     def update
       all_valid, changed = update_super_settings
       if all_valid
@@ -88,6 +96,8 @@ module SuperSettings
 
     private
 
+    # Update all settings in memory. Only if all settings are valid will the changes
+    # actually be applied.
     def update_super_settings
       changed = {}
       changed_by = Configuration.instance.controller.changed_by(self)
@@ -117,6 +127,9 @@ module SuperSettings
       [all_valid, changed]
     end
 
+    # This method is used when there are errors saving changes. It loads all the settings,
+    # but makes sure any ones being upated are mixed in so that errors on the models can be
+    # displayed in the view.
     def all_super_settings_with_errors(changed)
       settings = changed.values.select(&:new_record?)
       Setting.order(:key).each do |setting|

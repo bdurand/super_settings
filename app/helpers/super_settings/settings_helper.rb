@@ -23,18 +23,22 @@ module SuperSettings
       "vertical-align" => "middle"
     ).freeze
 
+    # Render the scripts.js file as an inline <script> tag.
     def super_settings_javascript_tag
       content_tag(:script) do
         render(file: File.join(__dir__, "scripts.js")).html_safe
       end
     end
 
+    # Render the styles.css as an inline <style> tag.
     def super_settings_style_tag
       content_tag(:style, type: "text/css") do
         render(file: File.join(__dir__, "styles.css")).html_safe
       end
     end
 
+    # Render an image tag for one of the SVG images in the images directory. If the :color option
+    # is specified, it will be applied to the SVG image.
     def super_settings_icon(name, options = {})
       svg = ICON_SVG[name.to_s]
       if options[:color].present?
@@ -45,6 +49,7 @@ module SuperSettings
       image_tag("data:image/svg+xml;utf8,#{svg}", options)
     end
 
+    # Render an icon image as a link tag.
     def super_settings_icon_button(icon, title:, color:, js_class:, url: nil, style: {})
       url = "#" if url.blank?
       link_to(url, class: js_class, title: title) do
@@ -52,10 +57,12 @@ module SuperSettings
       end
     end
 
+    # Return the application name set by the configuration or a default value.
     def super_settings_application_name
       Configuration.instance.controller.application_name || "Application"
     end
 
+    # Render the header for the web pages using values set in the configuration.
     def super_settings_application_header
       config = Configuration.instance.controller
       content = "#{super_settings_application_name} Settings"
