@@ -50,9 +50,9 @@ module SuperSettings
     end
 
     # Render an icon image as a link tag.
-    def super_settings_icon_button(icon, title:, color:, js_class:, url: nil, style: {})
+    def super_settings_icon_button(icon, title:, color:, js_class:, url: nil, disabled: false, style: {}, link_style: nil)
       url = "#" if url.blank?
-      link_to(url, class: js_class, title: title) do
+      link_to(url, class: js_class, title: title, disabled: disabled, style: link_style) do
         super_settings_icon(icon, color: color, style: ICON_BUTTON_STYLE.merge(style))
       end
     end
@@ -67,7 +67,7 @@ module SuperSettings
       config = Configuration.instance.controller
       content = "#{super_settings_application_name} Settings"
       if config.application_logo.present?
-        content = image_tag(config.application_logo).concat(content)
+        content = image_tag(config.application_logo, alt: super_settings_application_name).concat(content)
       end
       if config.application_link
         link_to(content, config.application_link)

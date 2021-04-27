@@ -19,46 +19,50 @@
   }
 </style>
 
-<%= form_tag(super_settings.update_path, method: :post, id: "settings-form", class: "form-inline", style: "display:block;") do %>
-  <div class="pb-3 pt-3 mb-1 sticky-top" style="background-color:white;">
-    <%= text_field_tag "filter", params[:filter], placeholder: "Filter Keys", size: 20, class: "form-control", title: "Filter Keys", id: "filter" %>
+<main>
+  <%= form_tag(super_settings.update_path, method: :post, id: "settings-form", class: "form-inline", style: "display:block;") do %>
+    <div class="pb-3 pt-3 mb-1 sticky-top" style="background-color:white;">
+      <%= text_field_tag "filter", params[:filter], placeholder: "Filter Keys", size: 20, class: "form-control", title: "Filter Keys", id: "filter" %>
 
-    <button type="button" class="btn btn-default" id="add-setting"><%= super_settings_icon(:plus) %> Add Setting</button>
+      <button type="button" class="btn btn-default" id="add-setting"><%= super_settings_icon(:plus) %> Add Setting</button>
 
-    <button type="submit" class="btn btn-primary" id="save-settings" disabled>Save Changes</button>
+      <button type="submit" class="btn btn-primary" id="save-settings" disabled>
+        Save <span class="count"></span> Changes
+      </button>
 
-    <% if flash[:notice].present? %>
-      <strong class="ml-3 text-success js-flash">
-        <%= flash[:notice]%>
-      </strong>
-    <% end %>
-    <% if flash[:alert].present? %>
-      <strong class="ml-3 text-danger js-flash">
-        <%= flash[:alert]%>
-      </strong>
-    <% end %>
-  </div>
-
-  <table class="table table-striped" id="settings-table">
-    <thead>
-      <tr>
-        <th scope="col" class="text-truncate">Key</th>
-        <th scope="col" class="text-truncate">Value</th>
-        <th scope="col" class="text-truncate super-settings-value-type">Type</th>
-        <th scope="col" class="text-truncate">Description</th>
-        <th scope="col" class="text-nowrap super-settings-controls">&nbsp;</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @settings.each do |setting| %>
-        <% if setting.changed? %>
-          <%= render "edit_setting", setting: setting %>
-        <% else %>
-          <%= render "setting", setting: setting %>
-        <% end %>
+      <% if flash[:notice].present? %>
+        <strong class="ml-3 text-success js-flash">
+          <%= flash[:notice]%>
+        </strong>
       <% end %>
-    </tbody>
-  </table>
-<% end %>
+      <% if flash[:alert].present? %>
+        <strong class="ml-3 text-danger js-flash">
+          <%= flash[:alert]%>
+        </strong>
+      <% end %>
+    </div>
+
+    <table class="table table-striped" id="settings-table">
+      <thead>
+        <tr>
+          <th scope="col" class="text-truncate">Key</th>
+          <th scope="col" class="text-truncate">Value</th>
+          <th scope="col" class="text-truncate super-settings-value-type">Type</th>
+          <th scope="col" class="text-truncate">Description</th>
+          <th scope="col" class="text-nowrap super-settings-controls">&nbsp;</th>
+        </tr>
+      </thead>
+      <tbody translate="no">
+        <% @settings.each do |setting| %>
+          <% if setting.changed? %>
+            <%= render "edit_setting", setting: setting %>
+          <% else %>
+            <%= render "setting", setting: setting %>
+          <% end %>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</main>
 
 <%= super_settings_javascript_tag %>

@@ -18,7 +18,6 @@ module SuperSettings
       key = key.to_s
       value = @cache[key]
       if value.nil? && !@cache.include?(key)
-        start_time = Time.now
         if @refreshing
           value = NOT_DEFINED
         else

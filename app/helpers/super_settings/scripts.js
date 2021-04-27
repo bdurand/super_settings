@@ -1,4 +1,4 @@
-// function() {
+(function() {
   function docReady(fn) {
     if (document.readyState === "complete" || document.readyState === "interactive") {
       setTimeout(fn, 1);
@@ -30,17 +30,28 @@
     alert("Sorry, an error occurred. Refresh the page and try again.")
   }
 
+  function changesCount() {
+    var changes = 0;
+    document.querySelectorAll("#settings-table tbody tr").forEach(function(element) {
+      if (element.dataset.edited) {
+        changes += 1;
+      }
+    });
+    return changes;
+  }
+
   function enableSaveButton() {
     var saveButton = document.querySelector("#save-settings");
     if (saveButton) {
-      var disabled = true;
-      document.querySelectorAll("#settings-table tbody tr").forEach(function(element) {
-        if (element.dataset.edited) {
-          disabled = false;
-          return;
-        }
-      });
-      document.querySelector("#save-settings").disabled = disabled;
+      var count = changesCount();
+      var countSpan = saveButton.querySelector(".count");
+      if (count == 0) {
+        saveButton.disabled = true;
+        countSpan.innerHTML = "";
+      } else {
+        saveButton.disabled = false;
+        countSpan.innerHTML = count;
+      }
     }
   }
 
@@ -179,25 +190,30 @@
   function removeSetting(event) {
     event.preventDefault();
     var settingRow = event.target.closest("tr");
-    if (!settingRow.dataset["id"]) {
-      settingRow.remove();
+    if (settingRow.dataset["id"]) {
+      settingRow.querySelector("input.js-setting-deleted").value = "1";
+      settingRow.dataset.edited = true;
+      settingRow.style.color = "darkred";
+      settingRow.querySelectorAll("td").forEach(function(element) { element.style.backgroundColor = "#ffd1d8" });
+      settingRow.querySelector("td").style.textDecoration = "line-through";
+      settingRow.querySelector(".js-remove-setting").style.display = "none";
+      settingRow.querySelector(".js-cancel-remove-setting").style.display = "inline-block";
     } else {
-      s = settingRow
-      var deletedField = settingRow.querySelector("input.js-setting-deleted")
-      if (deletedField.value) {
-        deletedField.value = "";
-        settingRow.dataset.edited = "";
-        settingRow.style.color = "inherit";
-        settingRow.querySelectorAll("td").forEach(function(element) { element.style.backgroundColor = "inherit" });
-        settingRow.querySelector("td").style.textDecoration = "inherit";
-      } else {
-        deletedField.value = "1";
-        settingRow.dataset.edited = true;
-        settingRow.style.color = "darkred";
-        settingRow.querySelectorAll("td").forEach(function(element) { element.style.backgroundColor = "lightpink" });
-        settingRow.querySelector("td").style.textDecoration = "line-through";
-      }
+      settingRow.remove();
     }
+    enableSaveButton();
+  }
+
+  function cancelRemoveSetting(event) {
+    event.preventDefault();
+    var settingRow = event.target.closest("tr");
+    settingRow.querySelector("input.js-setting-deleted").value = "";
+    settingRow.dataset.edited = "";
+    settingRow.style.color = "inherit";
+    settingRow.querySelectorAll("td").forEach(function(element) { element.style.backgroundColor = "inherit" });
+    settingRow.querySelector("td").style.textDecoration = "inherit";
+    settingRow.querySelector(".js-cancel-remove-setting").style.display = "none";
+    settingRow.querySelector(".js-remove-setting").style.display = "inline-block";
     enableSaveButton();
   }
 
@@ -206,11 +222,20 @@
     event.target.value.split(" ").forEach(function(filter) {
       filter = filter.toUpperCase();
       filters.push(function(tr) {
-        var val = tr.dataset.key;
-        if (!val) {
-          var input = tr.querySelector("td input")?.value
+        text = "";
+        var settingKey = tr.querySelector(".setting-key");
+        if (settingKey) {
+          text += " " + settingKey.textContent.toUpperCase();
         }
-        return (val && val.toUpperCase().indexOf(filter) > -1);
+        var settingValue = tr.querySelector(".setting-value");
+        if (settingValue) {
+          text += " " + settingValue.textContent.toUpperCase();
+        }
+        var settingDescription = tr.querySelector(".setting-description");
+        if (settingDescription) {
+          text += " " + settingDescription.textContent.toUpperCase();
+        }
+        return (text.indexOf(filter) > -1);
       });
     });
 
@@ -274,15 +299,25 @@
     this.href = url
   }
 
+  function promptUnsavedChanges() {
+    if (changesCount() > 0) {
+      return "Are you sure you want to leave?";
+    } else {
+      return undefined;
+    }
+  }
+
   docReady(function() {
     addListener(document.querySelector("#filter"), "input", filterSettings);
     addListener(document.querySelector("#add-setting"), "click", addSetting);
     addListeners(document.querySelectorAll(".js-remove-setting"), "click", removeSetting);
+    addListeners(document.querySelectorAll(".js-cancel-remove-setting"), "click", cancelRemoveSetting);
     addListeners(document.querySelectorAll(".js-edit-setting"), "click", editSetting);
     addListeners(document.querySelectorAll(".js-cancel-setting"), "click", restoreSetting);
     addListeners(document.querySelectorAll(".js-setting-info"), "click", addFilterParam);
     applyFilter();
     dismissFlash();
     enableSaveButton();
+    window.onbeforeunload = promptUnsavedChanges;
   })
-// }();
+})();

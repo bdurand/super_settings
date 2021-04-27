@@ -1,10 +1,10 @@
 <%= content_tag(:tr, id: "setting-#{setting.id}", data: {id: setting.id, key: setting.key, edited: (setting.deleted? ? true : nil)}) do %>
-  <td class="text-truncate">
+  <td class="text-truncate setting-key">
     <%= setting.key %>
     <%= hidden_field_tag "settings[#{setting.id}][key]", setting.key %>
   </td>
 
-  <td class="text-truncate">
+  <td class="text-truncate setting-value">
     <% if setting.value.blank? && !setting.boolean? %>
       &nbsp;
     <% elsif setting.array? %>
@@ -22,7 +22,7 @@
     <%= setting.value_type %>
   </td>
 
-  <td class="text-truncate">
+  <td class="text-truncate setting-description">
     <% if setting.description.blank? %>
       &nbsp;
     <% else %>
@@ -36,5 +36,6 @@
     <%= super_settings_icon_button(:info, title: "#{setting.key} Info", color: "steelblue", js_class: "js-setting-info", url: super_settings.history_path(setting.id)) %>
     <%= super_settings_icon_button(:edit, title: "Edit #{setting.key}", color: "darkgreen", js_class: "js-edit-setting") %>
     <%= super_settings_icon_button(:trash, title: "Remove #{setting.key}", color: "red", js_class: "js-remove-setting") %>
+    <%= super_settings_icon_button(:slash, title: "Cancel Remove #{setting.key}", color: "darkorange", js_class: "js-cancel-remove-setting", link_style: "display:none;") %>
   </td>
 <% end %>
