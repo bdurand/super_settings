@@ -19,11 +19,14 @@ module SuperSettings
       value = @cache[key]
       if value.nil? && !@cache.include?(key)
         start_time = Time.now
-        setting = Setting.find_by(key: key)
-        value = (setting ? setting.value : NOT_DEFINED)
-        @lock.synchronize do
-          @last_refreshed = start_time
-          @cache = @cache.merge(key => value).freeze
+        if @refreshing
+          value = NOT_DEFINED
+        else
+          setting = Setting.find_by(key: key)
+          value = (setting ? setting.value : NOT_DEFINED)
+          @lock.synchronize do
+            @cache = @cache.merge(key => value).freeze
+          end
         end
       end
       (value == NOT_DEFINED ? nil : value)
@@ -48,10 +51,14 @@ module SuperSettings
     end
 
     def load_settings
+      return if @refreshing
+
       @lock.synchronize do
+        return if @refreshing
         @refreshing = true
         @next_check_at = Time.now + @ttl
       end
+
       begin
         values = {}
         start_time = Time.now
@@ -121,7 +128,7 @@ module SuperSettings
 
     def ensure_cache_up_to_date!
       if @last_refreshed.nil?
-        # Abort if another thread has already calling load_settings
+        # Abort if another thread is already calling load_settings
         previous_cache_id = @cache.object_id
         @lock.synchronize do
           return unless previous_cache_id == @cache.object_id
