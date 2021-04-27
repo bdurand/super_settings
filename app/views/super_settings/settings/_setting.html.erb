@@ -18,11 +18,19 @@
     <% end %>
   </td>
 
-  <td class="text-truncate">
+  <td class="text-truncate super-settings-value-type">
     <%= setting.value_type %>
   </td>
 
-  <td class="text-nowrap align-right text-right">
+  <td class="text-truncate">
+    <% if setting.description.blank? %>
+      &nbsp;
+    <% else %>
+      <%= simple_format(setting.description) %>
+    <% end %>
+  </td>
+
+  <td class="text-nowrap align-right text-right super-settings-controls">
     <%= hidden_field_tag "settings[#{setting.id}][_delete]", (setting.deleted? ? 1 : nil), class: "form-control js-setting-deleted" %>
 
     <%= super_settings_icon_button(:info, title: "#{setting.key} Info", color: "steelblue", js_class: "js-setting-info", url: super_settings.history_path(setting.id)) %>

@@ -118,6 +118,7 @@ module SuperSettings
         elsif setting_params.include?(:value_type)
           setting.value_type = setting_params[:value_type]
           setting.value = (setting.boolean? ? setting_params[:value].present? : setting_params[:value])
+          setting.description = setting_params[:description] if setting_params.include?(:description)
           setting.deleted = false if setting.deleted?
           setting.changed_by = changed_by
           all_valid &= setting.valid?

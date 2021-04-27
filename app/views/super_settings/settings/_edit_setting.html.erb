@@ -32,11 +32,15 @@
     <% end %>
   </td>
 
-  <td class="text-truncate">
+  <td class="text-truncate super-settings-value-type">
     <%= select_tag "settings[#{identifier}][value_type]", options_for_select(SuperSettings::Setting::VALUE_TYPES, setting.value_type), class: "form-control js-setting-value-type" %>
   </td>
 
-  <td class="text-nowrap align-right text-right">
+  <td class="text-truncate">
+    <%= text_area_tag "settings[#{identifier}][description]", setting.description, rows: 4, class: "form-control" %>
+  </td>
+
+  <td class="text-nowrap align-right text-right super-settings-controls">
     <%= super_settings_icon_button(:slash, title: "Cancel Edit Setting", color: "darkorange", js_class: (setting.persisted? ? "js-cancel-setting" : "js-remove-setting")) %>
   </td>
 <% end %>
