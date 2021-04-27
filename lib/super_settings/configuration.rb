@@ -96,9 +96,14 @@ module SuperSettings
       Setting.cache = cache_store
     end
 
-    # Set the local cache TTL on SuperSettings.
-    def ttl=(seconds)
-      SuperSettings.ttl = seconds
+    # Set the local cache refresh interval on SuperSettings.
+    def refresh_interval=(seconds)
+      SuperSettings.refresh_interval = seconds
+    end
+
+    # Enable tracking when keys are used on SuperSettings.
+    def track_last_used=(value)
+      SuperSettings.track_last_used = value
     end
   end
 end

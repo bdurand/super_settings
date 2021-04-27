@@ -20,13 +20,9 @@ else
 end
 
 module SuperSettings
-  DEFAULT_CACHE_TTL = 5.0
+  DEFAULT_REFRESH_INTERVAL = 5.0
 
   class << self
-    def ttl=(value)
-      local_cache.ttl = value
-    end
-
     def get(key, default: nil)
       val = local_cache[key]
       val.nil? ? default : val.to_s
@@ -102,10 +98,18 @@ module SuperSettings
       local_cache.loaded?
     end
 
+    def refresh_interval=(value)
+      local_cache.refresh_interval = value
+    end
+
+    def track_last_used=(value)
+      local_cache.track_last_used = value
+    end
+
     private
 
     def local_cache
-      @local_cache ||= LocalCache.new(ttl: DEFAULT_CACHE_TTL)
+      @local_cache ||= LocalCache.new(refresh_interval: DEFAULT_REFRESH_INTERVAL)
     end
 
     def set_nested_hash_value(hash, key, value, delimiter)
