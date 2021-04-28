@@ -1,7 +1,7 @@
 <style type="text/css">
   #settings-table td p {
     margin-top: 0;
-    margin-bottom: 0.5em;
+    margin-bottom: 0.5rem;
   }
   #settings-table td p:last-of-type {
     margin-bottom: 0;
@@ -10,12 +10,54 @@
     width: 100%;
   }
   .super-settings-controls {
-    max-width: 6em;
+    max-width: 6rem;
     white-space: nowrap;
     text-align: right;
   }
   .super-settings-value-type {
-    max-width: 7em;
+    max-width: 7rem;
+  }
+
+  .super-settings-modal {
+    z-index: 3;
+    display: none;
+    padding-top: 5rem;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+  }
+
+  .super-settings-modal-dialog {
+    margin: auto;
+    background-color: #fff;
+    position: relative;
+    outline: 0;
+    padding: 2em;
+    box-shadow: 3px 3px 7px 3px rgba(0, 0, 0, 0.6);
+    border-radius: 4px;
+    width: 80%;
+    height: 80%;
+  }
+
+  .super-settings-modal-content {
+    height: 100%;
+    overflow: auto;
+  }
+
+  .super-settings-modal-close {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    border: 0;
+    padding: 1ex;
+    background-color: inherit;
+    font-size: 1.5rem;
+    font-weight: 500;
   }
 </style>
 
@@ -25,6 +67,10 @@
       <%= text_field_tag "filter", params[:filter], placeholder: "Filter Keys", size: 20, class: "form-control", title: "Filter Keys", id: "filter" %>
 
       <button type="button" class="btn btn-default" id="add-setting"><%= super_settings_icon(:plus) %> Add Setting</button>
+
+      <button type="button" class="btn btn-default" id="discard-changes" disabled>
+        Discard Changes
+      </button>
 
       <button type="submit" class="btn btn-primary" id="save-settings" disabled>
         Save <span class="count"></span> Changes
@@ -64,5 +110,13 @@
     </table>
   <% end %>
 </main>
+
+<div id="modal" class="super-settings-modal js-close-modal" aria-hidden="true" aria-role="dialog">
+  <div class="super-settings-modal-dialog">
+    <button type="button" title="Close Dialog" class="super-settings-modal-close js-close-modal">&times;</button>
+    <div class="super-settings-modal-content">
+    </div>
+  </div>
+</div>
 
 <%= super_settings_javascript_tag %>

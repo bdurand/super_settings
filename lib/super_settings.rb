@@ -106,6 +106,10 @@ module SuperSettings
       local_cache.track_last_used = value
     end
 
+    def track_last_used?
+      local_cache.track_last_used?
+    end
+
     private
 
     def local_cache

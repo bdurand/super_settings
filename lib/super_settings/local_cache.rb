@@ -123,6 +123,10 @@ module SuperSettings
       @track_last_used = !!value
     end
 
+    def track_last_used?
+      @track_last_used
+    end
+
     private
 
     def merge_load(last_refresh_time)
@@ -158,7 +162,7 @@ module SuperSettings
     end
 
     def update_last_used_at!(key, last_used_at)
-      return unless @track_last_used
+      return unless track_last_used?
       if last_used_at + 3600 + @last_used_drift < Time.now.to_f
         begin
           Setting.where(key: key).update_all(last_used_at: Time.now)

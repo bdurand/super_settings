@@ -1,7 +1,7 @@
 <% identifier = (setting.id || SecureRandom.hex) %>
 <%= content_tag(:tr, id: "setting-#{identifier}", data: {id: setting.id, edited: true}, style: "background-color:#cef9ce;") do %>
   <td class="text-truncate">
-    <%= text_field_tag "settings[#{identifier}][key]", setting.key, class: "form-control" %>
+    <%= text_field_tag "settings[#{identifier}][key]", setting.key, class: "form-control", required: true %>
   </td>
 
   <td class="text-truncate js-setting-value">

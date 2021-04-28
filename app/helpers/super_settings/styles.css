@@ -31,10 +31,10 @@ header h1.logo a:visited {
 }
 
 header h1.logo img {
-  max-height: 3em;
+  max-height: 3rem;
   vertical-align: middle;
   display: inline-block;
-  margin-right: 1em;
+  margin-right: 1rem;
 }
 
 .pt-3 {
@@ -55,6 +55,10 @@ header h1.logo img {
 
 .align-right {
   text-align: right;
+}
+
+.align-center {
+  text-align: center;
 }
 
 .sticky-top {

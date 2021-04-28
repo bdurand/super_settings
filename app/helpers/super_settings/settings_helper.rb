@@ -75,5 +75,17 @@ module SuperSettings
         content
       end
     end
+
+    def super_settings_last_used_age(last_used_at)
+      return "never" if last_used_at.nil?
+      hours = (Time.now - last_used_at) / 1.hour
+      if hours <= 1
+        "less than one hour ago"
+      elsif hours <= 48
+        "over #{pluralize(hours.floor, "hour")} ago"
+      else
+        "over #{pluralize((hours / 24).floor, "day")} ago"
+      end
+    end
   end
 end

@@ -12,18 +12,19 @@
 
 ActiveRecord::Schema.define(version: 2021_04_14_004553) do
   create_table "super_settings", force: :cascade do |t|
-    t.string "key", limit: 255, null: false
+    t.string "key", limit: 190, null: false
     t.string "value_type", limit: 30, default: "string", null: false
     t.string "raw_value", limit: 4096
     t.string "description", limit: 4096
     t.datetime "updated_at", null: false
     t.datetime "created_at", null: false
     t.boolean "deleted", default: false
+    t.datetime "last_used_at"
     t.index ["key"], name: "index_super_settings_on_key", unique: true
   end
 
   create_table "super_settings_histories", force: :cascade do |t|
-    t.string "key", limit: 255, null: false
+    t.string "key", limit: 190, null: false
     t.string "changed_by", limit: 150
     t.string "value", limit: 4096
     t.boolean "deleted", default: false

@@ -42,15 +42,18 @@
 
   function enableSaveButton() {
     var saveButton = document.querySelector("#save-settings");
+    var discardButton = document.querySelector("#discard-changes");
     if (saveButton) {
       var count = changesCount();
       var countSpan = saveButton.querySelector(".count");
       if (count == 0) {
         saveButton.disabled = true;
         countSpan.innerHTML = "";
+        discardButton.disabled = true;
       } else {
         saveButton.disabled = false;
         countSpan.innerHTML = count;
+        discardButton.disabled = false;
       }
     }
   }
@@ -271,50 +274,81 @@
     }
   }
 
-  function addFilterParam(event) {
-    var filter = document.querySelector("#filter").value;
-    if (filter == "") {
-      return;
-    }
-
-    var url = this.href;
-    var targetParts = url.split("#", 2);
-    url = targetParts[0];
-    var target = targetParts[1];
-    var queryParts = url.split("?", 2);
-    var url = queryParts[0];
-    var query = queryParts[1];
-    var params = (query ? query.split("&") : []);
-
-    url += "?filter=" + escape(filter);
-    params.forEach(function(p) {
-      if (!p.startsWith("filter=")) {
-        url += "&" + p;
-      }
-    });
-    if (target) {
-      url += "#" + target;
-    }
-
-    this.href = url
-  }
-
-  function promptUnsavedChanges() {
-    if (changesCount() > 0) {
+  function promptUnsavedChanges(event) {
+    var form = document.querySelector("#settings-form");
+    if (form && !form.dataset.submitting && changesCount() > 0) {
       return "Are you sure you want to leave?";
     } else {
       return undefined;
     }
   }
 
+  function disableLeavePage(event) {
+    document.querySelector("#settings-form").dataset.submitting = true;
+  }
+
+  function refreshPage(event) {
+    event.preventDefault();
+    var url = window.location.href.replace(/\?.*/, "");
+    filter = document.querySelector("#filter").value;
+    if (filter !== "") {
+      url += "?filter=" + escape(filter);
+    }
+    window.location = url;
+  }
+
+  function showModal(event) {
+    event.preventDefault();
+    var modal = document.querySelector("#modal");
+    var content = document.querySelector(".super-settings-modal-content");
+    fetch(this.href, {credentials: "same-origin", headers: new Headers({"Accept": "text/html"})})
+    .then(
+      function(response) {
+        if (response.ok) {
+          return response.text();
+        } else {
+          throw( response.status + response.statusText)
+        }
+      }
+    ).then(
+      function(html) {
+        content.innerHTML = html;
+        modal.style.display = "block";
+        modal.setAttribute("aria-hidden", "false");
+        document.querySelector("body").style.overflow = "hidden";
+      }
+    ).catch(
+      function(error) {
+        showError(error);
+      }
+    );
+  }
+
+  function closeModal(event) {
+    if (event.target.classList.contains("js-close-modal")) {
+      event.preventDefault();
+      var modal = document.querySelector("#modal");
+      var content = document.querySelector(".super-settings-modal-content");
+      modal.style.display = "none";
+      modal.setAttribute("aria-hidden", "true");
+      content.innerHTML = "";
+      document.querySelector("body").style.overflow = "visible";
+    }
+  }
+
   docReady(function() {
     addListener(document.querySelector("#filter"), "input", filterSettings);
     addListener(document.querySelector("#add-setting"), "click", addSetting);
+    addListener(document.querySelector("#discard-changes"), "click", refreshPage);
+    addListener(document.querySelector("#settings-form"), "submit", disableLeavePage);
+    addListener(document.querySelector("#modal"), "click", closeModal);
+
     addListeners(document.querySelectorAll(".js-remove-setting"), "click", removeSetting);
     addListeners(document.querySelectorAll(".js-cancel-remove-setting"), "click", cancelRemoveSetting);
     addListeners(document.querySelectorAll(".js-edit-setting"), "click", editSetting);
     addListeners(document.querySelectorAll(".js-cancel-setting"), "click", restoreSetting);
-    addListeners(document.querySelectorAll(".js-setting-info"), "click", addFilterParam);
+    addListeners(document.querySelectorAll(".js-setting-info"), "click", showModal);
+
     applyFilter();
     dismissFlash();
     enableSaveButton();

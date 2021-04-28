@@ -90,7 +90,7 @@ module SuperSettings
       @histories = @setting.histories.order(id: :desc).limit(50).offset(params[:offset])
       respond_to do |format|
         format.json { render json: @histories.as_json }
-        format.html { render :history }
+        format.html { render :history, layout: false }
       end
     end
 

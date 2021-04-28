@@ -1,10 +1,17 @@
-<h3>
-  <%= link_to super_settings.index_path(filter: params[:filter]), title: "Settings" do %>
-    &#11013;
-  <% end %>
+<h3 style="margin-top:0; margin-bottom:1rem;">
   Setting Change Log:
   <%= @setting.key %>
 </h3>
+
+<p>
+  Last Used:
+  <% if @setting.last_used_at %>
+    <% classname = (@setting.last_used_at > 1.day.ago ? "text-success" : "text-danger") %>
+    <%= content_tag(:span, super_settings_last_used_age(@setting.last_used_at), title: I18n.localize(@setting.last_used_at, format: :long), class: classname) %>
+  <% else %>
+    <em class="text-danger">never</em>
+  <% end %>
+</p>
 
 <table class="table table-striped" id="settings-table">
   <thead>

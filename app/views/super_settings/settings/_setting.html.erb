@@ -23,10 +23,14 @@
   </td>
 
   <td class="text-truncate setting-description">
-    <% if setting.description.blank? %>
-      &nbsp;
-    <% else %>
-      <%= simple_format(setting.description) %>
+    <%= simple_format(setting.description) %>
+    <% if SuperSettings.track_last_used? %>
+      <% if setting.last_used_at.nil? %>
+        <span class="text-danger">never used</span>
+      <% elsif setting.last_used_at < 1.day.ago %>
+        <%= content_tag(:span, "last used #{super_settings_last_used_age(setting.last_used_at)}", title: I18n.localize(setting.last_used_at, format: :long), class: "text-danger") %>
+      <% else %>
+      <% end %>
     <% end %>
   </td>
 
