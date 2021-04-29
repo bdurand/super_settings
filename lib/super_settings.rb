@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "secret_keys"
+
 require_relative "super_settings/boolean_parser"
 require_relative "super_settings/configuration"
 require_relative "super_settings/local_cache"
@@ -108,6 +110,11 @@ module SuperSettings
 
     def track_last_used?
       local_cache.track_last_used?
+    end
+
+    def secret=(value)
+      Setting.secret = value
+      load_settings if loaded?
     end
 
     private

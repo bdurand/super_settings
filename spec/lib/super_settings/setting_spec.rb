@@ -17,6 +17,7 @@ describe SuperSettings::Setting do
         expect(setting.boolean?).to eq false
         expect(setting.datetime?).to eq false
         expect(setting.array?).to eq false
+        expect(setting.secret?).to eq false
       end
 
       it "should use nil for blank values" do
@@ -43,6 +44,7 @@ describe SuperSettings::Setting do
         expect(setting.boolean?).to eq false
         expect(setting.datetime?).to eq false
         expect(setting.array?).to eq false
+        expect(setting.secret?).to eq false
       end
 
       it "should use nil for blank values" do
@@ -75,6 +77,7 @@ describe SuperSettings::Setting do
         expect(setting.boolean?).to eq false
         expect(setting.datetime?).to eq false
         expect(setting.array?).to eq false
+        expect(setting.secret?).to eq false
       end
 
       it "should use nil for blank values" do
@@ -107,6 +110,7 @@ describe SuperSettings::Setting do
         expect(setting.boolean?).to eq true
         expect(setting.datetime?).to eq false
         expect(setting.array?).to eq false
+        expect(setting.secret?).to eq false
       end
 
       it "should cast the value to a boolean" do
@@ -138,6 +142,7 @@ describe SuperSettings::Setting do
         expect(setting.boolean?).to eq false
         expect(setting.datetime?).to eq true
         expect(setting.array?).to eq false
+        expect(setting.secret?).to eq false
       end
 
       it "should use nil for blank values" do
@@ -173,6 +178,7 @@ describe SuperSettings::Setting do
         expect(setting.boolean?).to eq false
         expect(setting.datetime?).to eq false
         expect(setting.array?).to eq true
+        expect(setting.secret?).to eq false
       end
 
       it "should use nil for blank values" do
@@ -192,6 +198,62 @@ describe SuperSettings::Setting do
       it "should be able to be set with an array" do
         setting = SuperSettings::Setting.create!(key: "test", value: ["foo", "bar"], value_type: :array)
         expect(setting.value).to eq ["foo", "bar"]
+      end
+    end
+
+    describe "secret" do
+      it "should identify as a secret" do
+        setting = SuperSettings::Setting.new(key: "test", value_type: :secret)
+        expect(setting.string?).to eq false
+        expect(setting.integer?).to eq false
+        expect(setting.float?).to eq false
+        expect(setting.boolean?).to eq false
+        expect(setting.datetime?).to eq false
+        expect(setting.array?).to eq false
+        expect(setting.secret?).to eq true
+      end
+
+      it "should use nil for blank values" do
+        setting = SuperSettings::Setting.new(key: "test", value_type: :secret)
+        expect(setting.value).to eq nil
+        setting.value = ""
+        setting.save!
+        setting.reload
+        expect(setting.value).to eq nil
+      end
+
+      it "should store the raw value unencrypted if there is no secret" do
+        SuperSettings.secret = nil
+        setting = SuperSettings::Setting.create!(key: "test", value: "foo", value_type: :secret)
+        expect(setting.value).to eq "foo"
+        expect(setting.raw_value).to eq "foo"
+        expect(setting.encrypted?).to eq false
+      end
+
+      it "should encrypt and decrypt the value" do
+        SuperSettings.secret = "foobar"
+        setting = SuperSettings::Setting.create!(key: "test", value: "foo", value_type: :secret)
+        expect(setting.value).to eq "foo"
+        expect(setting.raw_value).to_not eq "foo"
+        expect(setting.encrypted?).to eq true
+      end
+
+      it "should encrypt and decrypt the value using overloaded secrets" do
+        SuperSettings.secret = "foobar"
+        setting = SuperSettings::Setting.create!(key: "test", value: "foo", value_type: :secret)
+        SuperSettings.secret = ["newsecret", "foobar"]
+        expect(setting.value).to eq "foo"
+        expect(setting.raw_value).to_not eq "foo"
+        expect(setting.encrypted?).to eq true
+      end
+
+      it "should return nil if the value cannot be decrypted" do
+        SuperSettings.secret = "foobar"
+        setting = SuperSettings::Setting.create!(key: "test", value: "foo", value_type: :secret)
+        SuperSettings.secret = "newsecret"
+        expect(setting.value).to eq nil
+        expect(setting.raw_value).to_not eq nil
+        expect(setting.encrypted?).to eq true
       end
     end
   end

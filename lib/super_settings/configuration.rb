@@ -54,6 +54,10 @@ module SuperSettings
 
     # Configuration for the models.
     class Model
+      # Specify the cache implementation to use for caching the last updated timestamp for reloading
+      # changed records. Defaults to `Rails.cache`
+      attr_accessor :cache
+
       attr_reader :enhancement, :history_enhancement
 
       # Provide additional enhancements to the SuperSettings::Setting model. You can define methods
@@ -77,6 +81,19 @@ module SuperSettings
     # Return the controller specific configuration object.
     attr_reader :controller
 
+    # Set the secret used for encrypting secret settings. Defaults to the value of the
+    # SUPER_SETTINGS_SECRET environment variable. An array can be provided if you need to
+    # roll the secret with the first value being the current one.
+    attr_accessor :secret
+
+    # Set the number of seconds that settings will be cached locally before the database
+    # is checked for updates. Defaults to five seconds.
+    attr_accessor :refresh_interval
+
+    # Enable the optional feature to track usage of settings. This requires write permission
+    # to the database table where settings are stored.
+    attr_accessor :track_last_used
+
     def initialize
       @model = Model.new
       @controller = Controller.new
@@ -89,21 +106,6 @@ module SuperSettings
     def call
       @block&.call(self)
       @block = nil
-    end
-
-    # Set the cache used by SuperSettings::Setting.
-    def cache=(cache_store)
-      Setting.cache = cache_store
-    end
-
-    # Set the local cache refresh interval on SuperSettings.
-    def refresh_interval=(seconds)
-      SuperSettings.refresh_interval = seconds
-    end
-
-    # Enable tracking when keys are used on SuperSettings.
-    def track_last_used=(value)
-      SuperSettings.track_last_used = value
     end
   end
 end

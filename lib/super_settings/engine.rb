@@ -12,6 +12,9 @@ module SuperSettings
       configuration = Configuration.instance
       configuration.call
 
+      SuperSettings.track_last_used = configuration.track_last_used
+      SuperSettings.refresh_interval = configuration.refresh_interval
+
       # Setup the controller.
       ActiveSupport.on_load(:action_controller) do
         klass = Class.new(configuration.controller.superclass || ApplicationController)
@@ -32,7 +35,12 @@ module SuperSettings
           History.class_eval(&configuration.model.history_enhancement)
         end
 
-        Setting.cache ||= Rails.cache
+        Setting.cache = (configuration.model.cache || Rails.cache)
+
+        if configuration.secret.present?
+          SuperSettings.secret = configuration.secret
+          configuration.secret = nil
+        end
 
         if !SuperSettings.loaded? && Setting.table_exists?
           begin

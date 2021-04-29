@@ -6,6 +6,7 @@ unless ENV["SUPER_SETTINGS_NO_OVERRIDES"].present?
 
     config.track_last_used = true
     config.refresh_interval = 2
+    config.secret = "foobar"
 
     config.controller.superclass = ::ApplicationController
 
@@ -34,5 +35,7 @@ unless ENV["SUPER_SETTINGS_NO_OVERRIDES"].present?
         logger.debug("Overridden history definition")
       end
     end
+
+    config.model.cache = Rails.cache
   end
 end

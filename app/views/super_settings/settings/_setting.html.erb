@@ -13,6 +13,13 @@
       <% end %>
     <% elsif setting.datetime? %>
       <%= I18n.localize(setting.value, format: :long)%>
+    <% elsif setting.secret? %>
+      <%= "•" * 24 %>
+      <% unless setting.encrypted? %>
+        <div class="text-danger">
+          not encrypted
+        </div>
+      <% end %>
     <% else %>
       <%= setting.value %>
     <% end %>
