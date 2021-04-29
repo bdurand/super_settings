@@ -85,7 +85,7 @@ describe SuperSettings::SettingsController, type: :controller do
           },
           setting_2.id.to_s => {
             key: "integer",
-            _delete: "1"
+            delete: "1"
           },
           "newrecord" => {
             key: "newkey",

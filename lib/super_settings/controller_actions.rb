@@ -11,11 +11,27 @@ module SuperSettings
   module ControllerActions
     extend ActiveSupport::Concern
 
+    HISTORY_PAGE_SIZE = 25
+
     included do
       layout "super_settings/settings"
       helper SettingsHelper
     end
 
+    # Get all settings sorted by key. This endpoint may be called with a REST GET request.
+    # The response payload is:
+    # [
+    #   {
+    #     id: integer,
+    #     key: string,
+    #     value: object,
+    #     value_type: string,
+    #     description string,
+    #     created_at: iso8601 string,
+    #     updated_at: iso8601 string
+    #   },
+    #   ...
+    # ]
     def index
       @settings = Setting.order(:key)
       respond_to do |format|
@@ -24,6 +40,19 @@ module SuperSettings
       end
     end
 
+    # Get a setting by id. This endpoint may be called with a REST GET request.
+    # The response payload is:
+    # {
+    #   id: integer,
+    #   key: string,
+    #   value: object,
+    #   value_type: string,
+    #   description string,
+    #   created_at: iso8601 string,
+    #   updated_at: iso8601 string
+    # }
+    #
+    # This also serves as the AJAX endpoint to render the partial to show the setting value.
     def show
       setting = Setting.find(params[:id])
       respond_to do |format|
@@ -32,16 +61,38 @@ module SuperSettings
       end
     end
 
+    # AJAX endpoint to get the edit form partial.
     def edit
       setting = Setting.find(params[:id])
       render partial: "super_settings/settings/edit_setting", locals: {setting: setting}
     end
 
+    # AJAX endpoint to get the new form partial.
     def new
       render partial: "super_settings/settings/edit_setting", locals: {setting: Setting.new}
     end
 
-    # The update operation uses a transaction to atomically update all settings at once.
+    # The update operation uses a transaction to atomically update all settings.
+    # This endpoint may be called with a REST POST request. The format of the parameters
+    # is an array of hash with each setting identified by the key. The settings should include
+    # either value and value type (and optionally description) to insert or update a setting, or
+    # delete to delete the setting.
+    # { settings: [
+    #     {
+    #       key: string,
+    #       value: object,
+    #       value_type: string,
+    #       description: string,
+    #     },
+    #     {
+    #       key: string,
+    #       delete: boolean,
+    #     },
+    #     ...
+    #   ]
+    # }
+    #
+    # The REST response format is either {success: true} or {success: false, errors: [string, ...]}
     def update
       all_valid, changed = update_super_settings
       if all_valid
@@ -85,9 +136,26 @@ module SuperSettings
       end
     end
 
+    # Return the history of the setting. This endpoint may be called with a REST GET request.
+    # The response format is:
+    # [
+    #   {
+    #     key: string,
+    #     value: object,
+    #     changed_by: string,
+    #     created_at: iso8601 string
+    #   },
+    #   ...
+    # ]
+    #
+    # This also serves as the AJAX endpoint to render the setting history.
     def history
       @setting = Setting.find(params[:id])
-      @histories = @setting.histories.order(id: :desc).limit(50).offset(params[:offset])
+      @histories = @setting.histories.order(id: :desc).limit(HISTORY_PAGE_SIZE).offset(params[:offset]).to_a
+      @previous_offset = [params[:offset].to_i - HISTORY_PAGE_SIZE, 0].max if params[:offset].to_i > 0
+      if @histories.size == HISTORY_PAGE_SIZE && @setting.histories.where("id > ?", @histories.last.id).exists?
+        @next_offset = params[:offset].to_i + HISTORY_PAGE_SIZE
+      end
       respond_to do |format|
         format.json { render json: @histories.as_json }
         format.html { render :history, layout: false }
@@ -102,18 +170,21 @@ module SuperSettings
       changed = {}
       changed_by = Configuration.instance.controller.changed_by(self)
       all_valid = true
-      params[:settings].values.each do |setting_params|
+
+      # Parameters are passed as a hash from the web page form, but can be passed as an array in REST.
+      parameters = (params[:settings].respond_to?(:values) ? params[:settings].values : params[:settings])
+      parameters.each do |setting_params|
         next if setting_params[:key].blank?
-        next if setting_params[:value_type].blank? && setting_params[:_delete].blank?
+        next if setting_params[:value_type].blank? && setting_params[:delete].blank?
 
         setting = Setting.with_deleted.find_by(key: setting_params[:key])
         unless setting
-          next if setting_params[:_delete].present?
+          next if setting_params[:delete].present?
           setting = Setting.new(key: setting_params[:key])
         end
 
-        if setting_params[:_delete].present?
-          setting.deleted = true
+        if setting_params[:delete].present?
+          setting.deleted = BooleanParser.cast(setting_params[:delete])
           setting.changed_by = changed_by
         elsif setting_params.include?(:value_type)
           setting.value_type = setting_params[:value_type]

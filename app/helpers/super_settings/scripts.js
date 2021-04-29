@@ -316,6 +316,7 @@
         modal.style.display = "block";
         modal.setAttribute("aria-hidden", "false");
         document.querySelector("body").style.overflow = "hidden";
+        addListeners(content.querySelectorAll(".js-modal-link"), "click", showModal);
       }
     ).catch(
       function(error) {
@@ -347,7 +348,7 @@
     addListeners(document.querySelectorAll(".js-cancel-remove-setting"), "click", cancelRemoveSetting);
     addListeners(document.querySelectorAll(".js-edit-setting"), "click", editSetting);
     addListeners(document.querySelectorAll(".js-cancel-setting"), "click", restoreSetting);
-    addListeners(document.querySelectorAll(".js-setting-info"), "click", showModal);
+    addListeners(document.querySelectorAll(".js-modal-link"), "click", showModal);
 
     applyFilter();
     dismissFlash();
