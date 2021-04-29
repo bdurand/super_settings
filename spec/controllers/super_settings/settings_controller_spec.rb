@@ -56,7 +56,11 @@ describe SuperSettings::SettingsController, type: :controller do
       get :history, **request_params(id: setting_1.id.to_s)
       expect(response.status).to eq 200
       expect(response.content_type).to include "application/json"
-      expect(JSON.parse(response.body)).to eq setting_1.histories.collect { |s| JSON.parse(s.to_json) }
+      expect(JSON.parse(response.body)).to eq({
+        "key" => setting_1.key,
+        "last_used_at" => setting_1.last_used_at,
+        "histories" => setting_1.histories.collect { |s| JSON.parse(s.to_json) }
+      })
     end
   end
 

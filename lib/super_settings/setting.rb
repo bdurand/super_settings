@@ -179,7 +179,7 @@ module SuperSettings
 
     # Serialize to a hash that is used for rendering JSON responses.
     def as_json(options = nil)
-      {
+      attributes = {
         id: id,
         key: key,
         value: value,
@@ -188,6 +188,8 @@ module SuperSettings
         created_at: created_at,
         updated_at: updated_at
       }
+      attributes[:last_used_at] = last_used_at if SuperSettings.track_last_used?
+      attributes
     end
 
     private

@@ -48,18 +48,18 @@
   </tbody>
 </table>
 
-<% if @previous_offset || @next_offset %>
+<% if @previous_page_url || @next_page_url %>
   <div class="align-center">
-    <% if @previous_offset %>
+    <% if @previous_page_url %>
       <div style="float:left;">
-        <%= link_to(super_settings.history_path(id: @setting.id, offset: @previous_offset), class: "js-modal-link") do %>
+        <%= link_to(@previous_page_url, class: "js-modal-link") do %>
           &#8592; Previous
         <% end %>
       </div>
     <% end %>
-    <% if @next_offset %>
+    <% if @next_page_url %>
       <div style="float:right;">
-        <%= link_to(super_settings.history_path(id: @setting.id, offset: @next_offset), class: "js-modal-link") do %>
+        <%= link_to(@next_page_url, class: "js-modal-link") do %>
           Next &#8594;
         <% end %>
       </div>

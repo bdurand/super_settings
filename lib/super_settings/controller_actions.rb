@@ -138,26 +138,51 @@ module SuperSettings
 
     # Return the history of the setting. This endpoint may be called with a REST GET request.
     # The response format is:
-    # [
-    #   {
-    #     key: string,
-    #     value: object,
-    #     changed_by: string,
-    #     created_at: iso8601 string
-    #   },
-    #   ...
-    # ]
+    # {
+    #   key: string,
+    #   last_used_at: iso8601 string
+    #   histories: [
+    #     {
+    #       key: string,
+    #       value: object,
+    #       changed_by: string,
+    #       created_at: iso8601 string
+    #     },
+    #     ...
+    #   ]
+    # }
     #
     # This also serves as the AJAX endpoint to render the setting history.
     def history
       @setting = Setting.find(params[:id])
-      @histories = @setting.histories.order(id: :desc).limit(HISTORY_PAGE_SIZE).offset(params[:offset]).to_a
-      @previous_offset = [params[:offset].to_i - HISTORY_PAGE_SIZE, 0].max if params[:offset].to_i > 0
-      if @histories.size == HISTORY_PAGE_SIZE && @setting.histories.where("id > ?", @histories.last.id).exists?
-        @next_offset = params[:offset].to_i + HISTORY_PAGE_SIZE
+      @histories = @setting.histories.limit(HISTORY_PAGE_SIZE)
+      if params[:after].to_i > 0
+        @histories = @histories.where("id > ?", params[:after].to_i).order(id: :asc).reverse
+      else
+        @histories = @histories.order(id: :desc)
+        if params[:before].to_i > 0
+          @histories = @histories.where("id < ?", params[:before].to_i)
+        end
       end
+      @histories = @histories.to_a
+
+      unless @histories.empty?
+        if @setting.histories.where("id > ?", @histories.first.id).exists?
+          @previous_page_url = super_settings.history_url(id: @setting.id, after: @histories.first.id)
+        end
+        if @setting.histories.where("id < ?", @histories.last.id).exists?
+          @next_page_url = super_settings.history_url(id: @setting.id, before: @histories.last.id)
+        end
+      end
+
       respond_to do |format|
-        format.json { render json: @histories.as_json }
+        format.json do
+          payload = {key: @setting.key, histories: @histories.as_json}
+          payload[:last_used_at] = @setting.last_used_at if SuperSettings.track_last_used?
+          payload[:previous_page_url] = @previous_page_url if @previous_page_url
+          payload[:next_page_url] = @next_page_url if @next_page_url
+          render json: payload
+        end
         format.html { render :history, layout: false }
       end
     end
