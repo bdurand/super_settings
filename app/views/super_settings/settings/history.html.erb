@@ -17,8 +17,8 @@
   <thead>
     <tr>
       <th scope="col" class="text-nowrap">Time</th>
-      <th scope="col" class="text-truncate">Value</th>
       <th scope="col" class="text-truncate">Changed By</th>
+      <th scope="col" class="text-truncate">Value</th>
     </tr>
   </thead>
   <tbody>
@@ -29,18 +29,18 @@
         </td>
 
         <td>
-          <% if @setting.secret? %>
-            <em>N/A</em>
-          <% else %>
-            <div style="white-space:pre;"><%= history.value %></div>
-          <% end %>
-        </td>
-
-        <td>
           <% if history.changed_by.present? %>
             <%= history.changed_by_display %>
           <% else %>
             <em>n/a</em>
+          <% end %>
+        </td>
+
+        <td>
+          <% if @setting.secret? %>
+            <em>N/A</em>
+          <% else %>
+            <div style="white-space:pre;"><%= history.value %></div>
           <% end %>
         </td>
       </tr>
