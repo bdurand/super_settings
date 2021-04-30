@@ -13,7 +13,7 @@ class CreateSuperSettings < migration_class
       t.string :value_type, limit: 30, null: false, default: "string"
       t.string :raw_value, limit: 4096, null: true
       t.string :description, limit: 4096, null: true
-      t.datetime :updated_at, null: false
+      t.datetime :updated_at, null: false, index: true
       t.datetime :created_at, null: false
       t.boolean :deleted, default: false
       t.datetime :last_used_at, null: true

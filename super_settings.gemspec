@@ -4,7 +4,7 @@ Gem::Specification.new do |spec|
   spec.authors = ["Brian Durand"]
   spec.email = ["bbdurand@gmail.com"]
 
-  spec.summary = "Runtime settings in a Rails application."
+  spec.summary = "Fast access runtime settings for a Rails application with an included UI and API for administration."
   spec.homepage = "https://github.com/bdurand/super_settings"
   spec.license = "MIT"
 

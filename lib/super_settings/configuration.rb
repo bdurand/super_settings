@@ -46,6 +46,8 @@ module SuperSettings
       end
 
       # Return the value of `define_changed_by` block.
+      #
+      # @api private
       def changed_by(controller)
         if defined?(@changed_by_block) && @changed_by_block
           controller.instance_eval(&@changed_by_block)
@@ -104,12 +106,14 @@ module SuperSettings
     # Defer the execution of a block that will be yielded to with the config object. This
     # is needed in a Rails environment during initialization so that all the frameworks can
     # load before loading the settings.
+    #
     # @api private
     def defer(&block)
       @block = block
     end
 
     # Call the block deferred during initialization.
+    #
     # @api private
     def call
       @block&.call(self)

@@ -36,41 +36,59 @@ module SuperSettings
     #
     # If usage tracking is turned on, this method will periodically update the setting with
     # the timestamp so you can have visibility into whether settings are being used or not.
+    #
     # @param key [String, Symbol] setting key
     def [](key)
       ensure_cache_up_to_date!
       key = key.to_s
       value, last_used_at = @cache[key]
+
       if value.nil? && !@cache.include?(key)
         if @refreshing
           value = NOT_DEFINED
         else
           setting = Setting.find_by(key: key)
           value = (setting ? setting.value : NOT_DEFINED)
-          last_used_at = setting&.last_used_at.to_f
-          @lock.synchronize do
-            @cache = @cache.merge(key => [value, last_used_at]).freeze
+          # Guard against caching too many cache missees; at some point it's better to slam
+          # the database rather than run out of memory.
+          if setting || size < 100_000
+            last_used_at = setting&.last_used_at.to_f
+            @lock.synchronize do
+              @cache = @cache.merge(key => [value, last_used_at]).freeze
+            end
           end
         end
       end
+
       return nil if value == NOT_DEFINED
       update_last_used_at!(key, last_used_at)
       value
     end
 
+    # Check if the cache includes a key. Note that this will return true if you have tried
+    # to fetch a non-existent key since the cache will store that as undefined. This method
+    # is provided for testing purposes.
+    #
+    # @api private
     # @param key [String, Symbol] setting key
-    # @return true if the key exists in the cache.
+    # @return [Boolean]
     def include?(key)
       @cache.include?(key.to_s)
     end
 
+    # Get the number of entries in the cache. Note that this will include cache misses as well.
+    #
+    # @api private
     # @return the number of entries in the cache.
     def size
       ensure_cache_up_to_date!
       @cache.size
     end
 
-    # @return all the settings as a Hash of { key => value }.
+    # Return the cached settings as a key/value hash. Calling this method will load the cache
+    # with the settings if they have not already been loaded.
+    #
+    # @return [Hash]
     def to_h
       ensure_cache_up_to_date!
       hash = {}
@@ -81,7 +99,9 @@ module SuperSettings
       hash
     end
 
-    # @return true if the cache has already been loaded from the database.
+    # Return true if the cache has already been loaded from the database.
+    #
+    # @return [Boolean]
     def loaded?
       !!@last_refreshed
     end
@@ -132,7 +152,7 @@ module SuperSettings
       end
     end
 
-    # Reset the cache to be empty.
+    # Reset the cache to an unloaded state.
     def reset
       @lock.synchronize do
         @cache = {}.freeze
@@ -143,6 +163,7 @@ module SuperSettings
     end
 
     # Set the number of seconds to wait between cache refresh checks.
+    #
     # @param seconds [Numeric]
     def refresh_interval=(seconds)
       @lock.synchronize do
@@ -152,11 +173,15 @@ module SuperSettings
     end
 
     # Set to true to enable tracking the last used timestamp on settings.
+    #
+    # @param value [Boolean]
     def track_last_used=(value)
       @track_last_used = !!value
     end
 
-    # @return true if last used tracking is enabled.
+    # Return true if last used tracking is enabled.
+    #
+    # @return [Boolean]
     def track_last_used?
       @track_last_used
     end
