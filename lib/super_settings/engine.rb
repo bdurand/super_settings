@@ -12,8 +12,8 @@ module SuperSettings
       configuration = Configuration.instance
       configuration.call
 
-      SuperSettings.track_last_used = configuration.track_last_used
-      SuperSettings.refresh_interval = configuration.refresh_interval
+      SuperSettings.track_last_used = configuration.track_last_used unless configuration.track_last_used.nil?
+      SuperSettings.refresh_interval = configuration.refresh_interval unless configuration.refresh_interval.nil?
 
       # Setup the controller.
       ActiveSupport.on_load(:action_controller) do

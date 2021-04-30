@@ -167,7 +167,7 @@ module SuperSettings
     # @param seconds [Numeric]
     def refresh_interval=(seconds)
       @lock.synchronize do
-        @refresh_interval = seconds
+        @refresh_interval = seconds.to_f
         @next_check_at = Time.now + @refresh_interval if @next_check_at > Time.now + @refresh_interval
       end
     end
