@@ -346,5 +346,19 @@ describe SuperSettings::Setting do
       histories = setting.histories.order(id: :desc)
       expect(histories.collect(&:changed_by)).to eq ["John", nil, "Joe"]
     end
+
+    it "should not record values on secret settings" do
+      setting = SuperSettings::Setting.create!(key: "test", value: "foobar", value_type: :secret)
+      setting.update!(value: "bizbaz")
+      histories = setting.histories.order(id: :desc)
+      expect(histories.collect(&:value)).to eq [nil, nil]
+    end
+
+    it "should redact values in the history if the setting is changed to a secret" do
+      setting = SuperSettings::Setting.create!(key: "test", value: "foobar", value_type: :string)
+      setting.update!(value: "bizbaz", value_type: :secret)
+      histories = setting.histories.order(id: :desc)
+      expect(histories.collect(&:value)).to eq [nil, nil]
+    end
   end
 end

@@ -49,6 +49,8 @@ module SuperSettings
     after_find :clear_changed_by
     after_save :clear_changed_by
 
+    before_update :redact_history, if: :secret?
+
     before_save do
       self.raw_value = serialize(raw_value) unless array?
       if secret? && raw_value && !SecretKeys::Encryptor.encrypted?(raw_value)
@@ -262,6 +264,12 @@ module SuperSettings
 
     def clear_changed_by
       self.changed_by = nil
+    end
+
+    def redact_history
+      if secret? && value_type_changed?
+        histories.update_all(value: nil)
+      end
     end
   end
 end
