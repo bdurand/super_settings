@@ -3,6 +3,7 @@
 require_relative "application_record"
 
 module SuperSettings
+  # Model for storing settings to the database.
   class Setting < ApplicationRecord
     LAST_UPDATED_CACHE_KEY = "SuperSettings.last_updated_at"
 
@@ -30,13 +31,19 @@ module SuperSettings
 
     self.table_name = "super_settings"
 
+    # The changed_by attribute is used to temporarily store an identifier for the user
+    # who made a change to a setting to be stored in the history table. This value is optional
+    # and is cleared after the record is saved.
     attr_accessor :changed_by
 
+    # Rows are marked as deleted so that they can be taken into account in the caching strategy
+    # when determining if any rows have changed since the cache was filled. Deleted rows
+    # are excluded from queries by default so that they don't accidentally get included since
+    # they really don't exist.
     default_scope -> { where(deleted: false) }
-
     scope :with_deleted, -> { unscope(where: :deleted) }
 
-    # Scope to select just the date needed to load the setting values.
+    # Scope to select just the data needed to load the setting values.
     scope :runtime_data, -> { select([:id, :key, :value_type, :raw_value, :deleted, :last_used_at]) }
 
     has_many :histories, class_name: "History", foreign_key: :key, primary_key: :key
@@ -66,6 +73,9 @@ module SuperSettings
     class << self
       attr_accessor :cache
 
+      # Return the maximum updated at value from all the rows. This is used in the caching
+      # scheme to determine if data needs to be reloaded from the database.
+      # @return [Time]
       def last_updated_at
         fetch_from_cache(LAST_UPDATED_CACHE_KEY) do
           with_deleted.maximum(:updated_at)
@@ -89,6 +99,8 @@ module SuperSettings
         @encryptors = make_encryptors(value)
       end
 
+      # Encrypt a value for use with secret settings.
+      # @api private
       def encrypt(value)
         return nil if value.blank?
         encryptor = encryptors.first
@@ -96,6 +108,8 @@ module SuperSettings
         encryptor.encrypt(value)
       end
 
+      # Decrypt a value for use with secret settings.
+      # @api private
       def decrypt(value)
         return nil if value.blank?
         return value if encryptors.empty? || encryptors == [nil]
@@ -131,6 +145,7 @@ module SuperSettings
       end
     end
 
+    # @return [Object] the value of a setting coerced to the appropriate class depending on its value type.
     def value
       if deleted?
         nil
@@ -139,47 +154,59 @@ module SuperSettings
       end
     end
 
+    # Set the value of the setting.
     def value=(val)
       self.raw_value = (val.is_a?(Array) ? val.join("\n") : val)
     end
 
+    # @return [true] if the setting has a string value type.
     def string?
       value_type == STRING
     end
 
+    # @return [true] if the setting has an integer value type.
     def integer?
       value_type == INTEGER
     end
 
+    # @return [true] if the setting has a float value type.
     def float?
       value_type == FLOAT
     end
 
+    # @return [true] if the setting has a boolean value type.
     def boolean?
       value_type == BOOLEAN
     end
 
+    # @return [true] if the setting has a datetime value type.
     def datetime?
       value_type == DATETIME
     end
 
+    # @return [true] if the setting has an array value type.
     def array?
       value_type == ARRAY
     end
 
+    # @return [true] if the setting has a secret value type.
     def secret?
       value_type == SECRET
     end
 
+    # @return [true] if the setting is a secret setting and the value is encrypted in the database.
     def encrypted?
       secret? && SecretKeys::Encryptor.encrypted?(raw_value)
     end
 
-    def destroy!
+    # Mark the record as deleted. The record will not actually be deleted since it's still needed
+    # for caching purposes, but it will no longer be returned by queries.
+    def delete!
       update!(deleted: true)
     end
 
     # Serialize to a hash that is used for rendering JSON responses.
+    # @return [Hash]
     def as_json(options = nil)
       attributes = {
         id: id,
@@ -191,11 +218,13 @@ module SuperSettings
         updated_at: updated_at
       }
       attributes[:last_used_at] = last_used_at if SuperSettings.track_last_used?
+      attributes[:encrypted] = encrypted? if secret?
       attributes
     end
 
     private
 
+    # Coerce a value for the appropriate value type.
     def coerce(value)
       return nil if value.blank?
 
@@ -229,6 +258,7 @@ module SuperSettings
       nil
     end
 
+    # Format the value so it can be saved as a string in the database.
     def serialize(value)
       if value.blank?
         nil
@@ -251,6 +281,7 @@ module SuperSettings
       end
     end
 
+    # Update the histories association whenever the value or key is changed.
     def record_value_change
       return unless raw_value_changed? || deleted_changed? || key_changed?
       recorded_value = (deleted? || secret? ? nil : raw_value)
@@ -262,10 +293,13 @@ module SuperSettings
       end
     end
 
+    # Clear the changed_by attribute.
     def clear_changed_by
       self.changed_by = nil
     end
 
+    # Remove the value stored on history records if the setting is changed to a secret since
+    # these are not stored encrypted in the database.
     def redact_history
       if secret? && value_type_changed?
         histories.update_all(value: nil)

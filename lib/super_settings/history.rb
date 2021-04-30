@@ -19,11 +19,13 @@ module SuperSettings
     # For instance, you could store a user id in the changed_by column and add an association
     # on this model `belongs_to :user, class_name: "User", foreign_key: :changed_by` and then
     # define this method as `user.name`.
+    # @return [String]
     def changed_by_display
       changed_by
     end
 
     # Serialize to a hash that is used for rendering JSON responses.
+    # @return [Hash]
     def as_json(options = nil)
       {
         key: key,

@@ -12,6 +12,7 @@ module SuperSettings
 
     # Configuration for the controller.
     class Controller
+      # @api private
       attr_reader :enhancement
 
       # Superclass for the controller. This should normally be set to one of your existing
@@ -58,6 +59,7 @@ module SuperSettings
       # changed records. Defaults to `Rails.cache`
       attr_accessor :cache
 
+      # @api private
       attr_reader :enhancement, :history_enhancement
 
       # Provide additional enhancements to the SuperSettings::Setting model. You can define methods
@@ -99,10 +101,16 @@ module SuperSettings
       @controller = Controller.new
     end
 
+    # Defer the execution of a block that will be yielded to with the config object. This
+    # is needed in a Rails environment during initialization so that all the frameworks can
+    # load before loading the settings.
+    # @api private
     def defer(&block)
       @block = block
     end
 
+    # Call the block deferred during initialization.
+    # @api private
     def call
       @block&.call(self)
       @block = nil

@@ -17,6 +17,9 @@ module SuperSettings
     # rubocop:enable Lint/BooleanSymbol
 
     class << self
+      # Cast a value to a boolean
+      # @param value [Object]
+      # @return [Boolean]
       def cast(value)
         if value == false
           false

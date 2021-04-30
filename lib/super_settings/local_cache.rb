@@ -1,12 +1,22 @@
 # frozen_string_literal: true
 
 module SuperSettings
+  # Cache that stores the settings in memory so they can be looked up without any
+  # network overhead. All of the settings will be loaded in the cache and the database
+  # will only be checked every few seconds for changes so that lookups are very fast.
+  #
+  # The cache is thread safe and it ensures that only a single thread will ever be
+  # trying to update the cache at a time to avoid any dog piling effects.
   class LocalCache
     NOT_DEFINED = Object.new.freeze
     private_constant :NOT_DEFINED
 
+    # Number of seconds that the cache will be considered fresh. The database will only be
+    # checked for changed settings at most this often.
     attr_reader :refresh_interval
 
+    # @parem refresh_interval [Numeric] number of seconds to wait between checking for setting updates
+    # @param track_last_used [Boolean] set to true turn on setting usage tracking
     def initialize(refresh_interval:, track_last_used: false)
       @refresh_interval = refresh_interval
       @lock = Mutex.new
@@ -15,6 +25,18 @@ module SuperSettings
       reset
     end
 
+    # Get a setting value from the cache.
+    #
+    # This method will periodically check the cache for freshness and update the cache from
+    # the database if there are any differences.
+    #
+    # Cache misses will be stored in the cache so that a request for a missing setting does not
+    # hit the database every time. This does mean that that you should not call this method with
+    # a large number of dynamically generated keys since that could lead to memory bloat.
+    #
+    # If usage tracking is turned on, this method will periodically update the setting with
+    # the timestamp so you can have visibility into whether settings are being used or not.
+    # @param key [String, Symbol] setting key
     def [](key)
       ensure_cache_up_to_date!
       key = key.to_s
@@ -36,15 +58,19 @@ module SuperSettings
       value
     end
 
+    # @param key [String, Symbol] setting key
+    # @return true if the key exists in the cache.
     def include?(key)
-      @cache.include?(key)
+      @cache.include?(key.to_s)
     end
 
+    # @return the number of entries in the cache.
     def size
       ensure_cache_up_to_date!
       @cache.size
     end
 
+    # @return all the settings as a Hash of { key => value }.
     def to_h
       ensure_cache_up_to_date!
       hash = {}
@@ -55,10 +81,12 @@ module SuperSettings
       hash
     end
 
+    # @return true if the cache has already been loaded from the database.
     def loaded?
       !!@last_refreshed
     end
 
+    # Load all the settings from the database into the cache.
     def load_settings
       return if @refreshing
 
@@ -81,6 +109,7 @@ module SuperSettings
       end
     end
 
+    # Load only settings that have changed since the last load.
     def refresh
       last_refresh_time = @last_refreshed
       return if last_refresh_time.nil?
@@ -103,6 +132,7 @@ module SuperSettings
       end
     end
 
+    # Reset the cache to be empty.
     def reset
       @lock.synchronize do
         @cache = {}.freeze
@@ -112,6 +142,8 @@ module SuperSettings
       end
     end
 
+    # Set the number of seconds to wait between cache refresh checks.
+    # @param seconds [Numeric]
     def refresh_interval=(seconds)
       @lock.synchronize do
         @refresh_interval = seconds
@@ -119,16 +151,19 @@ module SuperSettings
       end
     end
 
+    # Set to true to enable tracking the last used timestamp on settings.
     def track_last_used=(value)
       @track_last_used = !!value
     end
 
+    # @return true if last used tracking is enabled.
     def track_last_used?
       @track_last_used
     end
 
     private
 
+    # Load just the settings have that changed since the specified timestamp.
     def merge_load(last_refresh_time)
       changed_settings = {}
       start_time = Time.now
@@ -140,6 +175,8 @@ module SuperSettings
       set_cache_values(start_time) { @cache.merge(changed_settings) }
     end
 
+    # Check that cache has update to date data in it. If it doesn't, then sync the
+    # cache with the database.
     def ensure_cache_up_to_date!
       if @last_refreshed.nil?
         # Abort if another thread is already calling load_settings
@@ -153,6 +190,7 @@ module SuperSettings
       end
     end
 
+    # Synchronized method for setting cache and sync meta data.
     def set_cache_values(refreshed_at_time, &block)
       @lock.synchronize do
         @last_refreshed = refreshed_at_time
@@ -161,6 +199,8 @@ module SuperSettings
       end
     end
 
+    # Update the last used timestamp on a setting. Last used timestamps are only
+    # updated at most once per hour.
     def update_last_used_at!(key, last_used_at)
       return unless track_last_used?
       if last_used_at + 3600 + @last_used_drift < Time.now.to_f
