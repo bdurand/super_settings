@@ -42,7 +42,7 @@
 
   <td class="text-nowrap align-right text-right super-settings-controls">
     <% if setting.persisted? %>
-      <%= super_settings_icon_button(:info, title: "#{setting.key} Info", color: "steelblue", js_class: "js-setting-info", url: super_settings.history_path(setting.id)) %>
+      <%= super_settings_icon_button(:info, title: "#{setting.key} Info", color: "steelblue", js_class: "js-modal-link", url: super_settings.history_path(setting.id)) %>
     <% end %>
     <%= super_settings_icon_button(:edit, title: "Edit #{setting.key}", color: "gray", js_class: nil, disabled: true) %>
     <%= super_settings_icon_button(:slash, title: "Cancel Edit Setting", color: "darkorange", js_class: (setting.persisted? ? "js-cancel-setting" : "js-remove-setting")) %>

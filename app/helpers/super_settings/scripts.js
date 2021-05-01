@@ -127,6 +127,7 @@
       settingRow = findSettingElement(id);
       addListener(settingRow.querySelector(".js-cancel-setting"), "click", restoreSetting);
       addListener(settingRow.querySelector(".js-edit-setting"), "click", editSetting);
+      addListeners(settingRow.querySelectorAll(".js-modal-link"), "click", showModal);
     } else {
       var tableBody = document.querySelector("#settings-table tbody");
       tableBody.insertAdjacentHTML("afterbegin", html);
@@ -315,6 +316,14 @@
         content.innerHTML = html;
         modal.style.display = "block";
         modal.setAttribute("aria-hidden", "false");
+        modal.activator = document.activeElement;
+        focusableElements(document).forEach(function(element) {
+          if (!modal.contains(element)) {
+            element.dataset.saveTabIndex = element.getAttribute("tabindex");
+            element.setAttribute("tabindex", -1);
+          }
+        });
+        modalFocusables = null;
         document.querySelector("body").style.overflow = "hidden";
         addListeners(content.querySelectorAll(".js-modal-link"), "click", showModal);
       }
@@ -332,9 +341,24 @@
       var content = document.querySelector(".super-settings-modal-content");
       modal.style.display = "none";
       modal.setAttribute("aria-hidden", "true");
+      focusableElements(document).forEach(function(element) {
+        var tabIndex = element.dataset.saveTabIndex;
+        delete element.dataset.saveTabIndex;
+        if (tabIndex) {
+          element.setAttribute("tabindex", tabIndex);
+        }
+      });
+      if (modal.activator) {
+        modal.activator.focus();
+        delete modal.activator;
+      }
       content.innerHTML = "";
       document.querySelector("body").style.overflow = "visible";
     }
+  }
+
+  function focusableElements(parent) {
+    return parent.querySelectorAll("a[href], area[href], button, input:not([type=hidden]), select, textarea, iframe, [tabindex], [contentEditable=true]")
   }
 
   docReady(function() {
