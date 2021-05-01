@@ -37,26 +37,6 @@ header h1.logo img {
   margin-right: 1rem;
 }
 
-.pt-3 {
-  padding-top: 1rem;
-}
-
-.pb-3 {
-  padding-bottom: 1rem;
-}
-
-.mb-1 {
-  margin-bottom: 0.3rem;
-}
-
-.ml-3 {
-  margin-left: 1rem;
-}
-
-.align-right {
-  text-align: right;
-}
-
 .align-center {
   text-align: center;
 }
@@ -204,19 +184,9 @@ select.form-control:not([size]):not([multiple]) {
 }
 
 .text-success {
-  color: #28a745!important;
+  color: green !important;
 }
 
 .text-danger {
-  color: #dc3545!important;
-}
-
-.text-nowrap {
-  white-space: nowrap!important;
-}
-
-.text-truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: firebrick !important;
 }

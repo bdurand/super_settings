@@ -33,7 +33,14 @@ module SuperSettings
     # Render the styles.css as an inline <style> tag.
     def super_settings_style_tag
       content_tag(:style, type: "text/css") do
-        render(file: File.join(__dir__, "styles.css")).html_safe
+        render(file: File.join(__dir__, "super_settings_styles.css")).html_safe
+      end
+    end
+
+    # Render the styles.css as an inline <style> tag.
+    def super_settings_layout_style_tag
+      content_tag(:style, type: "text/css") do
+        render(file: File.join(__dir__, "layout_styles.css")).html_safe
       end
     end
 
@@ -52,8 +59,8 @@ module SuperSettings
     # Render an icon image as a link tag.
     def super_settings_icon_button(icon, title:, color:, js_class:, url: nil, disabled: false, style: {}, link_style: nil)
       url = "#" if url.blank?
-      link_to(url, class: js_class, title: title, disabled: disabled, style: link_style) do
-        super_settings_icon(icon, color: color, style: ICON_BUTTON_STYLE.merge(style))
+      link_to(url, class: js_class, disabled: disabled, style: link_style) do
+        super_settings_icon(icon, alt: title, color: color, style: ICON_BUTTON_STYLE.merge(style))
       end
     end
 
@@ -67,7 +74,7 @@ module SuperSettings
       config = Configuration.instance.controller
       content = "#{super_settings_application_name} Settings"
       if config.application_logo.present?
-        content = image_tag(config.application_logo, alt: super_settings_application_name).concat(content)
+        content = image_tag(config.application_logo, alt: "").concat(content)
       end
       if config.application_link
         link_to(content, config.application_link)

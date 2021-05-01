@@ -17,7 +17,7 @@ module SuperSettings
 
       # Setup the controller.
       ActiveSupport.on_load(:action_controller) do
-        klass = Class.new(configuration.controller.superclass || ApplicationController)
+        klass = Class.new(configuration.controller.superclass || ::ApplicationController)
         SuperSettings.const_set(:SettingsController, klass)
         klass.include(ControllerActions)
         if configuration.controller.enhancement

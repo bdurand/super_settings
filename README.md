@@ -26,36 +26,89 @@ SuperSettings can be used on its own, or as a part of a larger configuration str
 This gem is in essence a key/value store. Settings are identified by unique keys and contain a typed value. You can access setting values using methods on the `SuperSettings` object.
 
 ```ruby
-TODO
+SuperSettings.get("key") # -> returns a string
+
+SuperSettings.integer("key") # -> returns an integer
+
+SuperSettings.float("key") # -> returns a float
+
+SuperSettings.enabled?("key") # -> returns a boolean
+
+SuperSettings.datetime("key") # -> returns a `Time` object
+
+SuperSettings.array("key") # -> returns an array of strings
 ```
 
+#### Hashes
 There is also a method to get multiple settings at once structured as a Hash.
 
 ```ruby
-TODO
+SuperSettings.hash("parent") # -> returns an hash
 ```
+
+The key provided to the `SuperSettings.hash` method indicates the key prefix and constructs the hash from settings that have keys beginning with that prefix. Keys are also broken down by a delimiter so you can create nested hashes. The delimiter defaults to ".", but you can specify a different one with the `delimiter` keyword argument.
+
+So, if you have the following settings:
+
+```
+vendors.company_1.path = "/co1"
+vendors.company_1.timeout = 5
+vendors.company_2.path = "/co2"
+vendors.count = 2
+```
+
+You would get these results:
+
+```ruby
+
+SuperSettings.hash("vendors") -> {"company_1" => {"path" => "/co1", "timeout" => 5}, "company_2" => {"path" => "/co2"}}
+
+SuperSettings.hash("vendors.company_1") -> {"path" => "/co1", "timeout" => 5}
+
+SuperSettings.hash("vendors.company_2") -> {"path" => "/co2"}
+
+# Get all the settings by omitting the key
+SuperSettings.hash
+# -> {"vendors" => {
+#        "company_1" => {"path" => "/co1", "timeout" => 5},
+#        "company_2" => {"path" => "/co2",
+#        "count" => 2
+#      }}
+```
+
+#### Defaults
 
 When you request a setting, you can also specify a default value to use if the setting does not have a value.
 
 ```ruby
-TODO
+SuperSettings.integer("key", default: 4)
 ```
 
 When you read a setting using these methods, you are actually reading from an in memory cache. All of the settings are read into this local cache and the cache is checked periodically so see if it needs to be refreshed (defaults to every five seconds, but this can be customized by setting `SuperSettings.refresh_interval`). When the cache does need to be refreshed, only updated records are re-read from the database and only by a single thread. Thus, you don't have to worry about overloading your database by reading settings values and the performance only has a slight overhead vs. reading values from a Hash.
 
+If a setting does not exist in the database, the value will be returned as `nil`. The missing setting key will also be cached in the in memory cache, so you should avoid querying for dynamic values as a setting key since this can lead to memory bloat.
+
+Because all settings must be read into memory, creating thousands of settings could lead to performance or memory issues loading the cache. It should be able to handle hundreds of settings just fine, though.
+
 ### Data Model
 
-TODO
+Data is stored in the `SuperSettings::Setting` model. You can update records directly with this model and the local cache will automatically be kept up to date (with the slight delay defined by `SuperSettings.refresh_interval`).
 
-### History
+Each record has a unique key, a value, a value type, and an optional description. The value type can be one of string, integer, float, boolean, datetime, array, or secret. The array value type will always return an array of strings. The secret value type also returns a string and is used to indicate that the value contains sensitive data that should not be exposed. Secret values can be encrypted in the database as well (see below).
+
+The value type on a setting does not limit how it can be cast when request using one of the accessor methods on `SuperSettings`. For instance, you can call `SuperSettings.get("integer_key")` on an integer setting and it will return a string. The value type does ensure that the value being input is validated to be of the specified type, though, so you can avoid invalid data.
+
+It is not possible to store an empty string in a setting; empty strings will be cast to `nil`.
+
+#### History
 
 A history of all settings changes is kept every time the value is changed. You can use this information to see what values were in effect at what time. You can optionally alse record who made the changes.
 
-### Usage Tracking
+#### Usage Tracking
 
-An optional feature you can turn on is to track when settings are used. This can be useful as a audit feature so you can cleanup old feature flags, etc. that are no longer in use. The timestamp of when a setting was last used will only be updated at most once per hour, so this adds very little overhead. However, it does require write access on the database connection.
+An optional feature you can turn on is to track when settings are used. This can be useful as a audit feature so you can cleanup old feature flags, etc. that are no longer in use. The timestamp of when a setting was last used will only be updated at most once per hour into the `last_used_at` field, so this adds very little overhead. However, it does require write access on the database connection.
 
-### Secrets
+#### Encrypted Secrets
 
 You can specify that a setting is a secret by setting the value type to "secret". This will obscure the value in the UI (thoough it can still be seen when editing) as well as not record the values in the setting history. You can also specify an encryption secret that is used to encrypt these settings in the database.
 
@@ -67,9 +120,15 @@ If you need to roll your secrets, you can set the value as an array (or as a spa
 rake super_settings:encrypt_secrets
 ```
 
+Encryption only changes how values are stored in the database. Encrypted secrets are protected from someone gaining direct access to your database or a database backup and should be used if you are storing sensitive values. However, the values are not encrypted in the REST API or web UI. You must take appropriate measures to secure these if you choose to use them.
+
 ### Rails Engine
 
-TODO
+The gem ships with a Rails engine that provides a web UI and a REST API for creating and maintaining the settings. To use these, you need to mount the engine routes in your application's `config/routes.rb` file. The routes can be mounted under any prefix you'd like.
+
+```ruby
+mount SuperSettings::Engine => "/settings"
+```
 
 #### Web UI
 
@@ -81,7 +140,67 @@ TODO
 
 #### Configuration
 
-TODO
+You can configure various aspects of the Rails engine using by calling `SuperSettings.configure` in an initializer.
+
+```ruby
+# config/initializers/super_settings.rb
+
+SuperSettings.configure do |config|
+  # These options can be used to customize the header in the web UI.
+  config.controller.application_name = "My Application"
+  config.controller.application_link = "/"
+  config.controller.application_logo = "app_logo.png"
+
+  # Enable the feature to track the last used time on settings.
+  config.track_last_used = true
+
+  # Set a custom refresh interval for the cache (default is 5 seconds)
+  config.refresh_interval = 2
+
+  # Set a secret used for encrypting settings with the "secret" value type.
+  config.secret = "ad962cc27e02657795a61b8d48a31ce4"
+
+  # Set the superclass to use for the controll. Defaults to using `ApplicationController`.
+  config.controller.superclass = Admin::BaseController
+
+  # Add additional code to the controller. In this case we are adding code to ensure only
+  # admins can access the functionality.
+  config.controller.enhance do
+    before_action do
+      require_admin
+    end
+
+    private
+
+    def require_admin
+      if current_user.nil?
+        redirect_to login_url, status: 401
+      else
+        redirect_to access_denied_url, status: 403
+      end
+    end
+  end
+
+  # Define a method that returns the value that will be stored in the settings history in
+  # the `changed_by` column.
+  config.controller.define_changed_by do
+    current_user.name
+  end
+
+  # The models can also have code injected into them with these methods:
+  # config.model.enhance do
+  # end
+  #
+  # config.model.enhance_history do
+  # end
+
+  # You can also specify a cache implementation to use to cache the last updated timestamp
+  # for model changes. By default this will use `Rails.cache`.
+  # config.model.cache = Rails.cache
+end
+```
+
+One configuration you will probably want to set is the superclass for the controller. By default, the base `ApplicationController` defined for your application will be used. However, if you want to provide Your application probably already has a
 
 ## Installation
 

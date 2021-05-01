@@ -1,10 +1,10 @@
 <%= content_tag(:tr, id: "setting-#{setting.id}", data: {id: setting.id, key: setting.key, edited: (setting.deleted? ? true : nil)}) do %>
-  <td class="text-truncate setting-key">
+  <td class="super-settings-text-truncate super-settings-key">
     <%= setting.key %>
     <%= hidden_field_tag "settings[#{setting.id}][key]", setting.key %>
   </td>
 
-  <td class="text-truncate setting-value">
+  <td class="super-settings-text-truncate super-settings-value">
     <% if setting.value.blank? && !setting.boolean? %>
       &nbsp;
     <% elsif setting.array? %>
@@ -25,11 +25,11 @@
     <% end %>
   </td>
 
-  <td class="text-truncate super-settings-value-type">
+  <td class="super-settings-text-truncate super-settings-value-type">
     <%= setting.value_type %>
   </td>
 
-  <td class="text-truncate setting-description">
+  <td class="super-settings-text-truncate setting-description">
     <%= simple_format(setting.description) %>
     <% if SuperSettings.track_last_used? %>
       <% if setting.last_used_at.nil? %>
@@ -41,12 +41,12 @@
     <% end %>
   </td>
 
-  <td class="text-nowrap align-right text-right super-settings-controls">
+  <td class="super-settings-controls">
     <%= hidden_field_tag "settings[#{setting.id}][delete]", (setting.deleted? ? 1 : nil), class: "form-control js-setting-deleted" %>
 
-    <%= super_settings_icon_button(:info, title: "#{setting.key} Info", color: "steelblue", js_class: "js-modal-link", url: super_settings.history_path(setting.id)) %>
-    <%= super_settings_icon_button(:edit, title: "Edit #{setting.key}", color: "darkgreen", js_class: "js-edit-setting") %>
-    <%= super_settings_icon_button(:trash, title: "Remove #{setting.key}", color: "red", js_class: "js-remove-setting") %>
-    <%= super_settings_icon_button(:slash, title: "Cancel Remove #{setting.key}", color: "darkorange", js_class: "js-cancel-remove-setting", link_style: "display:none;") %>
+    <%= super_settings_icon_button(:info, title: "Info for #{setting.key}", color: "royalblue", js_class: "js-modal-link", url: super_settings.history_path(setting.id)) %>
+    <%= super_settings_icon_button(:edit, title: "Edit #{setting.key}", color: "green", js_class: "js-edit-setting") %>
+    <%= super_settings_icon_button(:trash, title: "Remove #{setting.key}", color: "firebrick", js_class: "js-remove-setting") %>
+    <%= super_settings_icon_button(:slash, title: "Cancel Remove #{setting.key}", color: "firebrick", js_class: "js-cancel-remove-setting", link_style: "display:none;") %>
   </td>
 <% end %>

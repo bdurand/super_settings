@@ -125,17 +125,13 @@
       settingRow.insertAdjacentHTML("afterend", html);
       settingRow.remove();
       settingRow = findSettingElement(id);
-      addListener(settingRow.querySelector(".js-cancel-setting"), "click", restoreSetting);
-      addListener(settingRow.querySelector(".js-edit-setting"), "click", editSetting);
-      addListeners(settingRow.querySelectorAll(".js-modal-link"), "click", showModal);
+      bindSettingControlEvents(settingRow);
     } else {
       var tableBody = document.querySelector("#settings-table tbody");
       tableBody.insertAdjacentHTML("afterbegin", html);
       settingRow = tableBody.querySelector("tbody tr");
       settingRow.querySelector("input").focus();
     }
-    addListener(settingRow.querySelector(".js-remove-setting"), "click", removeSetting);
-    addListener(settingRow.querySelector(".js-setting-value-type"), "change", changeSettingType);
     settingRow.scrollIntoView({block: "nearest"});
     enableSaveButton();
   }
@@ -227,11 +223,11 @@
       filter = filter.toUpperCase();
       filters.push(function(tr) {
         text = "";
-        var settingKey = tr.querySelector(".setting-key");
+        var settingKey = tr.querySelector(".super-settings-key");
         if (settingKey) {
           text += " " + settingKey.textContent.toUpperCase();
         }
-        var settingValue = tr.querySelector(".setting-value");
+        var settingValue = tr.querySelector(".super-settings-value");
         if (settingValue) {
           text += " " + settingValue.textContent.toUpperCase();
         }
@@ -361,6 +357,15 @@
     return parent.querySelectorAll("a[href], area[href], button, input:not([type=hidden]), select, textarea, iframe, [tabindex], [contentEditable=true]")
   }
 
+  function bindSettingControlEvents(parent) {
+    addListeners(parent.querySelectorAll(".js-remove-setting"), "click", removeSetting);
+    addListeners(parent.querySelectorAll(".js-cancel-remove-setting"), "click", cancelRemoveSetting);
+    addListeners(parent.querySelectorAll(".js-edit-setting"), "click", editSetting);
+    addListeners(parent.querySelectorAll(".js-cancel-setting"), "click", restoreSetting);
+    addListeners(parent.querySelectorAll(".js-modal-link"), "click", showModal);
+    addListeners(parent.querySelectorAll(".js-setting-value-type"), "change", changeSettingType);
+  }
+
   docReady(function() {
     addListener(document.querySelector("#filter"), "input", filterSettings);
     addListener(document.querySelector("#add-setting"), "click", addSetting);
@@ -368,11 +373,7 @@
     addListener(document.querySelector("#settings-form"), "submit", disableLeavePage);
     addListener(document.querySelector("#modal"), "click", closeModal);
 
-    addListeners(document.querySelectorAll(".js-remove-setting"), "click", removeSetting);
-    addListeners(document.querySelectorAll(".js-cancel-remove-setting"), "click", cancelRemoveSetting);
-    addListeners(document.querySelectorAll(".js-edit-setting"), "click", editSetting);
-    addListeners(document.querySelectorAll(".js-cancel-setting"), "click", restoreSetting);
-    addListeners(document.querySelectorAll(".js-modal-link"), "click", showModal);
+    bindSettingControlEvents(document);
 
     applyFilter();
     dismissFlash();

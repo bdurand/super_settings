@@ -1,69 +1,9 @@
-<style type="text/css">
-  #settings-table td p {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-  }
-  #settings-table td p:last-of-type {
-    margin-bottom: 0;
-  }
-  #settings-table input[type=text], #settings-table textarea {
-    width: 100%;
-  }
-  .super-settings-controls {
-    max-width: 6rem;
-    white-space: nowrap;
-    text-align: right;
-  }
-  .super-settings-value-type {
-    max-width: 7rem;
-  }
-
-  .super-settings-modal {
-    z-index: 3;
-    display: none;
-    padding-top: 5rem;
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
-  }
-
-  .super-settings-modal-dialog {
-    margin: auto;
-    background-color: #fff;
-    position: relative;
-    outline: 0;
-    padding: 2em;
-    box-shadow: 3px 3px 7px 3px rgba(0, 0, 0, 0.6);
-    border-radius: 4px;
-    width: 80%;
-    height: 80%;
-  }
-
-  .super-settings-modal-content {
-    height: 100%;
-    overflow: auto;
-  }
-
-  .super-settings-modal-close {
-    display: block;
-    position: absolute;
-    top: 0;
-    right: 0;
-    border: 0;
-    padding: 1ex;
-    background-color: inherit;
-    font-size: 1.5rem;
-    font-weight: 500;
-  }
-</style>
+<%= super_settings_style_tag %>
 
 <main>
   <%= form_tag(super_settings.update_path, method: :post, id: "settings-form", class: "form-inline", style: "display:block;") do %>
-    <div class="pb-3 pt-3 mb-1 sticky-top" style="background-color:white;">
+    <div class="super-setttings-sticky-top" style="padding:3rem 0; margin-bottom:1rem; background-color:white;">
+      <label for="filter" class="super-settings-sr-only">Filter</label>
       <%= text_field_tag "filter", params[:filter], placeholder: "Filter Keys", size: 20, class: "form-control", title: "Filter Keys", id: "filter" %>
 
       <button type="button" class="btn btn-default" id="add-setting"><%= super_settings_icon(:plus) %> Add Setting</button>
@@ -77,12 +17,12 @@
       </button>
 
       <% if flash[:notice].present? %>
-        <strong class="ml-3 text-success js-flash">
+        <strong class="margin-left:3rem; text-success js-flash">
           <%= flash[:notice]%>
         </strong>
       <% end %>
       <% if flash[:alert].present? %>
-        <strong class="ml-3 text-danger js-flash">
+        <strong class="margin-left:3rem; text-danger js-flash">
           <%= flash[:alert]%>
         </strong>
       <% end %>
@@ -91,11 +31,11 @@
     <table class="table table-striped" id="settings-table">
       <thead>
         <tr>
-          <th scope="col" class="text-truncate">Key</th>
-          <th scope="col" class="text-truncate">Value</th>
-          <th scope="col" class="text-truncate super-settings-value-type">Type</th>
-          <th scope="col" class="text-truncate">Description</th>
-          <th scope="col" class="text-nowrap super-settings-controls">&nbsp;</th>
+          <th scope="col" class="super-settings-text-truncate">Key</th>
+          <th scope="col" class="super-settings-text-truncate">Value</th>
+          <th scope="col" class="super-settings-text-truncate super-settings-value-type">Type</th>
+          <th scope="col" class="super-settings-text-truncate">Description</th>
+          <th scope="col" class="super-settings-controls"><span class="super-settings-sr-only">Controls</span></th>
         </tr>
       </thead>
       <tbody translate="no">
