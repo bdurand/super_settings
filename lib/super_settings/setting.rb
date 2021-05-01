@@ -60,7 +60,7 @@ module SuperSettings
 
     before_save do
       self.raw_value = serialize(raw_value) unless array?
-      if secret? && raw_value && !SecretKeys::Encryptor.encrypted?(raw_value)
+      if secret? && raw_value && (raw_value_changed? || !SecretKeys::Encryptor.encrypted?(raw_value))
         self.raw_value = self.class.encrypt(raw_value)
       end
       record_value_change
