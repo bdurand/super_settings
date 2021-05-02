@@ -136,7 +136,115 @@ TODO
 
 #### REST API
 
-TODO
+You can invoke the REST API by sending the `Accept: application/json` request header. All paths need to be prefixed the prefix you use to mount the routes in your `config/routes.rb` file and send whatever authentication headers are needed for you application.
+
+##### Get All Settings
+
+```http
+GET /
+```
+
+Response:
+```json
+[
+  {
+    "id": integer,
+    "key": string,
+    "value": object,
+    "value_type": string,
+    "description" string,
+    "created_at": iso8601 string,
+    "updated_at": iso8601 string,
+    "encrypted": boolean
+  },
+  ...
+]
+```
+
+The encrypted attribute is only returned if the setting has a value type of secret. It indicates if the setting is encrypted in the database.
+
+##### Get Setting
+
+```http
+GET /settings/:id
+```
+
+Response:
+```json
+{
+  "id": integer,
+  "key": string,
+  "value": object,
+  "value_type": string,
+  "description" string,
+  "created_at": iso8601 string,
+  "updated_at": iso8601 string,
+  "encrypted": boolean
+}
+```
+
+The encrypted attribute is only returned if the setting has a value type of secret. It indicates if the setting is encrypted in the database.
+
+##### Get Setting History
+
+```http
+GET /setting/:id/history
+```
+
+Response:
+```json
+{
+  "id": integer,
+  "key": string,
+  "last_used_at": iso8601 string
+  "histories": [
+    {
+      "key": string,
+      "value": object,
+      "changed_by": string,
+      "created_at": iso8601 string
+    },
+    ...
+  ],
+  "next_page_url": string,
+  "previous_page_url": string
+}
+
+```
+
+The `last_used_at` attribute is only returned if the usage tracking feature is turned on. The `next_page_url` and `previous_page_url` are returned for pagination if the full list of history items was not returned.
+
+##### Update Settings
+
+```http
+POST /
+{
+  "settings": [
+    {
+      "key": string,
+      "value": object,
+      "value_type": string,
+      "description": string
+    },
+    {
+      "key": string,
+      "delete": true
+    },
+  ]
+}
+```
+
+You must provide a key in each element in the `settings` array. Providing a `value`, `value_type`, and/or `description` will insert or update the setting. Providing `delete: true` will delete the setting.
+
+Success Response (status code 200):
+```json
+{success: true}
+```
+
+Error Response (status code 422):
+```json
+{success: false, errors: [string, ...]}
+```
 
 #### Configuration
 

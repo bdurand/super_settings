@@ -177,7 +177,10 @@ module SuperSettings
 
       respond_to do |format|
         format.json do
-          payload = {key: @setting.key, histories: @histories.as_json}
+          payload = {id: @setting.id, key: @setting.key}
+          payload[:histories] = @histories.collect do |history|
+            {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}
+          end
           payload[:last_used_at] = @setting.last_used_at if SuperSettings.track_last_used?
           payload[:previous_page_url] = @previous_page_url if @previous_page_url
           payload[:next_page_url] = @next_page_url if @next_page_url
@@ -200,7 +203,7 @@ module SuperSettings
       parameters = (params[:settings].respond_to?(:values) ? params[:settings].values : params[:settings])
       parameters.each do |setting_params|
         next if setting_params[:key].blank?
-        next if setting_params[:value_type].blank? && setting_params[:delete].blank?
+        next if [:value_type, :value, :description, :delete].all? { |pname| setting_params[pname].blank? }
 
         setting = Setting.with_deleted.find_by(key: setting_params[:key])
         unless setting
@@ -208,12 +211,12 @@ module SuperSettings
           setting = Setting.new(key: setting_params[:key])
         end
 
-        if setting_params[:delete].present?
-          setting.deleted = BooleanParser.cast(setting_params[:delete])
+        if BooleanParser.cast(setting_params[:delete])
+          setting.deleted = true
           setting.changed_by = changed_by
-        elsif setting_params.include?(:value_type)
-          setting.value_type = setting_params[:value_type]
-          setting.value = (setting.boolean? ? setting_params[:value].present? : setting_params[:value])
+        else
+          setting.value_type = setting_params[:value_type] if setting_params.include?(:value_type)
+          setting.value = (setting.boolean? ? setting_params[:value].present? : setting_params[:value]) if setting_params.include?(:value)
           setting.description = setting_params[:description] if setting_params.include?(:description)
           setting.deleted = false if setting.deleted?
           setting.changed_by = changed_by

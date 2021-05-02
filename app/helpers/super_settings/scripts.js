@@ -125,13 +125,14 @@
       settingRow.insertAdjacentHTML("afterend", html);
       settingRow.remove();
       settingRow = findSettingElement(id);
-      bindSettingControlEvents(settingRow);
     } else {
       var tableBody = document.querySelector("#settings-table tbody");
       tableBody.insertAdjacentHTML("afterbegin", html);
       settingRow = tableBody.querySelector("tbody tr");
       settingRow.querySelector("input").focus();
     }
+    bindSettingControlEvents(settingRow);
+    disableSubmitFormWithReturnKey(settingRow);
     settingRow.scrollIntoView({block: "nearest"});
     enableSaveButton();
   }
@@ -284,6 +285,20 @@
     document.querySelector("#settings-form").dataset.submitting = true;
   }
 
+  function disableSubmitFormWithReturnKey(parent) {
+    var inputs = parent.querySelectorAll("input[type=text], input[type=number], input[type=datetime-local], select");
+    if (!inputs) {
+      return;
+    }
+    inputs.forEach(function(element) {
+      element.addEventListener("keypress", function(event) {
+        if (event.keyCode == 13) {
+          event.preventDefault();
+        }
+      });
+    });
+  }
+
   function refreshPage(event) {
     event.preventDefault();
     var url = window.location.href.replace(/\?.*/, "");
@@ -374,6 +389,7 @@
     addListener(document.querySelector("#modal"), "click", closeModal);
 
     bindSettingControlEvents(document);
+    disableSubmitFormWithReturnKey(document.querySelector("#settings-table"))
 
     applyFilter();
     dismissFlash();

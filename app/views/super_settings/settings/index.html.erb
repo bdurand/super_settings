@@ -3,8 +3,12 @@
 <main>
   <%= form_tag(super_settings.update_path, method: :post, id: "settings-form", class: "form-inline", style: "display:block;") do %>
     <div class="super-setttings-sticky-top" style="padding:3rem 0; margin-bottom:1rem; background-color:white;">
+      <span style="display:inline-block; margin-right:1rem;">
+        <%= pluralize(@settings.size, "setting") %>
+      </span>
+
       <label for="filter" class="super-settings-sr-only">Filter</label>
-      <%= text_field_tag "filter", params[:filter], placeholder: "Filter Keys", size: 20, class: "form-control", title: "Filter Keys", id: "filter" %>
+      <%= text_field_tag "filter", params[:filter], placeholder: "Filter Keys", size: 20, class: "form-control", title: "Filter Keys", id: "filter", style: "margin-right:1rem;" %>
 
       <button type="button" class="btn btn-default" id="add-setting"><%= super_settings_icon(:plus) %> Add Setting</button>
 
@@ -17,12 +21,12 @@
       </button>
 
       <% if flash[:notice].present? %>
-        <strong class="margin-left:3rem; text-success js-flash">
+        <strong class="text-success js-flash" style="display:inline-block; margin-left:3rem;">
           <%= flash[:notice]%>
         </strong>
       <% end %>
       <% if flash[:alert].present? %>
-        <strong class="margin-left:3rem; text-danger js-flash">
+        <strong class="text-danger js-flash" style="display:inline-block; margin-left:3rem;">
           <%= flash[:alert]%>
         </strong>
       <% end %>

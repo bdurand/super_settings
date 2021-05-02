@@ -23,16 +23,5 @@ module SuperSettings
     def changed_by_display
       changed_by
     end
-
-    # Serialize to a hash that is used for rendering JSON responses.
-    # @return [Hash]
-    def as_json(options = nil)
-      {
-        key: key,
-        value: value,
-        changed_by: changed_by,
-        created_at: created_at
-      }
-    end
   end
 end
