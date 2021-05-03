@@ -11,7 +11,6 @@ require_relative "super_settings/version"
 if defined?(Rails::Engine)
   require_relative "super_settings/engine"
   ActiveSupport.on_load(:active_record) do
-    puts "LOADED<br>"
     require_relative "super_settings/setting"
     require_relative "super_settings/history"
   end
