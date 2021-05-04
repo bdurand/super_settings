@@ -21,6 +21,17 @@ SuperSettings can be used on its own, or as a part of a larger configuration str
 
 ## Usage
 
+* [Getting Value](#getting_values)
+  * [Hashes](#hashes)
+  * [Defaults](#defaults)
+* [Data Model](#data_model)
+  * [Usage Tracking](#usage_tracking)
+  * [Encrypted Secrets](#encrypted_secrets)
+* [Rails Engine](#rails_engine)
+  * [Web UI](#web_ui)
+  * [REST API](#rest_api)
+  * [Configuration](#configuration)
+
 ### Getting Values
 
 This gem is in essence a key/value store. Settings are identified by unique keys and contain a typed value. You can access setting values using methods on the `SuperSettings` object.
@@ -114,9 +125,7 @@ The value type on a setting does not limit how it can be cast when request using
 
 It is not possible to store an empty string in a setting; empty strings will be cast to `nil`.
 
-#### History
-
-A history of all settings changes is kept every time the value is changed. You can use this information to see what values were in effect at what time. You can optionally alse record who made the changes.
+A history of all settings changes is kept every time the value is changed in the `histories` association. You can use this information to see what values were in effect at what time. You can optionally alse record who made the changes.
 
 #### Usage Tracking
 
