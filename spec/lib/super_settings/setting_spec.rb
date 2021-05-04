@@ -361,4 +361,63 @@ describe SuperSettings::Setting do
       expect(histories.collect(&:value)).to eq [nil, nil]
     end
   end
+
+  describe "bulk_update" do
+    it "should update settings in a batch" do
+      setting_1 = SuperSettings::Setting.create!(key: "string", value_type: :string, value: "foobar")
+      setting_2 = SuperSettings::Setting.create!(key: "integer", value_type: :integer, value: 4)
+      setting_3 = SuperSettings::Setting.create!(key: "other", value_type: :string, value: 4)
+      success, settings = SuperSettings::Setting.bulk_update([
+        {
+          key: "string",
+          value: "new value",
+          value_type: "string"
+        },
+        {
+          key: "integer",
+          delete: "1"
+        },
+        {
+          key: "newkey",
+          value: 44,
+          value_type: "integer"
+        }
+      ])
+      expect(success).to eq true
+      expect(settings.size).to eq 3
+      expect(settings.all? { |setting| setting.errors.empty? }).to eq true
+      expect(settings.all?(&:persisted?)).to eq true
+      expect(setting_1.reload.value).to eq "new value"
+      expect(setting_2.reload.deleted?).to eq true
+      expect(SuperSettings::Setting.find_by(key: "newkey").value).to eq 44
+    end
+
+    it "should not update any settings if there is an error" do
+      setting_1 = SuperSettings::Setting.create!(key: "string", value_type: :string, value: "foobar")
+      setting_2 = SuperSettings::Setting.create!(key: "integer", value_type: :integer, value: 4)
+      setting_3 = SuperSettings::Setting.create!(key: "other", value_type: :string, value: 4)
+      success, settings = SuperSettings::Setting.bulk_update([
+        {
+          key: "string",
+          value: "new value",
+          value_type: "string"
+        },
+        {
+          key: "newkey",
+          value: 44,
+          value_type: "integer"
+        },
+        {
+          key: "integer",
+          value_type: "invalid"
+        }
+      ])
+      expect(success).to eq false
+      expect(settings.size).to eq 3
+      expect(settings.detect { |setting| setting.key == "integer" }.errors).to_not be_empty
+      expect(settings.detect { |setting| setting.key == "newkey" }.persisted?).to eq false
+      expect(setting_1.reload.value).to eq "foobar"
+      expect(SuperSettings::Setting.find_by(key: "newkey")).to eq nil
+    end
+  end
 end

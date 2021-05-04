@@ -93,10 +93,59 @@ module SuperSettings
       # when decrypting. If you are using the environment variable, separate the keys
       # with spaces.
       #
-      # @param [String] value One or more secrets to use for encrypting arguments.
+      # @param value [String] One or more secrets to use for encrypting arguments.
       # @return [void]
       def secret=(value)
         @encryptors = make_encryptors(value)
+      end
+
+      # Bulk update settings in a single database transaction. No changes will be saved
+      # if there are any invalid records.
+      #
+      # Example:
+      #
+      # ```
+      # SuperSettings.bulk_update([
+      #   {
+      #     key: "setting-key",
+      #     value: "foobar",
+      #     value_type: "string",
+      #     description: "A sample setting"
+      #   },
+      #   {
+      #     key: "setting-to-delete",
+      #     delete: true
+      #   }
+      # ])
+      # ```
+      #
+      # @param params [Array] Array of hashes with setting attributes. Each hash must include
+      #   a "key" element to identify the setting. To update a key, it must also include at least
+      #   one of "value", "value_type", or "description". If one of these attributes is present in
+      #   the hash, it will be updated. If a setting with the given key does not exist, it will be created.
+      #   A setting may also be deleted by providing the attribute "deleted: true".
+      # @return [Array] Boolean indicating if update succeeded, Array of settings affected by the update;
+      #   if the settings were not updated, the `errors` on the settings that failed validation will be filled.
+      def bulk_update(params, changed_by = nil)
+        all_valid, settings = update_settings(params, changed_by)
+        if all_valid
+          transaction do
+            settings.each do |setting|
+              begin
+                unless setting.save
+                  all_valid = false
+                  raise ActiveRecord::Rollback
+                end
+              rescue ActiveRecord::RecordNotUnique => e
+                # catch race condition on unique keys
+                raise e if setting.valid?
+                all_valid = false
+                raise ActiveRecord::Rollback
+              end
+            end
+          end
+        end
+        [all_valid, settings]
       end
 
       # Encrypt a value for use with secret settings.
@@ -124,6 +173,38 @@ module SuperSettings
       end
 
       private
+
+      def update_settings(params, changed_by)
+        changed = {}
+        all_valid = true
+
+        params.each do |setting_params|
+          setting_params = setting_params.with_indifferent_access if setting_params.is_a?(Hash)
+          next if setting_params[:key].blank?
+          next if [:value_type, :value, :description, :delete].all? { |name| setting_params[name].blank? }
+
+          setting = Setting.with_deleted.find_by(key: setting_params[:key])
+          unless setting
+            next if setting_params[:delete].present?
+            setting = Setting.new(key: setting_params[:key])
+          end
+
+          if BooleanParser.cast(setting_params[:delete])
+            setting.deleted = true
+            setting.changed_by = changed_by
+          else
+            setting.value_type = setting_params[:value_type] if setting_params.include?(:value_type)
+            setting.value = (setting.boolean? ? setting_params[:value].present? : setting_params[:value]) if setting_params.include?(:value)
+            setting.description = setting_params[:description] if setting_params.include?(:description)
+            setting.deleted = false if setting.deleted?
+            setting.changed_by = changed_by
+            all_valid &= setting.valid?
+          end
+          changed[setting.key] = setting
+        end
+
+        [all_valid, changed.values]
+      end
 
       def encryptors
         if !defined?(@encryptors) || @encryptors.empty?

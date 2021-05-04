@@ -92,19 +92,13 @@ module SuperSettings
     #   ]
     # }
     #
-    # The REST response format is either {success: true} or {success: false, errors: [string, ...]}
+    # The REST response format is either {success: true} or {success: false, errors: {key => message, ...}}
     def update
-      all_valid, changed = update_super_settings
-      if all_valid
-        Setting.transaction do
-          changed.values.each do |setting|
-            unless setting.save
-              all_valid = false
-              raise ActiveRecord::Rollback
-            end
-          end
-        end
-      end
+      # Parameters are passed as a hash from the web page form, but can be passed as an array in REST.
+      parameters = (params[:settings].respond_to?(:values) ? params[:settings].values : params[:settings]) || {}
+      changed_by = Configuration.instance.controller.changed_by(self)
+
+      all_valid, settings = Setting.bulk_update(parameters, changed_by)
 
       if all_valid
         respond_to do |format|
@@ -120,15 +114,15 @@ module SuperSettings
         respond_to do |format|
           format.json do
             errors = {}
-            changed.each do |setting|
+            settings.each do |setting|
               if setting.errors.any?
-                errors[setting[key]] = setting.errors.full_messages
+                errors[setting.key] = setting.errors.full_messages
               end
             end
             render json: {success: false, errors: errors}, status: :unprocessable_entity
           end
           format.html do
-            @settings = all_super_settings_with_errors(changed)
+            @settings = all_super_settings_with_errors(settings)
             flash.now[:alert] = "Settings not saved"
             render :index, status: :unprocessable_entity
           end
@@ -192,49 +186,16 @@ module SuperSettings
 
     private
 
-    # Update all settings in memory. Only if all settings are valid will the changes
-    # actually be applied.
-    def update_super_settings
-      changed = {}
-      changed_by = Configuration.instance.controller.changed_by(self)
-      all_valid = true
-
-      # Parameters are passed as a hash from the web page form, but can be passed as an array in REST.
-      parameters = (params[:settings].respond_to?(:values) ? params[:settings].values : params[:settings])
-      parameters.each do |setting_params|
-        next if setting_params[:key].blank?
-        next if [:value_type, :value, :description, :delete].all? { |pname| setting_params[pname].blank? }
-
-        setting = Setting.with_deleted.find_by(key: setting_params[:key])
-        unless setting
-          next if setting_params[:delete].present?
-          setting = Setting.new(key: setting_params[:key])
-        end
-
-        if BooleanParser.cast(setting_params[:delete])
-          setting.deleted = true
-          setting.changed_by = changed_by
-        else
-          setting.value_type = setting_params[:value_type] if setting_params.include?(:value_type)
-          setting.value = (setting.boolean? ? setting_params[:value].present? : setting_params[:value]) if setting_params.include?(:value)
-          setting.description = setting_params[:description] if setting_params.include?(:description)
-          setting.deleted = false if setting.deleted?
-          setting.changed_by = changed_by
-          all_valid &= setting.valid?
-        end
-        changed[setting.key] = setting
-      end
-      [all_valid, changed]
-    end
-
     # This method is used when there are errors saving changes. It loads all the settings,
     # but makes sure any ones being upated are mixed in so that errors on the models can be
     # displayed in the view.
     def all_super_settings_with_errors(changed)
-      settings = changed.values.select(&:new_record?)
+      changed_map = {}
+      changed.each { |setting| changed_map[setting.key] = setting }
+      settings = changed.select(&:new_record?)
       Setting.order(:key).each do |setting|
-        settings << if changed.include?(setting.key)
-          changed[setting.key]
+        settings << if changed_map.include?(setting.key)
+          changed_map[setting.key]
         else
           setting
         end
