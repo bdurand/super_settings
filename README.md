@@ -155,8 +155,8 @@ Response:
     "value": object,
     "value_type": string,
     "description" string,
-    "created_at": iso8601 string,
-    "updated_at": iso8601 string,
+    "created_at": iso8601string,
+    "updated_at": iso8601string,
     "encrypted": boolean
   },
   ...
@@ -179,8 +179,8 @@ Response:
   "value": object,
   "value_type": string,
   "description" string,
-  "created_at": iso8601 string,
-  "updated_at": iso8601 string,
+  "created_at": iso8601string,
+  "updated_at": iso8601string,
   "encrypted": boolean
 }
 ```
@@ -198,13 +198,13 @@ Response:
 {
   "id": integer,
   "key": string,
-  "last_used_at": iso8601 string
+  "last_used_at": iso8601string
   "histories": [
     {
       "key": string,
       "value": object,
       "changed_by": string,
-      "created_at": iso8601 string
+      "created_at": iso8601string
     },
     ...
   ],
@@ -240,12 +240,12 @@ You must provide a key in each element in the `settings` array. Providing a `val
 
 Success Response (status code 200):
 ```json
-{success: true}
+{"success": true}
 ```
 
 Error Response (status code 422):
 ```json
-{success: false, errors: [string, ...]}
+{"success": false, "errors": [key: string, ...]}
 ```
 
 #### Configuration
