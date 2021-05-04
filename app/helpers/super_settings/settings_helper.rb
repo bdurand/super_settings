@@ -97,7 +97,8 @@ module SuperSettings
 
     def super_settings_formatted_time(time)
       return unless time
-      "#{I18n.localize(time, format: :long)} #{Time.zone.tzinfo.abbreviation(time)}"
+      time_zone = (Time.zone.respond_to?(:abbreviation) ? Time.zone.tzinfo.abbreviation(time) : Time.zone.tzinfo.name)
+      "#{I18n.localize(time, format: :long)} #{time_zone}"
     end
   end
 end
