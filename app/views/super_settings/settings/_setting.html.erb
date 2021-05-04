@@ -16,7 +16,7 @@
         <div><%= val %></div>
       <% end %>
     <% elsif setting.datetime? %>
-      <%= I18n.localize(setting.value, format: :long)%> <%= Time.zone.tzinfo.abbreviation(setting.value) %>
+      <%= super_settings_formatted_time(setting.value) %>
     <% elsif setting.secret? %>
       <%= "•" * 24 %>
       <% unless setting.encrypted? %>
