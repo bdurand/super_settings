@@ -48,13 +48,15 @@ SuperSettings.hash("parent") # -> returns an hash
 
 The key provided to the `SuperSettings.hash` method indicates the key prefix and constructs the hash from settings that have keys beginning with that prefix. Keys are also broken down by a delimiter so you can create nested hashes. The delimiter defaults to ".", but you can specify a different one with the `delimiter` keyword argument.
 
+You can also set a maximum depth to the returned hash with the `max_depth` keyword argument.
+
 So, if you have the following settings:
 
 ```
 vendors.company_1.path = "/co1"
 vendors.company_1.timeout = 5
 vendors.company_2.path = "/co2"
-vendors.count = 2
+page_size = 20
 ```
 
 You would get these results:
@@ -69,11 +71,23 @@ SuperSettings.hash("vendors.company_2") -> {"path" => "/co2"}
 
 # Get all the settings by omitting the key
 SuperSettings.hash
-# -> {"vendors" => {
-#        "company_1" => {"path" => "/co1", "timeout" => 5},
-#        "company_2" => {"path" => "/co2",
-#        "count" => 2
-#      }}
+# -> {
+#        "vendors" => {
+#           "company_1" => {"path" => "/co1", "timeout" => 5},
+#           "company_2" => {"path" => "/co2"}
+#        },
+#        "page_size" => 20
+#      }
+
+# Limit the depth of the returned has to one level
+SuperSettings.hash(max_depth: 1)
+# -> {
+#        "vendors.company_1.path => "/co1",
+#        "vendors.company_1.timeout" => 5,
+#        "vendors.company_2.path" => "/co2",
+#        "page_size" => 20
+#      }
+
 ```
 
 #### Defaults

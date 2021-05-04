@@ -30,7 +30,7 @@ module SuperSettings
     # @param key [String, Symbol]
     # @param default [String] value to return if the setting value is nil
     # @return [String]
-    def get(key, default: nil)
+    def get(key, default = nil)
       val = local_cache[key]
       val.nil? ? default : val.to_s
     end
@@ -40,7 +40,7 @@ module SuperSettings
     # @param key [String, Symbol]
     # @param default [Integer] value to return if the setting value is nil
     # @return [Integer]
-    def integer(key, default: nil)
+    def integer(key, default = nil)
       val = local_cache[key]
       (val.nil? ? default : val)&.to_i
     end
@@ -50,7 +50,7 @@ module SuperSettings
     # @param key [String, Symbol]
     # @param default [Numeric] value to return if the setting value is nil
     # @return [Float]
-    def float(key, default: nil)
+    def float(key, default = nil)
       val = local_cache[key]
       (val.nil? ? default : val)&.to_f
     end
@@ -60,7 +60,7 @@ module SuperSettings
     # @param key [String, Symbol]
     # @param default [Boolean] value to return if the setting value is nil
     # @return [Boolean]
-    def enabled?(key, default: false)
+    def enabled?(key, default = false)
       val = local_cache[key]
       val.nil? ? BooleanParser.cast(default) : !!val
     end
@@ -70,7 +70,7 @@ module SuperSettings
     # @param key [String, Symbol]
     # @param default [Time] value to return if the setting value is nil
     # @return [Time]
-    def datetime(key, default: nil)
+    def datetime(key, default = nil)
       val = local_cache[key]
       (val.nil? ? default : val)&.to_time
     end
@@ -80,7 +80,7 @@ module SuperSettings
     # @param key [String, Symbol]
     # @param default [Array] value to return if the setting value is nil
     # @return [Array]
-    def array(key, default: nil)
+    def array(key, default = nil)
       val = local_cache[key]
       Array(val.nil? ? default : val).map { |v| v&.to_s }
     end
@@ -101,7 +101,7 @@ module SuperSettings
     # @param default [Hash] value to return if the setting value is nil
     # @param delimiter [String] the delimiter to use to define nested keys in the hash; defaults to "."
     # @return [Hash]
-    def hash(key = nil, default: nil, delimiter: ".")
+    def hash(key = nil, default = nil, delimiter: ".", max_depth: nil)
       flattened = local_cache.to_h
       root_key = ""
       if key.present?
@@ -121,7 +121,7 @@ module SuperSettings
 
       structured = {}
       flattened.each do |key, value|
-        set_nested_hash_value(structured, key, value, delimiter)
+        set_nested_hash_value(structured, key, value, 0, delimiter: delimiter, max_depth: max_depth)
       end
       structured
     end
@@ -207,15 +207,16 @@ module SuperSettings
       @local_cache ||= LocalCache.new(refresh_interval: DEFAULT_REFRESH_INTERVAL)
     end
 
-    def set_nested_hash_value(hash, key, value, delimiter)
-      key, sub_key = key.split(delimiter, 2)
+    # Recusive method for creating a nested hash from delimited keys.
+    def set_nested_hash_value(hash, key, value, current_depth, delimiter:, max_depth:)
+      key, sub_key = (max_depth && current_depth < max_depth ? [key, nil] : key.split(delimiter, 2))
       if sub_key
         sub_hash = hash[key]
         unless sub_hash.is_a?(Hash)
           sub_hash = {}
           hash[key] = sub_hash
         end
-        set_nested_hash_value(sub_hash, sub_key, value, delimiter)
+        set_nested_hash_value(sub_hash, sub_key, value, current_depth + 1, delimiter: delimiter, max_depth: max_depth)
       else
         hash[key] = value
       end
