@@ -134,6 +134,8 @@ mount SuperSettings::Engine => "/settings"
 
 TODO
 
+![Web UI](web_ui.png)
+
 #### REST API
 
 You can invoke the REST API by sending the `Accept: application/json` request header. All paths need to be prefixed the prefix you use to mount the routes in your `config/routes.rb` file and send whatever authentication headers are needed for you application.

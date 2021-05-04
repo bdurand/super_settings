@@ -126,7 +126,7 @@ a:visited {
   border-bottom: 2px solid #dee2e6;
 }
 
-.table td, .tagle th {
+.table td, .table th {
   padding: 0.75rem;
   vertical-align: top;
   border-top: 1px solid #dee2e6;

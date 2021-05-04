@@ -1,10 +1,14 @@
-<%= content_tag(:tr, id: "setting-#{setting.id}", data: {id: setting.id, key: setting.key, edited: (setting.deleted? ? true : nil)}) do %>
-  <td class="super-settings-text-truncate super-settings-key">
+<%
+  row_data = {id: setting.id, key: setting.key}
+  row_data[:edited] = true if setting.deleted?
+%>
+<%= content_tag(:tr, id: "setting-#{setting.id}", data: row_data) do %>
+  <td class="super-settings-key">
     <%= setting.key %>
     <%= hidden_field_tag "settings[#{setting.id}][key]", setting.key %>
   </td>
 
-  <td class="super-settings-text-truncate super-settings-value">
+  <td class="super-settings-value">
     <% if setting.value.blank? && !setting.boolean? %>
       &nbsp;
     <% elsif setting.array? %>
@@ -25,11 +29,11 @@
     <% end %>
   </td>
 
-  <td class="super-settings-text-truncate super-settings-value-type">
+  <td class="super-settings-value-type">
     <%= setting.value_type %>
   </td>
 
-  <td class="super-settings-text-truncate setting-description">
+  <td class="super-setting-description">
     <%= simple_format(setting.description) %>
     <% if SuperSettings.track_last_used? %>
       <% if setting.last_used_at.nil? %>
