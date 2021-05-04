@@ -130,11 +130,28 @@ The gem ships with a Rails engine that provides a web UI and a REST API for crea
 mount SuperSettings::Engine => "/settings"
 ```
 
+See the configuration section below for information about how to secure the controller endpoints. The engine provides no mechanism for security out of the box, but it is designed to seamlessly integrate with your application's existing authentication and authorization mechanism.
+
+You can also easily implement your own UI if you need to since the core data structure is just an ActiveRecord model.
+
 #### Web UI
 
-TODO
+The Web UI provides all the functionality to add, update, and delete settings.
 
 ![Web UI](web_ui.png)
+
+You can save multiple settings at once. So that if you have settings that need to be changed together, you can be assured they will all be saved in a single transaction.
+
+The Web UI is fully self contained and has no external dependencies. However, you can change the layout used by the controller (see the configuration section below for an example). If you do this, you will be responsible for providing the CSS styles for the buttons, table rows and the form controls. The CSS class names used by the default layout are compatible with the class names defined in the [Bootstrap library](https://getbootstrap.com/).
+
+You can see the Web UI in action if you clone this repository and then run:
+
+```bash
+bin/rails db:migrate
+bin/rails s
+```
+
+Then go to http://localhost:3000/settings in your browser.
 
 #### REST API
 
@@ -274,8 +291,10 @@ SuperSettings.configure do |config|
   config.controller.superclass = Admin::BaseController
 
   # Add additional code to the controller. In this case we are adding code to ensure only
-  # admins can access the functionality.
+  # admins can access the functionality and changing the layout to use one defined by the application.
   config.controller.enhance do
+    self.layout = "admin"
+
     before_action do
       require_admin
     end

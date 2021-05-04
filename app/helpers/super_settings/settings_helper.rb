@@ -94,5 +94,10 @@ module SuperSettings
         "over #{pluralize((hours / 24).floor, "day")} ago"
       end
     end
+
+    def super_settings_formatted_time(time)
+      return unless time
+      "#{I18n.localize(time, format: :long)} #{Time.zone.tzinfo.abbreviation(time)}"
+    end
   end
 end

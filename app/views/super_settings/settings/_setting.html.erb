@@ -16,7 +16,7 @@
         <div><%= val %></div>
       <% end %>
     <% elsif setting.datetime? %>
-      <%= I18n.localize(setting.value, format: :long)%>
+      <%= I18n.localize(setting.value, format: :long)%> <%= Time.zone.tzinfo.abbreviation(setting.value) %>
     <% elsif setting.secret? %>
       <%= "•" * 24 %>
       <% unless setting.encrypted? %>
@@ -39,7 +39,7 @@
       <% if setting.last_used_at.nil? %>
         <span class="text-danger">never used</span>
       <% elsif setting.last_used_at < 1.day.ago %>
-        <%= content_tag(:span, "last used #{super_settings_last_used_age(setting.last_used_at)}", title: I18n.localize(setting.last_used_at, format: :long), class: "text-danger") %>
+        <%= content_tag(:span, "last used #{super_settings_last_used_age(setting.last_used_at)}", title: super_settings_formatted_time(setting.last_used_at), class: "text-danger") %>
       <% else %>
       <% end %>
     <% end %>

@@ -69,7 +69,7 @@
   function settingInputHTML(type, fieldId, fieldName) {
     var html = null;
     if (type === "array") {
-      html = '<textarea name="' + fieldName + '" id="' + fieldId + '" rows="8" class="form-control"></textarea>';
+      html = '<textarea name="' + fieldName + '" id="' + fieldId + '" rows="8" class="form-control" placeholder="one entry per line"></textarea>';
     } else if (type === "boolean") {
       html = '<div class="form-check checkbox">'
       html += '<input type="checkbox" name="' + fieldName + '" id="' + fieldId + '" value="true">'
@@ -133,6 +133,7 @@
     }
     bindSettingControlEvents(settingRow);
     disableSubmitFormWithReturnKey(settingRow);
+    filterSettings(document.querySelector("#filter").value);
     settingRow.scrollIntoView({block: "nearest"});
     enableSaveButton();
   }
@@ -215,12 +216,17 @@
     settingRow.querySelector("td").style.textDecoration = "inherit";
     settingRow.querySelector(".js-cancel-remove-setting").style.display = "none";
     settingRow.querySelector(".js-remove-setting").style.display = "inline-block";
+    filterSettings(document.querySelector("#filter").value);
     enableSaveButton();
   }
 
-  function filterSettings(event) {
+  function filterListener(event) {
+    filterSettings(event.target.value);
+  }
+
+  function filterSettings(filterText) {
     var filters = [];
-    event.target.value.split(" ").forEach(function(filter) {
+    filterText.split(" ").forEach(function(filter) {
       filter = filter.toUpperCase();
       filters.push(function(tr) {
         text = "";
@@ -372,17 +378,22 @@
     return parent.querySelectorAll("a[href], area[href], button, input:not([type=hidden]), select, textarea, iframe, [tabindex], [contentEditable=true]")
   }
 
+  function noOp(event) {
+    event.preventDefault();
+  }
+
   function bindSettingControlEvents(parent) {
     addListeners(parent.querySelectorAll(".js-remove-setting"), "click", removeSetting);
     addListeners(parent.querySelectorAll(".js-cancel-remove-setting"), "click", cancelRemoveSetting);
     addListeners(parent.querySelectorAll(".js-edit-setting"), "click", editSetting);
     addListeners(parent.querySelectorAll(".js-cancel-setting"), "click", restoreSetting);
     addListeners(parent.querySelectorAll(".js-modal-link"), "click", showModal);
+    addListeners(parent.querySelectorAll(".js-no-op"), "click", noOp);
     addListeners(parent.querySelectorAll(".js-setting-value-type"), "change", changeSettingType);
   }
 
   docReady(function() {
-    addListener(document.querySelector("#filter"), "input", filterSettings);
+    addListener(document.querySelector("#filter"), "input", filterListener);
     addListener(document.querySelector("#add-setting"), "click", addSetting);
     addListener(document.querySelector("#discard-changes"), "click", refreshPage);
     addListener(document.querySelector("#settings-form"), "submit", disableLeavePage);

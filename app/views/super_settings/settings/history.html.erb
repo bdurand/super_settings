@@ -7,7 +7,7 @@
   Last Used:
   <% if @setting.last_used_at %>
     <% classname = (@setting.last_used_at > 1.day.ago ? "text-success" : "text-danger") %>
-    <%= content_tag(:span, super_settings_last_used_age(@setting.last_used_at), title: I18n.localize(@setting.last_used_at, format: :long), class: classname) %>
+    <%= content_tag(:span, super_settings_last_used_age(@setting.last_used_at), title: super_settings_formatted_time(@setting.last_used_at), class: classname) %>
   <% else %>
     <em class="text-danger">never</em>
   <% end %>
@@ -25,7 +25,7 @@
     <% @histories.each do |history| %>
       <tr>
         <td>
-          <%= I18n.localize(history.created_at, format: :long)%>
+          <%= super_settings_formatted_time(history.created_at) %>
         </td>
 
         <td>
