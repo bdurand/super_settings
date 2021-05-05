@@ -172,6 +172,24 @@ module SuperSettings
         raise InvalidSecretError
       end
 
+      # Determine the value type from a value.
+      def value_type(value)
+        case value
+        when Integer
+          INTEGER
+        when Numeric
+          FLOAT
+        when TrueClass, FalseClass
+          BOOLEAN
+        when Time, Date
+          DATETIME
+        when Array
+          ARRAY
+        else
+          STRING
+        end
+      end
+
       private
 
       def update_settings(params, changed_by)

@@ -256,6 +256,21 @@ describe SuperSettings::Setting do
         expect(setting.encrypted?).to eq true
       end
     end
+
+    it "should determine the correct value type based on a value" do
+      expect(SuperSettings::Setting.value_type("foo")).to eq "string"
+      expect(SuperSettings::Setting.value_type(:foo)).to eq "string"
+      expect(SuperSettings::Setting.value_type(nil)).to eq "string"
+      expect(SuperSettings::Setting.value_type("1")).to eq "string"
+      expect(SuperSettings::Setting.value_type(1)).to eq "integer"
+      expect(SuperSettings::Setting.value_type(1.0)).to eq "float"
+      expect(SuperSettings::Setting.value_type(true)).to eq "boolean"
+      expect(SuperSettings::Setting.value_type(false)).to eq "boolean"
+      expect(SuperSettings::Setting.value_type(["foo"])).to eq "array"
+      expect(SuperSettings::Setting.value_type(Time.now)).to eq "datetime"
+      expect(SuperSettings::Setting.value_type(DateTime.now)).to eq "datetime"
+      expect(SuperSettings::Setting.value_type(Date.today)).to eq "datetime"
+    end
   end
 
   describe "deleted" do

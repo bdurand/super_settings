@@ -126,6 +126,25 @@ module SuperSettings
       structured
     end
 
+    # Create settings and update the local cache with the values.
+    #
+    # @param key [String, Symbol] the key to set
+    # @param value [Object] the value to set
+    # @param value_type [String, Symbol] the value type to set; if the setting does not already exist,
+    #   this will be inferred from the value.
+    def set(key, value, value_type: nil)
+      setting = Setting.find_by(key: key)
+      if setting
+        setting.value_type = value_type if value_type
+      else
+        setting = Setting.new(key: key)
+        setting.value_type = (value_type || Setting.value_type(value) || Setting::STRING)
+      end
+      setting.value = value
+      setting.save!
+      local_cache.update_setting(setting)
+    end
+
     # Load the settings from the database into the in memory cache.
     def load_settings
       local_cache.load_settings

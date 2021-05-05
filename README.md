@@ -129,7 +129,9 @@ A history of all settings changes is kept every time the value is changed in the
 
 #### Usage Tracking
 
-An optional feature you can turn on is to track when settings are used. This can be useful as a audit feature so you can cleanup old feature flags, etc. that are no longer in use. The timestamp of when a setting was last used will only be updated at most once per hour into the `last_used_at` field, so this adds very little overhead. However, it does require write access on the database connection.
+An optional feature you can turn on is to track when settings are used. This can be useful as a audit feature so you can cleanup old feature flags, etc. that are no longer in use. The timestamp of when a setting was last used will only be updated at most once per hour into the `last_used_at` field, so this adds very little overhead.
+
+This feature does require write access on the database connection and can add overhead if a lot of keys need to be updated at once.
 
 #### Encrypted Secrets
 

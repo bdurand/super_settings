@@ -166,4 +166,21 @@ describe SuperSettings do
       expect(SuperSettings.hash("A3", {"foo" => "bar"})).to eq({"foo" => "bar"})
     end
   end
+
+  describe "set" do
+    it "updates a setting in the database and cache" do
+      setting = SuperSettings::Setting.create!(key: "foo", value: "bar")
+      expect(SuperSettings.get("foo")).to eq "bar"
+      SuperSettings.set("foo", "bip")
+      expect(SuperSettings.get("foo")).to eq "bip"
+      expect(setting.reload.value).to eq "bip"
+    end
+
+    it "creates a setting in the database and cache" do
+      expect(SuperSettings.get("foo")).to eq nil
+      SuperSettings.set("foo", "bip")
+      expect(SuperSettings.get("foo")).to eq "bip"
+      expect(SuperSettings::Setting.find_by(key: "foo").value).to eq "bip"
+    end
+  end
 end

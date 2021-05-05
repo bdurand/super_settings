@@ -8,8 +8,13 @@ module SuperSettings
   # The cache is thread safe and it ensures that only a single thread will ever be
   # trying to update the cache at a time to avoid any dog piling effects.
   class LocalCache
+    # @private
     NOT_DEFINED = Object.new.freeze
     private_constant :NOT_DEFINED
+
+    # @private
+    DRIFT_FACTOR = 10
+    private_constant :DRIFT_FACTOR
 
     # Number of seconds that the cache will be considered fresh. The database will only be
     # checked for changed settings at most this often.
@@ -20,8 +25,9 @@ module SuperSettings
     def initialize(refresh_interval:, track_last_used: false)
       @refresh_interval = refresh_interval
       @lock = Mutex.new
-      @last_used_drift = rand * 10
       @track_last_used = track_last_used
+      # This is used so that multiple processes won't all try to update the last used timestamp at the same time.
+      @last_used_drift = rand * DRIFT_FACTOR
       reset
     end
 
@@ -186,6 +192,15 @@ module SuperSettings
       @track_last_used
     end
 
+    # Update a single setting directly into the cache.
+    # @api private
+    def update_setting(setting)
+      return if setting.key.blank?
+      @lock.synchronize do
+        @cache = @cache.merge(setting.key => [setting.value, setting.last_used_at.to_f])
+      end
+    end
+
     private
 
     # Load just the settings have that changed since the specified timestamp.
@@ -228,7 +243,13 @@ module SuperSettings
     # updated at most once per hour.
     def update_last_used_at!(key, last_used_at)
       return unless track_last_used?
-      if last_used_at + 3600 + @last_used_drift < Time.now.to_f
+      now = Time.now.to_f
+      return if last_used_at + 3600 + @last_used_drift + DRIFT_FACTOR > now
+
+      # Set a key drift so we don't have to upate all the keys at the same time.
+      key_drift = (Digest::MD5.hexdigest(key)[0, 8].to_i(16) / 0xFFFFFFFF.to_f) * DRIFT_FACTOR
+
+      if last_used_at + 3600 + @last_used_drift + key_drift < now
         begin
           Setting.where(key: key).update_all(last_used_at: Time.now)
         rescue
