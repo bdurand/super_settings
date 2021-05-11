@@ -31,7 +31,7 @@
   }
 
   function changesCount() {
-    var changes = 0;
+    let changes = 0;
     document.querySelectorAll("#settings-table tbody tr").forEach(function(element) {
       if (element.dataset.edited) {
         changes += 1;
@@ -41,11 +41,11 @@
   }
 
   function enableSaveButton() {
-    var saveButton = document.querySelector("#save-settings");
-    var discardButton = document.querySelector("#discard-changes");
+    const saveButton = document.querySelector("#save-settings");
+    const discardButton = document.querySelector("#discard-changes");
     if (saveButton) {
-      var count = changesCount();
-      var countSpan = saveButton.querySelector(".count");
+      const count = changesCount();
+      const countSpan = saveButton.querySelector(".count");
       if (count == 0) {
         saveButton.disabled = true;
         countSpan.innerHTML = "";
@@ -59,7 +59,7 @@
   }
 
   function getFieldValueInput(settingRow) {
-    var input = settingRow.querySelector(".js-setting-value input");
+    const input = settingRow.querySelector(".js-setting-value input");
     if (!input) {
       input = settingRow.querySelector(".js-setting-value textarea");
     }
@@ -67,7 +67,7 @@
   }
 
   function settingInputHTML(type, fieldId, fieldName) {
-    var html = null;
+    let html = null;
     if (type === "array") {
       html = '<textarea name="' + fieldName + '" id="' + fieldId + '" rows="8" class="form-control" placeholder="one entry per line"></textarea>';
     } else if (type === "boolean") {
@@ -92,12 +92,12 @@
   }
 
   function changeSettingType(event) {
-    var valueTypeMenu = event.target;
-    var settingRow = valueTypeMenu.closest("tr");
-    var type = valueTypeMenu.options[valueTypeMenu.selectedIndex].value;
-    var input = getFieldValueInput(settingRow)
-    var fieldName = input.name;
-    var fieldValue = input.value;
+    const valueTypeMenu = event.target;
+    const settingRow = valueTypeMenu.closest("tr");
+    const type = valueTypeMenu.options[valueTypeMenu.selectedIndex].value;
+    let input = getFieldValueInput(settingRow)
+    const fieldName = input.name;
+    let fieldValue = input.value;
     if (input.type === "checkbox") {
       if (input.checked) {
         fieldValue = input.value;
@@ -105,7 +105,7 @@
         fieldValue = null;
       }
     }
-    var fieldId = fieldName.replace(/[\[\]]+/g, "_").replace(/_$/, "");
+    const fieldId = fieldName.replace(/[\[\]]+/g, "_").replace(/_$/, "");
 
     input.remove();
     settingRow.querySelector(".js-setting-value").innerHTML = settingInputHTML(type, fieldId, fieldName);
@@ -118,7 +118,7 @@
   }
 
   function addSettingToTable(id, html) {
-    var settingRow = findSettingElement(id);
+    let settingRow = findSettingElement(id);
     if (settingRow) {
       settingRow.id = null;
       settingRow.innerHTML = "";
@@ -126,7 +126,7 @@
       settingRow.remove();
       settingRow = findSettingElement(id);
     } else {
-      var tableBody = document.querySelector("#settings-table tbody");
+      const tableBody = document.querySelector("#settings-table tbody");
       tableBody.insertAdjacentHTML("afterbegin", html);
       settingRow = tableBody.querySelector("tbody tr");
       settingRow.querySelector("input").focus();
@@ -139,7 +139,7 @@
   }
 
   function apiURL(action, id) {
-    var url = document.location.pathname;
+    let url = document.location.pathname;
     if (url.endsWith("/")) {
       url = url.substring(0, url.length - 1);
     }
@@ -178,20 +178,19 @@
 
   function editSetting(event) {
     event.preventDefault();
-    var id = event.target.closest("tr").dataset.id;
+    const id = event.target.closest("tr").dataset.id;
     fetchSetting("edit", id);
   }
 
   function restoreSetting(event) {
     event.preventDefault();
-    var id = event.target.closest("tr").dataset.id;
-    tr = event.target.closest("tr");
+    const id = event.target.closest("tr").dataset.id;
     fetchSetting(null, id);
   }
 
   function removeSetting(event) {
     event.preventDefault();
-    var settingRow = event.target.closest("tr");
+    const settingRow = event.target.closest("tr");
     if (settingRow.dataset["id"]) {
       settingRow.querySelector("input.js-setting-deleted").value = "1";
       settingRow.dataset.edited = true;
@@ -208,7 +207,7 @@
 
   function cancelRemoveSetting(event) {
     event.preventDefault();
-    var settingRow = event.target.closest("tr");
+    const settingRow = event.target.closest("tr");
     settingRow.querySelector("input.js-setting-deleted").value = "";
     settingRow.dataset.edited = "";
     settingRow.style.color = "inherit";
@@ -225,20 +224,20 @@
   }
 
   function filterSettings(filterText) {
-    var filters = [];
+    const filters = [];
     filterText.split(" ").forEach(function(filter) {
       filter = filter.toUpperCase();
       filters.push(function(tr) {
-        text = "";
-        var settingKey = tr.querySelector(".super-settings-key");
+        let text = "";
+        const settingKey = tr.querySelector(".super-settings-key");
         if (settingKey) {
           text += " " + settingKey.textContent.toUpperCase();
         }
-        var settingValue = tr.querySelector(".super-settings-value");
+        const settingValue = tr.querySelector(".super-settings-value");
         if (settingValue) {
           text += " " + settingValue.textContent.toUpperCase();
         }
-        var settingDescription = tr.querySelector(".setting-description");
+        const settingDescription = tr.querySelector(".setting-description");
         if (settingDescription) {
           text += " " + settingDescription.textContent.toUpperCase();
         }
@@ -247,7 +246,7 @@
     });
 
     document.querySelectorAll("#settings-table tbody tr").forEach(function(tr) {
-      matched = true;
+      let matched = true;
       if (!tr.dataset.edited) {
         filters.forEach(function(filter) {
           matched = matched && filter(tr);
@@ -272,14 +271,14 @@
   }
 
   function applyFilter() {
-    var filter = document.querySelector("#filter");
+    const filter = document.querySelector("#filter");
     if (filter) {
       filter.dispatchEvent(new Event("input"));
     }
   }
 
   function promptUnsavedChanges(event) {
-    var form = document.querySelector("#settings-form");
+    const form = document.querySelector("#settings-form");
     if (form && !form.dataset.submitting && changesCount() > 0) {
       return "Are you sure you want to leave?";
     } else {
@@ -292,7 +291,7 @@
   }
 
   function disableSubmitFormWithReturnKey(parent) {
-    var inputs = parent.querySelectorAll("input[type=text], input[type=number], input[type=datetime-local], select");
+    const inputs = parent.querySelectorAll("input[type=text], input[type=number], input[type=datetime-local], select");
     if (!inputs) {
       return;
     }
@@ -307,8 +306,8 @@
 
   function refreshPage(event) {
     event.preventDefault();
-    var url = window.location.href.replace(/\?.*/, "");
-    filter = document.querySelector("#filter").value;
+    let url = window.location.href.replace(/\?.*/, "");
+    const filter = document.querySelector("#filter").value;
     if (filter !== "") {
       url += "?filter=" + escape(filter);
     }
@@ -317,8 +316,8 @@
 
   function showModal(event) {
     event.preventDefault();
-    var modal = document.querySelector("#modal");
-    var content = document.querySelector(".super-settings-modal-content");
+    const modal = document.querySelector("#modal");
+    const content = document.querySelector(".super-settings-modal-content");
     fetch(this.href, {credentials: "same-origin", headers: new Headers({"Accept": "text/html"})})
     .then(
       function(response) {
@@ -340,7 +339,6 @@
             element.setAttribute("tabindex", -1);
           }
         });
-        modalFocusables = null;
         document.querySelector("body").style.overflow = "hidden";
         addListeners(content.querySelectorAll(".js-modal-link"), "click", showModal);
       }
@@ -354,12 +352,12 @@
   function closeModal(event) {
     if (event.target.classList.contains("js-close-modal")) {
       event.preventDefault();
-      var modal = document.querySelector("#modal");
-      var content = document.querySelector(".super-settings-modal-content");
+      const modal = document.querySelector("#modal");
+      const content = document.querySelector(".super-settings-modal-content");
       modal.style.display = "none";
       modal.setAttribute("aria-hidden", "true");
       focusableElements(document).forEach(function(element) {
-        var tabIndex = element.dataset.saveTabIndex;
+        const tabIndex = element.dataset.saveTabIndex;
         delete element.dataset.saveTabIndex;
         if (tabIndex) {
           element.setAttribute("tabindex", tabIndex);
