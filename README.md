@@ -82,22 +82,22 @@ SuperSettings.hash("vendors.company_2") -> {"path" => "/co2"}
 
 # Get all the settings by omitting the key
 SuperSettings.hash
-# -> {
-#        "vendors" => {
-#           "company_1" => {"path" => "/co1", "timeout" => 5},
-#           "company_2" => {"path" => "/co2"}
-#        },
-#        "page_size" => 20
-#      }
+# {
+#   "vendors" => {
+#     "company_1" => {"path" => "/co1", "timeout" => 5},
+#     "company_2" => {"path" => "/co2"}
+#   },
+#   "page_size" => 20
+# }
 
 # Limit the depth of the returned has to one level
 SuperSettings.hash(max_depth: 1)
-# -> {
-#        "vendors.company_1.path => "/co1",
-#        "vendors.company_1.timeout" => 5,
-#        "vendors.company_2.path" => "/co2",
-#        "page_size" => 20
-#      }
+# {
+#   "vendors.company_1.path => "/co1",
+#   "vendors.company_1.timeout" => 5,
+#   "vendors.company_2.path" => "/co2",
+#   "page_size" => 20
+# }
 
 ```
 

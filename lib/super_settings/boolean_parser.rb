@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Backport of logic in ActiveModel::Types::BooleanParser.
+# Cast variations of booleans (i.e. "true", "false", 1, 0, etc.) to actual boolean objects.
 module SuperSettings
   class BooleanParser
     # rubocop:disable Lint/BooleanSymbol
