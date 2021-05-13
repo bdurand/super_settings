@@ -2,7 +2,7 @@
 
 <main>
   <%= form_tag(super_settings.update_path, method: :post, id: "settings-form", class: "form-inline", style: "display:block;") do %>
-    <div class="super-setttings-sticky-top" style="padding:3rem 0; margin-bottom:1rem; background-color:white;">
+    <div class="super-settings-sticky-top">
       <span style="display:inline-block; margin-right:1rem;">
         <%= pluralize(@settings.size, "setting") %>
       </span>

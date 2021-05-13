@@ -96,3 +96,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.super-settings-sticky-top {
+  position: sticky;
+  top: 0;
+  padding: 1rem 0;
+  background-color: white;
+}

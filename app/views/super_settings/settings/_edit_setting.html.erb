@@ -20,7 +20,7 @@
     <% elsif setting.integer? %>
       <%= number_field_tag value_field_name, setting.value, step: 1, class: "form-control" %>
     <% elsif setting.float? %>
-      <%= number_field_tag value_field_name, setting.value, class: "form-control" %>
+      <%= number_field_tag value_field_name, setting.value, step: "any", class: "form-control" %>
     <% else %>
       <%= text_field_tag value_field_name, setting.value, class: "form-control" %>
     <% end %>

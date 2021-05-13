@@ -41,11 +41,6 @@ header h1.logo img {
   text-align: center;
 }
 
-.sticky-top {
-  position: sticky;
-  top: 0;
-}
-
 .container {
   padding-left: 15px;
   padding-right: 15px;
