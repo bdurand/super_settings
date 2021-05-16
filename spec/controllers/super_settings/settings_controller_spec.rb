@@ -29,12 +29,6 @@ describe SuperSettings::SettingsController, type: :controller do
   end
 
   describe "show" do
-    it "should show a single setting" do
-      get :show, **request_params(id: setting_1.id.to_s)
-      expect(response.status).to eq 200
-      expect(response.content_type).to include "text/html"
-    end
-
     it "should have a REST endpoint" do
       request.headers["Accept"] = "application/json"
       get :show, **request_params(id: setting_1.id.to_s)
@@ -45,12 +39,6 @@ describe SuperSettings::SettingsController, type: :controller do
   end
 
   describe "history" do
-    it "should show setting's history" do
-      get :history, **request_params(id: setting_1.id.to_s)
-      expect(response.status).to eq 200
-      expect(response.content_type).to include "text/html"
-    end
-
     it "should have a REST endpoint" do
       request.headers["Accept"] = "application/json"
       get :history, **request_params(id: setting_1.id.to_s)
@@ -64,20 +52,6 @@ describe SuperSettings::SettingsController, type: :controller do
           JSON.parse({value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}.to_json)
         end
       })
-    end
-  end
-
-  describe "edit" do
-    it "should load a form to edit a setting" do
-      get :edit, **request_params(id: setting_1.id.to_s)
-      expect(response.status).to eq 200
-    end
-  end
-
-  describe "new" do
-    it "should load a form to create a setting" do
-      get :new
-      expect(response.status).to eq 200
     end
   end
 

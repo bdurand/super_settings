@@ -82,23 +82,5 @@ module SuperSettings
         content
       end
     end
-
-    def super_settings_last_used_age(last_used_at)
-      return "never" if last_used_at.nil?
-      hours = (Time.now - last_used_at) / 1.hour
-      if hours <= 1
-        "less than one hour ago"
-      elsif hours <= 48
-        "over #{pluralize(hours.floor, "hour")} ago"
-      else
-        "over #{pluralize((hours / 24).floor, "day")} ago"
-      end
-    end
-
-    def super_settings_formatted_time(time)
-      return unless time
-      time_zone = (Time.zone.respond_to?(:abbreviation) ? Time.zone.tzinfo.abbreviation(time) : Time.zone.tzinfo.name)
-      "#{I18n.localize(time, format: :long)} #{time_zone}"
-    end
   end
 end

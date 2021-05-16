@@ -185,3 +185,7 @@ select.form-control:not([size]):not([multiple]) {
 .text-danger {
   color: firebrick !important;
 }
+
+.text-muted {
+  color: #666 !important;
+}

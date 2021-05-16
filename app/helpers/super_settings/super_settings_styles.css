@@ -7,8 +7,22 @@
   margin-bottom: 0;
 }
 
-#settings-table input[type=text], #settings-table textarea {
+#settings-table input[type=text], #settings-table input[type=number], #settings-table input[type=date], #settings-table input[type=time], #settings-table textarea {
   width: 100%;
+}
+
+.super-settings-edit-row {
+  background-color: #f2fdf2 !important;
+}
+
+#settings-table tr[data-deleted] td {
+  background-color: #ffd1d8 !important;
+  color: darkred;
+  text-decoration: line-through;
+}
+
+#settings-table tr[data-newrecord] .js-show-history {
+  display: none;
 }
 
 .super-settings-key {
@@ -32,6 +46,7 @@
   width: 6rem;
   white-space: nowrap;
   text-align: right;
+  text-decoration: none !important;
 }
 
 .super-settings-modal {
@@ -89,12 +104,6 @@
 
 .super-settings-text-nowrap {
   white-space: nowrap !important;
-}
-
-.super-settings-super-settings-text-truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .super-settings-sticky-top {

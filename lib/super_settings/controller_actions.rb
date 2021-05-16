@@ -6,7 +6,7 @@ module SuperSettings
   # base controller classes since the application will want to define authentication and
   # authorization criteria.
   #
-  # The controller is built by extending the class defined by the Configuration objecgt and
+  # The controller is built by extending the class defined by the Configuration object and
   # then mixing in this module.
   module ControllerActions
     extend ActiveSupport::Concern
@@ -40,7 +40,7 @@ module SuperSettings
       end
     end
 
-    # Get a setting by id. This endpoint may be called with a REST GET request.
+    # Get a setting by id.
     # The response payload is:
     # {
     #   id: integer,
@@ -51,25 +51,9 @@ module SuperSettings
     #   created_at: iso8601 string,
     #   updated_at: iso8601 string
     # }
-    #
-    # This also serves as the AJAX endpoint to render the partial to show the setting value.
     def show
       setting = Setting.find(params[:id])
-      respond_to do |format|
-        format.json { render json: setting.as_json }
-        format.html { render partial: "super_settings/settings/setting", locals: {setting: setting} }
-      end
-    end
-
-    # AJAX endpoint to get the edit form partial.
-    def edit
-      setting = Setting.find(params[:id])
-      render partial: "super_settings/settings/edit_setting", locals: {setting: setting}
-    end
-
-    # AJAX endpoint to get the new form partial.
-    def new
-      render partial: "super_settings/settings/edit_setting", locals: {setting: Setting.new}
+      render json: setting.as_json
     end
 
     # The update operation uses a transaction to atomically update all settings.
@@ -122,7 +106,13 @@ module SuperSettings
             render json: {success: false, errors: errors}, status: :unprocessable_entity
           end
           format.html do
-            @settings = all_super_settings_with_errors(settings)
+            @changed_settings = settings.map do |setting|
+              json = setting.as_json
+              json[:errors] = setting.errors.full_messages if setting.errors.any?
+              json[:new_record] = setting.new_record?
+              json
+            end
+            @settings = Setting.order(:key)
             flash.now[:alert] = "Settings not saved"
             render :index, status: :unprocessable_entity
           end
@@ -130,7 +120,7 @@ module SuperSettings
       end
     end
 
-    # Return the history of the setting. This endpoint may be called with a REST GET request.
+    # Return the history of the setting.
     # The response format is:
     # {
     #   key: string,
@@ -145,8 +135,6 @@ module SuperSettings
     #     ...
     #   ]
     # }
-    #
-    # This also serves as the AJAX endpoint to render the setting history.
     def history
       @setting = Setting.find(params[:id])
       @histories = @setting.histories.limit(HISTORY_PAGE_SIZE)
@@ -169,38 +157,14 @@ module SuperSettings
         end
       end
 
-      respond_to do |format|
-        format.json do
-          payload = {id: @setting.id, key: @setting.key}
-          payload[:histories] = @histories.collect do |history|
-            {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}
-          end
-          payload[:last_used_at] = @setting.last_used_at if SuperSettings.track_last_used?
-          payload[:previous_page_url] = @previous_page_url if @previous_page_url
-          payload[:next_page_url] = @next_page_url if @next_page_url
-          render json: payload
-        end
-        format.html { render :history, layout: false }
+      payload = {id: @setting.id, key: @setting.key}
+      payload[:histories] = @histories.collect do |history|
+        {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}
       end
-    end
-
-    private
-
-    # This method is used when there are errors saving changes. It loads all the settings,
-    # but makes sure any ones being upated are mixed in so that errors on the models can be
-    # displayed in the view.
-    def all_super_settings_with_errors(changed)
-      changed_map = {}
-      changed.each { |setting| changed_map[setting.key] = setting }
-      settings = changed.select(&:new_record?)
-      Setting.order(:key).each do |setting|
-        settings << if changed_map.include?(setting.key)
-          changed_map[setting.key]
-        else
-          setting
-        end
-      end
-      settings
+      payload[:last_used_at] = @setting.last_used_at if SuperSettings.track_last_used?
+      payload[:previous_page_url] = @previous_page_url if @previous_page_url
+      payload[:next_page_url] = @next_page_url if @next_page_url
+      render json: payload
     end
   end
 end

@@ -19,7 +19,7 @@
 
   function findSettingElement(id) {
     if (id) {
-      return document.querySelector("#settings-table tr[id=setting-" + id + "]")
+      return document.querySelector('#settings-table tr[data-id="' + id + '"]');
     } else {
       return null;
     }
@@ -46,7 +46,7 @@
     if (saveButton) {
       const count = changesCount();
       const countSpan = saveButton.querySelector(".count");
-      if (count == 0) {
+      if (count === 0) {
         saveButton.disabled = true;
         countSpan.innerHTML = "";
         discardButton.disabled = true;
@@ -59,83 +59,272 @@
   }
 
   function getFieldValueInput(settingRow) {
-    const input = settingRow.querySelector(".js-setting-value input");
+    const input = settingRow.querySelector(".super-settings-value input");
     if (!input) {
-      input = settingRow.querySelector(".js-setting-value textarea");
+      input = settingRow.querySelector(".super-settings-value textarea");
     }
     return input;
   }
 
-  function settingInputHTML(type, fieldId, fieldName) {
-    let html = null;
-    if (type === "array") {
-      html = '<textarea name="' + fieldName + '" id="' + fieldId + '" rows="8" class="form-control" placeholder="one entry per line"></textarea>';
-    } else if (type === "boolean") {
-      html = '<div class="form-check checkbox">'
-      html += '<input type="checkbox" name="' + fieldName + '" id="' + fieldId + '" value="true">'
-      html += '<label for="' + fieldId + '">Enabled</label>'
-      html += '</div>'
-    } else {
-      html = '<input name="' + fieldName + '" id="' + fieldId + '" value="" class="form-control" '
-      if (type === "float") {
-        html += 'type="number" step="any"';
-      } else if (type === "integer") {
-        html += 'type="number" step="1"';
-      } else if (type === "datetime") {
-        html += 'type="datetime-local"';
+  function lastUsedAtAgeHTML(timestamp) {
+    let colorClass = "text-danger";
+    let message = null;
+    let title = "";
+    if (timestamp) {
+      const lastUsedTime = Date.parse(timestamp)
+      title = new Date(lastUsedTime).toUTCString().replace("GMT", "UTC");
+      const hours = (Date.now() - lastUsedTime) / (3600 * 1000);
+      if (hours < 1) {
+        message = "less than one hour ago";
+      } else if (hours < 2) {
+        message = "over 1 hour ago";
+      } else if (hours < 48) {
+        message = `over ${hours} hours ago`;
       } else {
-        html += 'type="text"';
+        message = `over ${Math.floor(hours / 24)} days ago`;
       }
-      html += ">";
+    } else {
+      message = "never used";
     }
-    return html;
+    return `<div class="${colorClass}" title="${title}">${message}</div>`;
+  }
+
+  function setSettingDisplayValue(element, setting) {
+    if (setting.value === null || setting.value === undefined) {
+      element.innerText = "";
+    } else if (Array.isArray(setting.value)) {
+      let arrayHTML = "";
+      setting.value.map(function(val) {
+        arrayHTML += `<div>${escapeHTML(val)}</div>`;
+      });
+      element.innerHTML = arrayHTML;
+    } else if (setting.value_type === "datetime") {
+      try {
+        const datetime = new Date(Date.parse(setting.value));
+        element.innerText = datetime.toUTCString().replace("GMT", "UTC");
+      } catch (e) {
+        element.innerText = "" + setting.value
+      }
+    } else if (setting.value_type === "secret") {
+      let placeholder = "••••••••••••••••••••••••";
+      if (!setting.encrypted) {
+        placeholder += '<br><span class="text-danger">not encrypted</span>'
+      }
+      element.innerHTML = placeholder;
+    } else {
+      element.innerText = "" + setting.value
+    }
+  }
+
+  function getSettingEditValue(element) {
+    if (element.querySelector("input[type=checkbox]")) {
+      return element.querySelector("input[type=checkbox]").checked;
+    } else {
+      return element.querySelector(".js-setting-value").value;
+    }
   }
 
   function changeSettingType(event) {
-    const valueTypeMenu = event.target;
-    const settingRow = valueTypeMenu.closest("tr");
-    const type = valueTypeMenu.options[valueTypeMenu.selectedIndex].value;
-    let input = getFieldValueInput(settingRow)
-    const fieldName = input.name;
-    let fieldValue = input.value;
-    if (input.type === "checkbox") {
-      if (input.checked) {
-        fieldValue = input.value;
-      } else {
-        fieldValue = null;
-      }
+    event.preventDefault();
+    const row = event.target.closest("tr");
+    const valueType = event.target.options[event.target.selectedIndex].value;
+    var setting = {
+      id: row.dataset.id,
+      key: row.querySelector(".super-settings-key input").value,
+      value: getSettingEditValue(row),
+      value_type: valueType,
+      description: row.querySelector(".super-settings-description textarea").value,
+      new_record: row.dataset.newrecord
     }
-    const fieldId = fieldName.replace(/[\[\]]+/g, "_").replace(/_$/, "");
-
-    input.remove();
-    settingRow.querySelector(".js-setting-value").innerHTML = settingInputHTML(type, fieldId, fieldName);
-    input = getFieldValueInput(settingRow);
-    if (type === "boolean") {
-      input.checked = fieldValue;
+    const addedRow = addRowToTable(editSettingRow(setting));
+    if (addedRow.querySelector(".super-settings-value .js-date-input")) {
+      addedRow.querySelector(".super-settings-value .js-date-input").focus();
     } else {
-      input.value = fieldValue;
+      addedRow.querySelector(".super-settings-value .js-setting-value").focus();
     }
   }
 
-  function addSettingToTable(id, html) {
-    let settingRow = findSettingElement(id);
-    if (settingRow) {
-      settingRow.id = null;
-      settingRow.innerHTML = "";
-      settingRow.insertAdjacentHTML("afterend", html);
-      settingRow.remove();
-      settingRow = findSettingElement(id);
-    } else {
-      const tableBody = document.querySelector("#settings-table tbody");
-      tableBody.insertAdjacentHTML("afterbegin", html);
-      settingRow = tableBody.querySelector("tbody tr");
-      settingRow.querySelector("input").focus();
+  function changeDateTime(event) {
+    const parentNode = event.target.closest("span")
+    const dateValue = parentNode.querySelector(".js-date-input").value;
+    let timeValue = parentNode.querySelector(".js-time-input").value;
+    if (timeValue === "") {
+      timeValue = "00:00:00";
     }
-    bindSettingControlEvents(settingRow);
-    disableSubmitFormWithReturnKey(settingRow);
+    parentNode.querySelector(".js-setting-value").value = `${dateValue}T${timeValue}Z`
+  }
+
+  function escapeHTML(text) {
+    if (text === null && text === undefined) {
+      return "";
+    }
+    const htmlEscapes = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '/': '&#x2F;'};
+    const htmlEscaper = /[&<>"'\/]/g;
+    return ('' + text).replace(htmlEscaper, function(match) {
+      return htmlEscapes[match];
+    });
+  }
+
+  function mustacheSubstitute(html, setting) {
+    return html.replaceAll("{{id}}", escapeHTML(setting.id));
+  }
+
+  function elementFromSettingTemplate(setting, templateSelector) {
+    let html = document.querySelector(templateSelector).innerHTML;
+    html = mustacheSubstitute(html, setting);
+    const template = document.createElement('template');
+    template.innerHTML = html.trim();
+    return template.content.firstChild;
+  }
+
+  function settingRow(setting) {
+    const row = elementFromSettingTemplate(setting, "#setting-row-template");
+    row.dataset.id = setting.id
+    row.dataset.key = setting.key
+    row.querySelector(".js-setting-key").value = setting.key;
+    if (setting.deleted) {
+      row.dataset.edited = true
+      row.dataset.deleted = true
+      row.querySelector(".js-setting-deleted").value = "1";
+    }
+    if (setting.key !== null && setting.key !== undefined) {
+      row.querySelector(".super-settings-key .js-value-placeholder").innerText = setting.key;
+    }
+    if (setting.value !== null && setting.value !== undefined) {
+      setSettingDisplayValue(row.querySelector(".super-settings-value .js-value-placeholder"), setting);
+    }
+    if (setting.value_type !== null && setting.value_type !== undefined) {
+      row.querySelector(".super-settings-value-type .js-value-placeholder").innerText = setting.value_type;
+    }
+    if (setting.description !== null && setting.description !== undefined) {
+      row.querySelector(".super-settings-description .js-value-placeholder").innerHTML = escapeHTML(setting.description).replaceAll("\n", "<br>");
+    }
+
+    if (setting.last_used_at !== undefined) {
+      row.querySelector(".js-last_used_at-placeholder").innerHTML = lastUsedAtAgeHTML(setting.last_used_at);
+    }
+
+    return row
+  }
+
+  function createValueInputElement(setting) {
+    let templateName = null;
+    if (setting.value_type === "integer") {
+      templateName = "#setting-value-field-integer-template";
+    } else if (setting.value_type === "float") {
+      templateName = "#setting-value-field-float-template";
+    } else if (setting.value_type === "datetime") {
+      templateName = "#setting-value-field-datetime-template";
+    } else if (setting.value_type === "boolean") {
+      templateName = "#setting-value-field-boolean-template";
+    } else if (setting.value_type === "array") {
+      templateName = "#setting-value-field-array-template";
+    } else {
+      templateName = "#setting-value-field-template";
+    }
+    const html = mustacheSubstitute(document.querySelector(templateName).innerHTML, setting);
+    const template = document.createElement('template');
+    template.innerHTML = html.trim();
+    return template.content.firstChild;
+  }
+
+  function padTimeVal(val) {
+    return ("" + val).padStart(2, "0");
+  }
+
+  function valueInputElement(setting) {
+    const element = createValueInputElement(setting)
+    if (setting.value_type === "boolean") {
+      const checked = (`${setting.value}` === "true" || parseInt(setting.value) > 0)
+      element.querySelector('input[type="checkbox"]').checked = checked;
+    } else if (setting.value_type === "array") {
+      if (Array.isArray(setting.value)) {
+        element.value = setting.value.join("\n");
+      } else {
+        element.value = setting.value;
+      }
+    } else if (setting.value_type === "datetime") {
+      const datetime = new Date(Date.parse(setting.value));
+      const isoDate = `${datetime.getUTCFullYear()}-${padTimeVal(datetime.getUTCMonth() + 1)}-${padTimeVal(datetime.getUTCDate())}`;
+      const isoTime = `${padTimeVal(datetime.getUTCHours())}:${padTimeVal(datetime.getUTCMinutes())}:${padTimeVal(datetime.getUTCSeconds())}`;
+      element.querySelector('input[type="date"]').value = isoDate;
+      element.querySelector('input[type="time"]').value = isoTime;
+      element.querySelector(".js-setting-value").value = setting.value;
+    } else {
+      element.value = setting.value;
+    }
+
+    return element;
+  }
+
+  function editSettingRow(setting) {
+    const row = elementFromSettingTemplate(setting, "#setting-row-edit-template");
+    row.dataset.id = setting.id
+    disableSubmitFormWithReturnKey(row);
+
+    row.querySelector(".super-settings-key input").value = setting.key;
+
+    const valueInput = valueInputElement(setting);
+    const valuePlaceholder = row.querySelector(".super-settings-value .js-value-placeholder");
+    valuePlaceholder.innerHTML = "";
+    valuePlaceholder.appendChild(valueInput);
+
+    const valueType = row.querySelector(".super-settings-value-type select");
+    for (let i = 0; i < valueType.options.length; i++) {
+      if (valueType.options[i].value === setting.value_type) {
+        valueType.selectedIndex = i;
+        break;
+      }
+    }
+
+    if (setting.errors && setting.errors.length > 0) {
+      let errorsHTML = "";
+      setting.errors.forEach(function(error) {
+        errorsHTML += `<div>${escapeHTML(error)}</div>`
+      });
+      row.querySelector(".js-setting-errors").innerHTML = errorsHTML;
+    }
+
+    if (setting.new_record) {
+      row.dataset.newrecord = "true";
+    }
+
+    return row
+  }
+
+  function newSettingRow() {
+    const randomId = "new" + Math.floor((Math.random() * 0xFFFFFFFFFFFFFF)).toString(16);
+    const setting = {id: randomId, key: "", value: "", value_type: "string", new_record: true}
+    row = editSettingRow(setting);
+    return row;
+  }
+
+  function addRowToTable(row) {
+    const existingRow = findSettingElement(row.dataset.id);
+    if (existingRow) {
+      existingRow.replaceWith(row);
+    } else {
+      document.querySelector("#settings-table tbody").prepend(row);
+    }
+    bindSettingControlEvents(row);
     filterSettings(document.querySelector("#filter").value);
-    settingRow.scrollIntoView({block: "nearest"});
+    row.scrollIntoView({block: "nearest"});
     enableSaveButton();
+    return row;
+  }
+
+  function renderSettingsTable(settings, changes) {
+    const tbody = document.querySelector("#settings-table tbody");
+    settings.forEach(function(setting) {
+      const row = settingRow(setting);
+      tbody.appendChild(row);
+      bindSettingControlEvents(row);
+    });
+    if (changes) {
+      changes.forEach(function(setting) {
+        addRowToTable(editSettingRow(setting));
+      });
+    }
   }
 
   function apiURL(action, id) {
@@ -152,40 +341,36 @@
     return url;
   }
 
-  function fetchSetting(action, id) {
-    fetch(apiURL(action, id), {credentials: "same-origin", headers: new Headers({"Accept": "text/html"})})
-    .then(
-      function(response) {
-        if (response.ok) {
-          return response.text();
-        } else {
-          throw( response.status + response.statusText)
-        }
-      }
-    ).then(
-      function(html) { addSettingToTable(id, html) }
-    ).catch(
-      function(error) {
-        showError(error);
-      }
-    );
-  }
-
   function addSetting(event) {
     event.preventDefault();
-    fetchSetting("new");
+    const row = addRowToTable(newSettingRow());
+    row.querySelector(".super-settings-key input").focus();
   }
 
   function editSetting(event) {
     event.preventDefault();
     const id = event.target.closest("tr").dataset.id;
-    fetchSetting("edit", id);
+    const setting = findSetting(id);
+    const row = addRowToTable(editSettingRow(setting));
+    if (row.querySelector(".super-settings-value .js-date-input")) {
+      row.querySelector(".super-settings-value .js-date-input").focus();
+    } else {
+      row.querySelector(".super-settings-value .js-setting-value").focus();
+    }
   }
 
   function restoreSetting(event) {
     event.preventDefault();
-    const id = event.target.closest("tr").dataset.id;
-    fetchSetting(null, id);
+    const row = event.target.closest("tr");
+    const id = row.dataset.id;
+    const setting = findSetting(id);
+    if (setting) {
+      const newRow = settingRow(setting);
+      bindSettingControlEvents(newRow);
+      row.replaceWith(newRow);
+    } else {
+      row.remove();
+    }
   }
 
   function removeSetting(event) {
@@ -194,33 +379,33 @@
     if (settingRow.dataset["id"]) {
       settingRow.querySelector("input.js-setting-deleted").value = "1";
       settingRow.dataset.edited = true;
-      settingRow.style.color = "darkred";
-      settingRow.querySelectorAll("td").forEach(function(element) { element.style.backgroundColor = "#ffd1d8" });
-      settingRow.querySelector("td").style.textDecoration = "line-through";
+      settingRow.dataset.deleted = true;
       settingRow.querySelector(".js-remove-setting").style.display = "none";
-      settingRow.querySelector(".js-cancel-remove-setting").style.display = "inline-block";
+      settingRow.querySelector(".js-restore-setting").style.display = "inline-block";
     } else {
       settingRow.remove();
     }
     enableSaveButton();
   }
 
-  function cancelRemoveSetting(event) {
-    event.preventDefault();
-    const settingRow = event.target.closest("tr");
-    settingRow.querySelector("input.js-setting-deleted").value = "";
-    settingRow.dataset.edited = "";
-    settingRow.style.color = "inherit";
-    settingRow.querySelectorAll("td").forEach(function(element) { element.style.backgroundColor = "inherit" });
-    settingRow.querySelector("td").style.textDecoration = "inherit";
-    settingRow.querySelector(".js-cancel-remove-setting").style.display = "none";
-    settingRow.querySelector(".js-remove-setting").style.display = "inline-block";
-    filterSettings(document.querySelector("#filter").value);
-    enableSaveButton();
+  function filterListener(event) {
+    const filter = event.target.value;
+    filterSettings(filter);
+    updateFilterURL(filter);
   }
 
-  function filterListener(event) {
-    filterSettings(event.target.value);
+  function updateFilterURL(filter) {
+    const queryParams = new URLSearchParams(window.location.search);
+    if (filter === "") {
+      queryParams.delete("filter");
+    } else {
+      queryParams.set("filter", filter);
+    }
+    if (queryParams.toString() !== "") {
+      history.replaceState(null, null, "?" + queryParams.toString());
+    } else {
+      history.replaceState(null, null, window.location.pathname);
+    }
   }
 
   function filterSettings(filterText) {
@@ -297,7 +482,7 @@
     }
     inputs.forEach(function(element) {
       element.addEventListener("keypress", function(event) {
-        if (event.keyCode == 13) {
+        if (event.keyCode === 13) {
           event.preventDefault();
         }
       });
@@ -314,33 +499,69 @@
     window.location = url;
   }
 
-  function showModal(event) {
+  function renderHistoryTable(parent, payload) {
+    parent.innerHTML = document.querySelector("#setting-history-table").innerHTML.trim();
+    const tbody = parent.querySelector("tbody");
+    let rowsHTML = "";
+    payload.histories.forEach(function(history) {
+      const date = (new Date(Date.parse(history.created_at))).toUTCString().replace("GMT", "UTC");
+      rowsHTML += `<tr><td class="super-settings-text-nowrap">${escapeHTML(date)}</td><td>${escapeHTML(history.changed_by)}</td><td>${escapeHTML(history.value)}</td></tr>`;
+    });
+    tbody.insertAdjacentHTML("beforeend", rowsHTML);
+
+    if (payload.previous_page_url || payload.next_page_url) {
+      let paginationHTML = `<div class="align-center">`;
+      if (payload.previous_page_url) {
+        paginationHTML += `<div style="float:left;"><a href="${escapeHTML(payload.previous_page_url)}" class="js-show-history")>&#8592; Newer</a></div>`;
+      }
+      if (payload.next_page_url) {
+        paginationHTML += `<div style="float:right;"><a href="${escapeHTML(payload.next_page_url)}" class="js-show-history")>Older &#8594;</a></div>`;
+      }
+      paginationHTML += '<div style="clear:both;"></div>';
+      parent.querySelector("table").insertAdjacentHTML("afterend", paginationHTML);
+    }
+    addListeners(parent.querySelectorAll(".js-show-history"), "click", showHistoryModal);
+  }
+
+  function showModal() {
+    const modal = document.querySelector("#modal");
+    const content = document.querySelector(".super-settings-modal-content");
+    modal.style.display = "block";
+    modal.setAttribute("aria-hidden", "false");
+    modal.activator = document.activeElement;
+    focusableElements(document).forEach(function(element) {
+      if (!modal.contains(element)) {
+        element.dataset.saveTabIndex = element.getAttribute("tabindex");
+        element.setAttribute("tabindex", -1);
+      }
+    });
+    document.querySelector("body").style.overflow = "hidden";
+  }
+
+  function showHistoryModal(event) {
     event.preventDefault();
     const modal = document.querySelector("#modal");
     const content = document.querySelector(".super-settings-modal-content");
-    fetch(this.href, {credentials: "same-origin", headers: new Headers({"Accept": "text/html"})})
+    let url = "";
+    if (event.target.href) {
+      url = event.target.href
+    } else {
+      const id = event.target.closest("tr").dataset.id;
+      url = apiURL("history", id)
+    }
+    fetch(url, {credentials: "same-origin", headers: new Headers({"Accept": "application/json"})})
     .then(
       function(response) {
         if (response.ok) {
-          return response.text();
+          return response.json();
         } else {
           throw( response.status + response.statusText)
         }
       }
     ).then(
-      function(html) {
-        content.innerHTML = html;
-        modal.style.display = "block";
-        modal.setAttribute("aria-hidden", "false");
-        modal.activator = document.activeElement;
-        focusableElements(document).forEach(function(element) {
-          if (!modal.contains(element)) {
-            element.dataset.saveTabIndex = element.getAttribute("tabindex");
-            element.setAttribute("tabindex", -1);
-          }
-        });
-        document.querySelector("body").style.overflow = "hidden";
-        addListeners(content.querySelectorAll(".js-modal-link"), "click", showModal);
+      function(json) {
+        renderHistoryTable(content, json);
+        showModal();
       }
     ).catch(
       function(error) {
@@ -380,14 +601,27 @@
     event.preventDefault();
   }
 
+  function findSetting(id) {
+    let found = null;
+    id = "" + id;
+    SuperSettings.settings.forEach(function(setting) {
+      if ("" + setting.id === id) {
+        found = setting;
+        return;
+      }
+    });
+    return found;
+  }
+
   function bindSettingControlEvents(parent) {
     addListeners(parent.querySelectorAll(".js-remove-setting"), "click", removeSetting);
-    addListeners(parent.querySelectorAll(".js-cancel-remove-setting"), "click", cancelRemoveSetting);
     addListeners(parent.querySelectorAll(".js-edit-setting"), "click", editSetting);
-    addListeners(parent.querySelectorAll(".js-cancel-setting"), "click", restoreSetting);
-    addListeners(parent.querySelectorAll(".js-modal-link"), "click", showModal);
+    addListeners(parent.querySelectorAll(".js-restore-setting"), "click", restoreSetting);
+    addListeners(parent.querySelectorAll(".js-show-history"), "click", showHistoryModal);
     addListeners(parent.querySelectorAll(".js-no-op"), "click", noOp);
     addListeners(parent.querySelectorAll(".js-setting-value-type"), "change", changeSettingType);
+    addListeners(parent.querySelectorAll(".js-date-input"), "change", changeDateTime);
+    addListeners(parent.querySelectorAll(".js-time-input"), "change", changeDateTime);
   }
 
   docReady(function() {
@@ -397,7 +631,7 @@
     addListener(document.querySelector("#settings-form"), "submit", disableLeavePage);
     addListener(document.querySelector("#modal"), "click", closeModal);
 
-    bindSettingControlEvents(document);
+    renderSettingsTable(SuperSettings.settings, SuperSettings.changes);
     disableSubmitFormWithReturnKey(document.querySelector("#settings-table"))
 
     applyFilter();

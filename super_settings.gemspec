@@ -28,7 +28,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "activerecord", ">= 4.2"
-  spec.add_dependency "secret_keys"
+  spec.add_dependency "secret_keys", ">= 1.0"
 
   spec.add_development_dependency "bundler"
 end
