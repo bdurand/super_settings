@@ -32,7 +32,7 @@
       <% end %>
     </div>
 
-    <table class="table table-striped" id="settings-table">
+    <table class="table table-striped" id="settings-table" data-api-url="<%=super_settings.index_path%>">
       <thead>
         <tr>
           <th scope="col" class="super-settings-key">Key</th>
@@ -74,7 +74,6 @@
 
     <td class="super-settings-description">
       <div class="js-value-placeholder"></div>
-      <div class="js-last_used_at-placeholder"></div>
     </td>
 
     <td class="super-settings-controls">

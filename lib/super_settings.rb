@@ -188,26 +188,6 @@ module SuperSettings
       local_cache.refresh_interval = value
     end
 
-    # Enable or disable the feature to track setting usage. This feature can be useful to track
-    # if settings are actually being used. Since all settings are loaded into memory in the, you
-    # don't want to let the number of settings to grow too large. The timestamp for a setting being
-    # used is only updated at most once per hour since.
-    #
-    # Enabling the feature does require that the database connection used for loading the setting
-    # also allow write access, so this is an opt in feature.
-    #
-    # @param value [Boolean]
-    def track_last_used=(value)
-      local_cache.track_last_used = value
-    end
-
-    # Return true if the feature to track setting usage is enabled.
-    #
-    # @return [Boolean]
-    def track_last_used?
-      local_cache.track_last_used?
-    end
-
     # Set the secret used to encrypt secret settings in the database.
     #
     # If you need to roll your secret, you can pass in an array of values. The first one

@@ -94,10 +94,6 @@ module SuperSettings
     # is checked for updates. Defaults to five seconds.
     attr_accessor :refresh_interval
 
-    # Enable the optional feature to track usage of settings. This requires write permission
-    # to the database table where settings are stored.
-    attr_accessor :track_last_used
-
     def initialize
       @model = Model.new
       @controller = Controller.new

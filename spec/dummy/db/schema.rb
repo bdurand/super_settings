@@ -19,7 +19,6 @@ ActiveRecord::Schema.define(version: 2021_04_14_004553) do
     t.datetime "updated_at", null: false
     t.datetime "created_at", null: false
     t.boolean "deleted", default: false
-    t.datetime "last_used_at"
     t.index ["key"], name: "index_super_settings_on_key", unique: true
   end
 

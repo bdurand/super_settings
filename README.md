@@ -25,7 +25,6 @@ SuperSettings can be used on its own, or as a part of a larger configuration str
   * [Hashes](#hashes)
   * [Defaults](#defaults)
 * [Data Model](#data_model)
-  * [Usage Tracking](#usage_tracking)
   * [Encrypted Secrets](#encrypted_secrets)
 * [Rails Engine](#rails_engine)
   * [Web UI](#web_ui)
@@ -126,12 +125,6 @@ The value type on a setting does not limit how it can be cast when request using
 It is not possible to store an empty string in a setting; empty strings will be cast to `nil`.
 
 A history of all settings changes is kept every time the value is changed in the `histories` association. You can use this information to see what values were in effect at what time. You can optionally alse record who made the changes.
-
-#### Usage Tracking
-
-An optional feature you can turn on is to track when settings are used. This can be useful as a audit feature so you can cleanup old feature flags, etc. that are no longer in use. The timestamp of when a setting was last used will only be updated at most once per hour into the `last_used_at` field, so this adds very little overhead.
-
-This feature does require write access on the database connection and can add overhead if a lot of keys need to be updated at once.
 
 #### Encrypted Secrets
 
@@ -240,7 +233,6 @@ Response:
 {
   "id": integer,
   "key": string,
-  "last_used_at": iso8601string
   "histories": [
     {
       "key": string,
@@ -256,7 +248,7 @@ Response:
 
 ```
 
-The `last_used_at` attribute is only returned if the usage tracking feature is turned on. The `next_page_url` and `previous_page_url` are returned for pagination if the full list of history items was not returned.
+The `next_page_url` and `previous_page_url` are returned for pagination if the full list of history items was not returned.
 
 ##### Update Settings
 
@@ -302,9 +294,6 @@ SuperSettings.configure do |config|
   config.controller.application_name = "My Application"
   config.controller.application_link = "/"
   config.controller.application_logo = "app_logo.png"
-
-  # Enable the feature to track the last used time on settings.
-  config.track_last_used = true
 
   # Set a custom refresh interval for the cache (default is 5 seconds)
   config.refresh_interval = 2

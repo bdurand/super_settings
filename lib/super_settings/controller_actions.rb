@@ -124,7 +124,6 @@ module SuperSettings
     # The response format is:
     # {
     #   key: string,
-    #   last_used_at: iso8601 string
     #   histories: [
     #     {
     #       key: string,
@@ -161,7 +160,6 @@ module SuperSettings
       payload[:histories] = @histories.collect do |history|
         {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}
       end
-      payload[:last_used_at] = @setting.last_used_at if SuperSettings.track_last_used?
       payload[:previous_page_url] = @previous_page_url if @previous_page_url
       payload[:next_page_url] = @next_page_url if @next_page_url
       render json: payload

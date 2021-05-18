@@ -44,7 +44,7 @@ module SuperSettings
     scope :with_deleted, -> { unscope(where: :deleted) }
 
     # Scope to select just the data needed to load the setting values.
-    scope :runtime_data, -> { select([:id, :key, :value_type, :raw_value, :deleted, :last_used_at]) }
+    scope :runtime_data, -> { select([:id, :key, :value_type, :raw_value, :deleted]) }
 
     has_many :histories, class_name: "History", foreign_key: :key, primary_key: :key
 
@@ -316,7 +316,6 @@ module SuperSettings
         created_at: created_at,
         updated_at: updated_at
       }
-      attributes[:last_used_at] = last_used_at if SuperSettings.track_last_used?
       attributes[:encrypted] = encrypted? if secret?
       attributes
     end

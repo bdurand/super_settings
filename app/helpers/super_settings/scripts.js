@@ -1,23 +1,6 @@
 (function() {
-  function docReady(fn) {
-    if (document.readyState === "complete" || document.readyState === "interactive") {
-      setTimeout(fn, 1);
-    } else {
-      document.addEventListener("DOMContentLoaded", fn);
-    }
-  }
-
-  function addListener(element, event, handler) {
-    if (element) {
-      element.addEventListener(event, handler);
-    }
-  }
-
-  function addListeners(elements, event, handler) {
-    elements.forEach(function(element) { addListener(element, event, handler) });
-  }
-
-  function findSettingElement(id) {
+  // Return the table row element for a setting.
+  function findSettingRow(id) {
     if (id) {
       return document.querySelector('#settings-table tr[data-id="' + id + '"]');
     } else {
@@ -25,21 +8,18 @@
     }
   }
 
+  // Show an error message in an alert.
   function showError(error) {
     console.error('Error:', error)
     alert("Sorry, an error occurred. Refresh the page and try again.")
   }
 
+  // Return the number of settings that have been edited.
   function changesCount() {
-    let changes = 0;
-    document.querySelectorAll("#settings-table tbody tr").forEach(function(element) {
-      if (element.dataset.edited) {
-        changes += 1;
-      }
-    });
-    return changes;
+    return document.querySelectorAll("#settings-table tbody tr[data-edited=true]").length;
   }
 
+  // Set the enabled status of the save button for submitting the form.
   function enableSaveButton() {
     const saveButton = document.querySelector("#save-settings");
     const discardButton = document.querySelector("#discard-changes");
@@ -58,37 +38,7 @@
     }
   }
 
-  function getFieldValueInput(settingRow) {
-    const input = settingRow.querySelector(".super-settings-value input");
-    if (!input) {
-      input = settingRow.querySelector(".super-settings-value textarea");
-    }
-    return input;
-  }
-
-  function lastUsedAtAgeHTML(timestamp) {
-    let colorClass = "text-danger";
-    let message = null;
-    let title = "";
-    if (timestamp) {
-      const lastUsedTime = Date.parse(timestamp)
-      title = new Date(lastUsedTime).toUTCString().replace("GMT", "UTC");
-      const hours = (Date.now() - lastUsedTime) / (3600 * 1000);
-      if (hours < 1) {
-        message = "less than one hour ago";
-      } else if (hours < 2) {
-        message = "over 1 hour ago";
-      } else if (hours < 48) {
-        message = `over ${hours} hours ago`;
-      } else {
-        message = `over ${Math.floor(hours / 24)} days ago`;
-      }
-    } else {
-      message = "never used";
-    }
-    return `<div class="${colorClass}" title="${title}">${message}</div>`;
-  }
-
+  // Set the display value for a setting.
   function setSettingDisplayValue(element, setting) {
     if (setting.value === null || setting.value === undefined) {
       element.innerText = "";
@@ -116,46 +66,23 @@
     }
   }
 
-  function getSettingEditValue(element) {
-    if (element.querySelector("input[type=checkbox]")) {
-      return element.querySelector("input[type=checkbox]").checked;
+  // Get the value of a setting from the edit form field.
+  function getSettingEditValue(row) {
+    if (row.querySelector(".super-settings-value input[type=checkbox]")) {
+      return row.querySelector(".super-settings-value input[type=checkbox]").checked;
     } else {
-      return element.querySelector(".js-setting-value").value;
+      return row.querySelector(".super-settings-value .js-setting-value").value;
     }
   }
 
-  function changeSettingType(event) {
-    event.preventDefault();
-    const row = event.target.closest("tr");
-    const valueType = event.target.options[event.target.selectedIndex].value;
-    var setting = {
-      id: row.dataset.id,
-      key: row.querySelector(".super-settings-key input").value,
-      value: getSettingEditValue(row),
-      value_type: valueType,
-      description: row.querySelector(".super-settings-description textarea").value,
-      new_record: row.dataset.newrecord
-    }
-    const addedRow = addRowToTable(editSettingRow(setting));
-    if (addedRow.querySelector(".super-settings-value .js-date-input")) {
-      addedRow.querySelector(".super-settings-value .js-date-input").focus();
-    } else {
-      addedRow.querySelector(".super-settings-value .js-setting-value").focus();
-    }
+  // Helper function to pad time values with a zero for making ISO-8601 date and time formats.
+  function padTimeVal(val) {
+    return ("" + val).padStart(2, "0");
   }
 
-  function changeDateTime(event) {
-    const parentNode = event.target.closest("span")
-    const dateValue = parentNode.querySelector(".js-date-input").value;
-    let timeValue = parentNode.querySelector(".js-time-input").value;
-    if (timeValue === "") {
-      timeValue = "00:00:00";
-    }
-    parentNode.querySelector(".js-setting-value").value = `${dateValue}T${timeValue}Z`
-  }
-
+  // Escape special HTML characters in text.
   function escapeHTML(text) {
-    if (text === null && text === undefined) {
+    if (text === null || text === undefined) {
       return "";
     }
     const htmlEscapes = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '/': '&#x2F;'};
@@ -165,10 +92,12 @@
     });
   }
 
+  // Helper function for use with templates to replace the text {{id}} with a setting's id value.
   function mustacheSubstitute(html, setting) {
     return html.replaceAll("{{id}}", escapeHTML(setting.id));
   }
 
+  // Extract a new DOM element from a <template> element on the page.
   function elementFromSettingTemplate(setting, templateSelector) {
     let html = document.querySelector(templateSelector).innerHTML;
     html = mustacheSubstitute(html, setting);
@@ -177,6 +106,7 @@
     return template.content.firstChild;
   }
 
+  // Create a table row element for displaying a setting.
   function settingRow(setting) {
     const row = elementFromSettingTemplate(setting, "#setting-row-template");
     row.dataset.id = setting.id
@@ -200,13 +130,10 @@
       row.querySelector(".super-settings-description .js-value-placeholder").innerHTML = escapeHTML(setting.description).replaceAll("\n", "<br>");
     }
 
-    if (setting.last_used_at !== undefined) {
-      row.querySelector(".js-last_used_at-placeholder").innerHTML = lastUsedAtAgeHTML(setting.last_used_at);
-    }
-
     return row
   }
 
+  // Create an input element from a template depending on the value type.
   function createValueInputElement(setting) {
     let templateName = null;
     if (setting.value_type === "integer") {
@@ -228,10 +155,7 @@
     return template.content.firstChild;
   }
 
-  function padTimeVal(val) {
-    return ("" + val).padStart(2, "0");
-  }
-
+  // Create the elements needed to edit a setting value and set the element value.
   function valueInputElement(setting) {
     const element = createValueInputElement(setting)
     if (setting.value_type === "boolean") {
@@ -257,6 +181,7 @@
     return element;
   }
 
+  // Create a table row with form elements for editing a setting.
   function editSettingRow(setting) {
     const row = elementFromSettingTemplate(setting, "#setting-row-edit-template");
     row.dataset.id = setting.id
@@ -292,6 +217,7 @@
     return row
   }
 
+  // Create a table row with form elements for creating a new setting.
   function newSettingRow() {
     const randomId = "new" + Math.floor((Math.random() * 0xFFFFFFFFFFFFFF)).toString(16);
     const setting = {id: randomId, key: "", value: "", value_type: "string", new_record: true}
@@ -299,8 +225,9 @@
     return row;
   }
 
+  // Add a setting table row the table of settings.
   function addRowToTable(row) {
-    const existingRow = findSettingElement(row.dataset.id);
+    const existingRow = findSettingRow(row.dataset.id);
     if (existingRow) {
       existingRow.replaceWith(row);
     } else {
@@ -313,22 +240,9 @@
     return row;
   }
 
-  function renderSettingsTable(settings, changes) {
-    const tbody = document.querySelector("#settings-table tbody");
-    settings.forEach(function(setting) {
-      const row = settingRow(setting);
-      tbody.appendChild(row);
-      bindSettingControlEvents(row);
-    });
-    if (changes) {
-      changes.forEach(function(setting) {
-        addRowToTable(editSettingRow(setting));
-      });
-    }
-  }
-
+  // Get the URL for making an API call to the specified action and id.
   function apiURL(action, id) {
-    let url = document.location.pathname;
+    let url = document.querySelector("#settings-table").dataset.apiUrl;
     if (url.endsWith("/")) {
       url = url.substring(0, url.length - 1);
     }
@@ -341,59 +255,7 @@
     return url;
   }
 
-  function addSetting(event) {
-    event.preventDefault();
-    const row = addRowToTable(newSettingRow());
-    row.querySelector(".super-settings-key input").focus();
-  }
-
-  function editSetting(event) {
-    event.preventDefault();
-    const id = event.target.closest("tr").dataset.id;
-    const setting = findSetting(id);
-    const row = addRowToTable(editSettingRow(setting));
-    if (row.querySelector(".super-settings-value .js-date-input")) {
-      row.querySelector(".super-settings-value .js-date-input").focus();
-    } else {
-      row.querySelector(".super-settings-value .js-setting-value").focus();
-    }
-  }
-
-  function restoreSetting(event) {
-    event.preventDefault();
-    const row = event.target.closest("tr");
-    const id = row.dataset.id;
-    const setting = findSetting(id);
-    if (setting) {
-      const newRow = settingRow(setting);
-      bindSettingControlEvents(newRow);
-      row.replaceWith(newRow);
-    } else {
-      row.remove();
-    }
-  }
-
-  function removeSetting(event) {
-    event.preventDefault();
-    const settingRow = event.target.closest("tr");
-    if (settingRow.dataset["id"]) {
-      settingRow.querySelector("input.js-setting-deleted").value = "1";
-      settingRow.dataset.edited = true;
-      settingRow.dataset.deleted = true;
-      settingRow.querySelector(".js-remove-setting").style.display = "none";
-      settingRow.querySelector(".js-restore-setting").style.display = "inline-block";
-    } else {
-      settingRow.remove();
-    }
-    enableSaveButton();
-  }
-
-  function filterListener(event) {
-    const filter = event.target.value;
-    filterSettings(filter);
-    updateFilterURL(filter);
-  }
-
+  // Update the window location URL to reflect the current filter text.
   function updateFilterURL(filter) {
     const queryParams = new URLSearchParams(window.location.search);
     if (filter === "") {
@@ -408,6 +270,8 @@
     }
   }
 
+  // Apply the given filter to only show settings that have a key, value, or description
+  // that includes the filter text. Settings that are currently being edited will also be shown.
   function filterSettings(filterText) {
     const filters = [];
     filterText.split(" ").forEach(function(filter) {
@@ -445,6 +309,15 @@
     });
   }
 
+  // Programatically apply the filter again to keep it up to date with other changes.
+  function applyFilter() {
+    const filter = document.querySelector("#filter");
+    if (filter) {
+      filter.dispatchEvent(new Event("input"));
+    }
+  }
+
+  // Automatically hide the flash message displaying the results of the last save operation.
   function dismissFlash() {
     if (document.querySelector(".js-flash")) {
       setTimeout(function(){
@@ -455,50 +328,7 @@
     }
   }
 
-  function applyFilter() {
-    const filter = document.querySelector("#filter");
-    if (filter) {
-      filter.dispatchEvent(new Event("input"));
-    }
-  }
-
-  function promptUnsavedChanges(event) {
-    const form = document.querySelector("#settings-form");
-    if (form && !form.dataset.submitting && changesCount() > 0) {
-      return "Are you sure you want to leave?";
-    } else {
-      return undefined;
-    }
-  }
-
-  function disableLeavePage(event) {
-    document.querySelector("#settings-form").dataset.submitting = true;
-  }
-
-  function disableSubmitFormWithReturnKey(parent) {
-    const inputs = parent.querySelectorAll("input[type=text], input[type=number], input[type=datetime-local], select");
-    if (!inputs) {
-      return;
-    }
-    inputs.forEach(function(element) {
-      element.addEventListener("keypress", function(event) {
-        if (event.keyCode === 13) {
-          event.preventDefault();
-        }
-      });
-    });
-  }
-
-  function refreshPage(event) {
-    event.preventDefault();
-    let url = window.location.href.replace(/\?.*/, "");
-    const filter = document.querySelector("#filter").value;
-    if (filter !== "") {
-      url += "?filter=" + escape(filter);
-    }
-    window.location = url;
-  }
-
+  // Render a setting's history in a table.
   function renderHistoryTable(parent, payload) {
     parent.innerHTML = document.querySelector("#setting-history-table").innerHTML.trim();
     const tbody = parent.querySelector("tbody");
@@ -520,7 +350,7 @@
       paginationHTML += '<div style="clear:both;"></div>';
       parent.querySelector("table").insertAdjacentHTML("afterend", paginationHTML);
     }
-    addListeners(parent.querySelectorAll(".js-show-history"), "click", showHistoryModal);
+    addListener(parent.querySelectorAll(".js-show-history"), "click", showHistoryModal);
   }
 
   function showModal() {
@@ -537,6 +367,44 @@
     });
     document.querySelector("body").style.overflow = "hidden";
   }
+
+  function hideModal() {
+    const modal = document.querySelector("#modal");
+    const content = document.querySelector(".super-settings-modal-content");
+    modal.style.display = "none";
+    modal.setAttribute("aria-hidden", "true");
+    focusableElements(document).forEach(function(element) {
+      const tabIndex = element.dataset.saveTabIndex;
+      delete element.dataset.saveTabIndex;
+      if (tabIndex) {
+        element.setAttribute("tabindex", tabIndex);
+      }
+    });
+    if (modal.activator) {
+      modal.activator.focus();
+      delete modal.activator;
+    }
+    content.innerHTML = "";
+    document.querySelector("body").style.overflow = "visible";
+  }
+
+  function focusableElements(parent) {
+    return parent.querySelectorAll("a[href], area[href], button, input:not([type=hidden]), select, textarea, iframe, [tabindex], [contentEditable=true]")
+  }
+
+  function findSetting(id) {
+    let found = null;
+    id = "" + id;
+    SuperSettings.settings.forEach(function(setting) {
+      if ("" + setting.id === id) {
+        found = setting;
+        return;
+      }
+    });
+    return found;
+  }
+
+  /*** Event Listeners ***/
 
   function showHistoryModal(event) {
     event.preventDefault();
@@ -573,55 +441,184 @@
   function closeModal(event) {
     if (event.target.classList.contains("js-close-modal")) {
       event.preventDefault();
-      const modal = document.querySelector("#modal");
-      const content = document.querySelector(".super-settings-modal-content");
-      modal.style.display = "none";
-      modal.setAttribute("aria-hidden", "true");
-      focusableElements(document).forEach(function(element) {
-        const tabIndex = element.dataset.saveTabIndex;
-        delete element.dataset.saveTabIndex;
-        if (tabIndex) {
-          element.setAttribute("tabindex", tabIndex);
-        }
-      });
-      if (modal.activator) {
-        modal.activator.focus();
-        delete modal.activator;
-      }
-      content.innerHTML = "";
-      document.querySelector("body").style.overflow = "visible";
+      hideModal();
     }
-  }
-
-  function focusableElements(parent) {
-    return parent.querySelectorAll("a[href], area[href], button, input:not([type=hidden]), select, textarea, iframe, [tabindex], [contentEditable=true]")
   }
 
   function noOp(event) {
     event.preventDefault();
   }
 
-  function findSetting(id) {
-    let found = null;
-    id = "" + id;
-    SuperSettings.settings.forEach(function(setting) {
-      if ("" + setting.id === id) {
-        found = setting;
-        return;
-      }
-    });
-    return found;
+  // Listener for changing the setting value type select element. Different types will have
+  // different input elements for the setting value.
+  function changeSettingType(event) {
+    event.preventDefault();
+    const row = event.target.closest("tr");
+    const valueType = event.target.options[event.target.selectedIndex].value;
+    var setting = {
+      id: row.dataset.id,
+      key: row.querySelector(".super-settings-key input").value,
+      value: getSettingEditValue(row),
+      value_type: valueType,
+      description: row.querySelector(".super-settings-description textarea").value,
+      new_record: row.dataset.newrecord
+    }
+    const addedRow = addRowToTable(editSettingRow(setting));
+    if (addedRow.querySelector(".super-settings-value .js-date-input")) {
+      addedRow.querySelector(".super-settings-value .js-date-input").focus();
+    } else {
+      addedRow.querySelector(".super-settings-value .js-setting-value").focus();
+    }
   }
 
+  // Listener for date and time input elements the combine the values into a hidden datetime field.
+  function changeDateTime(event) {
+    const parentNode = event.target.closest("span")
+    const dateValue = parentNode.querySelector(".js-date-input").value;
+    let timeValue = parentNode.querySelector(".js-time-input").value;
+    if (timeValue === "") {
+      timeValue = "00:00:00";
+    }
+    parentNode.querySelector(".js-setting-value").value = `${dateValue}T${timeValue}Z`
+  }
+
+  function addSetting(event) {
+    event.preventDefault();
+    const row = addRowToTable(newSettingRow());
+    row.querySelector(".super-settings-key input").focus();
+  }
+
+  function editSetting(event) {
+    event.preventDefault();
+    const id = event.target.closest("tr").dataset.id;
+    const setting = findSetting(id);
+    const row = addRowToTable(editSettingRow(setting));
+    if (row.querySelector(".super-settings-value .js-date-input")) {
+      row.querySelector(".super-settings-value .js-date-input").focus();
+    } else {
+      row.querySelector(".super-settings-value .js-setting-value").focus();
+    }
+  }
+
+  function restoreSetting(event) {
+    event.preventDefault();
+    const row = event.target.closest("tr");
+    const id = row.dataset.id;
+    const setting = findSetting(id);
+    if (setting) {
+      const newRow = settingRow(setting);
+      bindSettingControlEvents(newRow);
+      row.replaceWith(newRow);
+    } else {
+      row.remove();
+    }
+    enableSaveButton();
+  }
+
+  function removeSetting(event) {
+    event.preventDefault();
+    const settingRow = event.target.closest("tr");
+    if (settingRow.dataset["id"]) {
+      settingRow.querySelector("input.js-setting-deleted").value = "1";
+      settingRow.dataset.edited = true;
+      settingRow.dataset.deleted = true;
+      settingRow.querySelector(".js-remove-setting").style.display = "none";
+      settingRow.querySelector(".js-restore-setting").style.display = "inline-block";
+    } else {
+      settingRow.remove();
+    }
+    enableSaveButton();
+  }
+
+  function filterListener(event) {
+    const filter = event.target.value;
+    filterSettings(filter);
+    updateFilterURL(filter);
+  }
+
+  function refreshPage(event) {
+    event.preventDefault();
+    let url = window.location.href.replace(/\?.*/, "");
+    const filter = document.querySelector("#filter").value;
+    if (filter !== "") {
+      url += "?filter=" + escape(filter);
+    }
+    window.location = url;
+  }
+
+  // Attach event listener to one or more elements.
+  function addListener(elements, event, handler) {
+    if (elements.addEventListener) {
+      elements = [elements];
+    }
+    elements.forEach(function(element) {
+      if (element) {
+        element.addEventListener(event, handler);
+      }
+    });
+  }
+
+  // Bind event listeners for setting controls on a setting table row.
   function bindSettingControlEvents(parent) {
-    addListeners(parent.querySelectorAll(".js-remove-setting"), "click", removeSetting);
-    addListeners(parent.querySelectorAll(".js-edit-setting"), "click", editSetting);
-    addListeners(parent.querySelectorAll(".js-restore-setting"), "click", restoreSetting);
-    addListeners(parent.querySelectorAll(".js-show-history"), "click", showHistoryModal);
-    addListeners(parent.querySelectorAll(".js-no-op"), "click", noOp);
-    addListeners(parent.querySelectorAll(".js-setting-value-type"), "change", changeSettingType);
-    addListeners(parent.querySelectorAll(".js-date-input"), "change", changeDateTime);
-    addListeners(parent.querySelectorAll(".js-time-input"), "change", changeDateTime);
+    addListener(parent.querySelectorAll(".js-remove-setting"), "click", removeSetting);
+    addListener(parent.querySelectorAll(".js-edit-setting"), "click", editSetting);
+    addListener(parent.querySelectorAll(".js-restore-setting"), "click", restoreSetting);
+    addListener(parent.querySelectorAll(".js-show-history"), "click", showHistoryModal);
+    addListener(parent.querySelectorAll(".js-no-op"), "click", noOp);
+    addListener(parent.querySelectorAll(".js-setting-value-type"), "change", changeSettingType);
+    addListener(parent.querySelectorAll(".js-date-input"), "change", changeDateTime);
+    addListener(parent.querySelectorAll(".js-time-input"), "change", changeDateTime);
+  }
+
+  // Initialize the table with all the settings plus any changes from a failed form submission.
+  function renderSettingsTable(settings, changes) {
+    const tbody = document.querySelector("#settings-table tbody");
+    settings.forEach(function(setting) {
+      const row = settingRow(setting);
+      tbody.appendChild(row);
+      bindSettingControlEvents(row);
+    });
+    if (changes) {
+      changes.forEach(function(setting) {
+        addRowToTable(editSettingRow(setting));
+      });
+    }
+  }
+
+  function disableSubmitFormWithReturnKey(parent) {
+    const inputs = parent.querySelectorAll("input[type=text], input[type=number], input[type=datetime-local], select");
+    if (!inputs) {
+      return;
+    }
+    inputs.forEach(function(element) {
+      element.addEventListener("keypress", function(event) {
+        if (event.keyCode === 13) {
+          event.preventDefault();
+        }
+      });
+    });
+  }
+
+  function promptUnsavedChanges(event) {
+    const form = document.querySelector("#settings-form");
+    if (form && !form.dataset.submitting && changesCount() > 0) {
+      return "Are you sure you want to leave?";
+    } else {
+      return undefined;
+    }
+  }
+
+  function disableLeavePage(event) {
+    document.querySelector("#settings-form").dataset.submitting = true;
+  }
+
+  // Run the supplied function when the document has been marked ready.
+  function docReady(fn) {
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+      setTimeout(fn, 1);
+    } else {
+      document.addEventListener("DOMContentLoaded", fn);
+    }
   }
 
   docReady(function() {

@@ -3,7 +3,7 @@
 require_relative "../../spec_helper"
 
 describe SuperSettings::LocalCache do
-  let(:cache) { SuperSettings::LocalCache.new(refresh_interval: 5, track_last_used: true) }
+  let(:cache) { SuperSettings::LocalCache.new(refresh_interval: 5) }
 
   before do
     SuperSettings::Setting.create!(key: "key.1", value: 1, value_type: :integer)
@@ -95,46 +95,6 @@ describe SuperSettings::LocalCache do
       SuperSettings::Setting.with_deleted.find_by(key: "key.3").update!(deleted: true)
       cache["key.5"]
       expect(cache.to_h).to eq("key.1" => 1, "key.4" => nil)
-    end
-  end
-
-  describe "update last used" do
-    it "should update the last used time if it was never set" do
-      cache["key.1"]
-      diff = (Time.now - SuperSettings::Setting.find_by(key: "key.1").last_used_at).abs
-      expect(diff).to be <= 1
-    end
-
-    it "should update the last used time if it was over an hour ago" do
-      SuperSettings::Setting.find_by(key: "key.1").update!(last_used_at: 61.minutes.ago)
-      cache["key.1"]
-      diff = (Time.now - SuperSettings::Setting.find_by(key: "key.1").last_used_at).abs
-      expect(diff).to be <= 1
-    end
-
-    it "should not update the last used time if it was within the hour" do
-      SuperSettings::Setting.find_by(key: "key.1").update!(last_used_at: 59.minutes.ago)
-      cache["key.1"]
-      diff = (Time.now - SuperSettings::Setting.find_by(key: "key.1").last_used_at).abs
-      expect(diff).to be >= 58.minutes.to_f
-    end
-
-    it "should not update the last used time of deleted settings" do
-      cache["key.2"]
-      expect(SuperSettings::Setting.with_deleted.find_by(key: "key.2").last_used_at).to eq nil
-    end
-
-    it "should not raise an error updating the last used time" do
-      expect(SuperSettings::Setting).to receive(:where).and_raise("Boom").once
-      expect(cache["key.1"]).to eq 1
-      expect(cache["key.1"]).to eq 1
-      expect(SuperSettings::Setting.find_by(key: "key.1").last_used_at).to eq nil
-    end
-
-    it "should not update the last used time if the feature is turned off" do
-      cache.track_last_used = false
-      cache["key.1"]
-      expect(SuperSettings::Setting.find_by(key: "key.1").last_used_at).to eq nil
     end
   end
 end

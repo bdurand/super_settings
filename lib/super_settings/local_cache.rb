@@ -21,13 +21,9 @@ module SuperSettings
     attr_reader :refresh_interval
 
     # @parem refresh_interval [Numeric] number of seconds to wait between checking for setting updates
-    # @param track_last_used [Boolean] set to true turn on setting usage tracking
-    def initialize(refresh_interval:, track_last_used: false)
+    def initialize(refresh_interval:)
       @refresh_interval = refresh_interval
       @lock = Mutex.new
-      @track_last_used = track_last_used
-      # This is used so that multiple processes won't all try to update the last used timestamp at the same time.
-      @last_used_drift = rand * DRIFT_FACTOR
       reset
     end
 
@@ -40,14 +36,11 @@ module SuperSettings
     # hit the database every time. This does mean that that you should not call this method with
     # a large number of dynamically generated keys since that could lead to memory bloat.
     #
-    # If usage tracking is turned on, this method will periodically update the setting with
-    # the timestamp so you can have visibility into whether settings are being used or not.
-    #
     # @param key [String, Symbol] setting key
     def [](key)
       ensure_cache_up_to_date!
       key = key.to_s
-      value, last_used_at = @cache[key]
+      value = @cache[key]
 
       if value.nil? && !@cache.include?(key)
         if @refreshing
@@ -58,16 +51,14 @@ module SuperSettings
           # Guard against caching too many cache missees; at some point it's better to slam
           # the database rather than run out of memory.
           if setting || size < 100_000
-            last_used_at = setting&.last_used_at.to_f
             @lock.synchronize do
-              @cache = @cache.merge(key => [value, last_used_at]).freeze
+              @cache = @cache.merge(key => value).freeze
             end
           end
         end
       end
 
       return nil if value == NOT_DEFINED
-      update_last_used_at!(key, last_used_at)
       value
     end
 
@@ -127,7 +118,7 @@ module SuperSettings
         start_time = Time.now
         finder = Setting.runtime_data
         finder.each do |setting|
-          values[setting.key] = [setting.value, setting.last_used_at.to_f]
+          values[setting.key] = setting.value
         end
         set_cache_values(start_time) { values }
       ensure
@@ -178,26 +169,12 @@ module SuperSettings
       end
     end
 
-    # Set to true to enable tracking the last used timestamp on settings.
-    #
-    # @param value [Boolean]
-    def track_last_used=(value)
-      @track_last_used = !!value
-    end
-
-    # Return true if last used tracking is enabled.
-    #
-    # @return [Boolean]
-    def track_last_used?
-      @track_last_used
-    end
-
     # Update a single setting directly into the cache.
     # @api private
     def update_setting(setting)
       return if setting.key.blank?
       @lock.synchronize do
-        @cache = @cache.merge(setting.key => [setting.value, setting.last_used_at.to_f])
+        @cache = @cache.merge(setting.key => setting.value)
       end
     end
 
@@ -210,7 +187,7 @@ module SuperSettings
       finder = Setting.with_deleted.runtime_data.where("updated_at >= ?", last_refresh_time - 1)
       finder.each do |setting|
         value = (setting.deleted? ? NOT_DEFINED : setting.value)
-        changed_settings[setting.key] = [value, setting.last_used_at.to_f]
+        changed_settings[setting.key] = value
       end
       set_cache_values(start_time) { @cache.merge(changed_settings) }
     end
@@ -236,28 +213,6 @@ module SuperSettings
         @last_refreshed = refreshed_at_time
         @refreshing = false
         @cache = block.call.freeze
-      end
-    end
-
-    # Update the last used timestamp on a setting. Last used timestamps are only
-    # updated at most once per hour.
-    def update_last_used_at!(key, last_used_at)
-      return unless track_last_used?
-      now = Time.now.to_f
-      return if last_used_at + 3600 + @last_used_drift + DRIFT_FACTOR > now
-
-      # Set a key drift so we don't have to upate all the keys at the same time.
-      key_drift = (Digest::MD5.hexdigest(key)[0, 8].to_i(16) / 0xFFFFFFFF.to_f) * DRIFT_FACTOR
-
-      if last_used_at + 3600 + @last_used_drift + key_drift < now
-        begin
-          Setting.where(key: key).update_all(last_used_at: Time.now)
-        rescue
-          @lock.synchronize do
-            entry = @cache[key]
-            entry[1] = Time.now.to_f if entry
-          end
-        end
       end
     end
   end

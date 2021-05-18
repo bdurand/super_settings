@@ -16,7 +16,6 @@ class CreateSuperSettings < migration_class
       t.datetime :updated_at, null: false, index: true
       t.datetime :created_at, null: false
       t.boolean :deleted, default: false
-      t.datetime :last_used_at, null: true
     end
 
     create_table :super_settings_histories do |t|

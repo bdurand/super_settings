@@ -320,8 +320,7 @@ describe SuperSettings::Setting do
         value_type: setting.value_type,
         description: setting.description,
         created_at: setting.created_at,
-        updated_at: setting.updated_at,
-        last_used_at: setting.last_used_at
+        updated_at: setting.updated_at
       })
     end
   end
