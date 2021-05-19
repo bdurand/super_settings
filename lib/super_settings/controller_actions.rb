@@ -9,11 +9,13 @@ module SuperSettings
   # The controller is built by extending the class defined by the Configuration object and
   # then mixing in this module.
   module ControllerActions
+    extend ActiveSupport::Concern
+
     HISTORY_PAGE_SIZE = 25
 
-    def self.included(base)
-      base.layout "super_settings/settings"
-      base.helper SettingsHelper
+    included do
+      layout "super_settings/settings"
+      helper SettingsHelper
     end
 
     # Get all settings sorted by key. This endpoint may be called with a REST GET request.

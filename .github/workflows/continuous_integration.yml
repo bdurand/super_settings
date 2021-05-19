@@ -52,7 +52,7 @@ jobs:
             gem uninstall bundler --all
             gem install bundler --no-document --version ${{ matrix.combo.bundler }}
           fi
-          if [ "${{ matrix.combo.rails }}" != "latest" && "${{ matrix.combo.rails }}" != "" ]; then
+          if [ "${{ matrix.combo.rails }}" != "latest" ] && [ "${{ matrix.combo.rails }}" != "" ]; then
             bundle config set gemfile "gemfiles/rails_${{ matrix.combo.rails }}.gemfile"
           fi
           bundle update
