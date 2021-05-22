@@ -53,6 +53,7 @@ jobs:
             gem install bundler --no-document --version ${{ matrix.combo.bundler }}
           fi
           if [ "${{ matrix.combo.rails }}" != "latest" ] && [ "${{ matrix.combo.rails }}" != "" ]; then
+            echo "using gemfile gemfiles/rails_${{ matrix.combo.rails }}.gemfile"
             bundle config set gemfile "gemfiles/rails_${{ matrix.combo.rails }}.gemfile"
           fi
           bundle update

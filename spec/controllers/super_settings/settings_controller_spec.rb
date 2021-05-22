@@ -106,22 +106,25 @@ describe SuperSettings::SettingsController, type: :controller do
 
     it "should update settings as a REST endpoint" do
       request.headers["Accept"] = "application/json"
-      post :update, **request_params(settings: [
-        {
-          key: "string",
-          value: "new value",
-          value_type: "string"
-        },
-        {
-          key: "integer",
-          delete: "1"
-        },
-        {
-          key: "newkey",
-          value: "44",
-          value_type: "integer"
-        }
-      ])
+      request.headers["Content-Type"] = "application/json"
+      post :update, body: {
+        settings: [
+          {
+            key: "string",
+            value: "new value",
+            value_type: "string"
+          },
+          {
+            key: "integer",
+            delete: "1"
+          },
+          {
+            key: "newkey",
+            value: "44",
+            value_type: "integer"
+          }
+        ]
+      }.to_json
       expect(response.status).to eq 200
       expect(JSON.parse(response.body)).to eq({"success" => true})
       expect(setting_1.reload.value).to eq "new value"
