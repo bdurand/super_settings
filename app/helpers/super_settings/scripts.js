@@ -353,6 +353,7 @@
     addListener(parent.querySelectorAll(".js-show-history"), "click", showHistoryModal);
   }
 
+  // Show a modal window overlayed on the page.
   function showModal() {
     const modal = document.querySelector("#modal");
     const content = document.querySelector(".super-settings-modal-content");
@@ -368,6 +369,7 @@
     document.querySelector("body").style.overflow = "hidden";
   }
 
+  // Hide the modal window overlayed on the page.
   function hideModal() {
     const modal = document.querySelector("#modal");
     const content = document.querySelector(".super-settings-modal-content");
@@ -388,10 +390,13 @@
     document.querySelector("body").style.overflow = "visible";
   }
 
+  // Returns a list of all focusable elements so that they can be set to not take the focus
+  // when a modal is opened.
   function focusableElements(parent) {
     return parent.querySelectorAll("a[href], area[href], button, input:not([type=hidden]), select, textarea, iframe, [tabindex], [contentEditable=true]")
   }
 
+  // Find a setting by id.
   function findSetting(id) {
     let found = null;
     id = "" + id;
@@ -406,6 +411,7 @@
 
   /*** Event Listeners ***/
 
+  // Listener for showing the setting history modal.
   function showHistoryModal(event) {
     event.preventDefault();
     const modal = document.querySelector("#modal");
@@ -438,6 +444,7 @@
     );
   }
 
+  // Listener for closing the modal window overlay.
   function closeModal(event) {
     if (event.target.classList.contains("js-close-modal")) {
       event.preventDefault();
@@ -445,6 +452,7 @@
     }
   }
 
+  // Listener to just capture events.
   function noOp(event) {
     event.preventDefault();
   }
@@ -482,12 +490,14 @@
     parentNode.querySelector(".js-setting-value").value = `${dateValue}T${timeValue}Z`
   }
 
+  // Listener for the add setting button.
   function addSetting(event) {
     event.preventDefault();
     const row = addRowToTable(newSettingRow());
     row.querySelector(".super-settings-key input").focus();
   }
 
+  // Listener for the edit setting button.
   function editSetting(event) {
     event.preventDefault();
     const id = event.target.closest("tr").dataset.id;
@@ -500,6 +510,7 @@
     }
   }
 
+  // Listener for the restore setting button.
   function restoreSetting(event) {
     event.preventDefault();
     const row = event.target.closest("tr");
@@ -515,6 +526,7 @@
     enableSaveButton();
   }
 
+  // Listener for the remove setting button.
   function removeSetting(event) {
     event.preventDefault();
     const settingRow = event.target.closest("tr");
@@ -530,12 +542,14 @@
     enableSaveButton();
   }
 
+  // Listener for the filter input field.
   function filterListener(event) {
     const filter = event.target.value;
     filterSettings(filter);
     updateFilterURL(filter);
   }
 
+  // Listener for refresh page button.
   function refreshPage(event) {
     event.preventDefault();
     let url = window.location.href.replace(/\?.*/, "");
