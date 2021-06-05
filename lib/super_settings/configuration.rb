@@ -59,7 +59,7 @@ module SuperSettings
     class Model
       # Specify the cache implementation to use for caching the last updated timestamp for reloading
       # changed records. Defaults to `Rails.cache`
-      attr_accessor :cache
+      attr_accessor :cache, :storage
 
       # @api private
       attr_reader :enhancement, :history_enhancement
@@ -76,6 +76,19 @@ module SuperSettings
       # logic or behavior on the model. This is essentially the same as monkeypatching the class.
       def enhance_history(&block)
         @history_enhancement = block
+      end
+
+      def storage_class
+        if storage.is_a?(Class)
+          storage
+        else
+          class_name = (storage || :active_record).to_s.classify
+          if Setting.const_defined?("#{class_name}Storage")
+            Setting.const_get("#{class_name}Storage")
+          else
+            constantize(class_name)
+          end
+        end
       end
     end
 

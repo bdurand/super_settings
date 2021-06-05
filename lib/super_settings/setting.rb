@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
-require_relative "application_record"
-
 module SuperSettings
   # Model for storing settings to the database.
-  class Setting < ApplicationRecord
+  class Setting
     LAST_UPDATED_CACHE_KEY = "SuperSettings.last_updated_at"
 
     STRING = "string"
@@ -19,84 +17,86 @@ module SuperSettings
 
     ARRAY_DELIMITER = /[\n\r]+/.freeze
 
-    SALT = "0c54a781"
-    private_constant :SALT
+    include ActiveModel::Model
 
-    # Error thrown when the secret is invalid
-    class InvalidSecretError < StandardError
-      def initialize
-        super("Cannot decrypt. Invalid secret provided.")
-      end
-    end
+    delegate :key, :value_type, :description, :deleted?, :updated_at, :created_at, :persisted?, to: :@record
 
-    self.table_name = "super_settings"
+    extend ActiveModel::Callbacks
+    define_model_callbacks :save
+
+    include ActiveModel::Dirty
+    define_attribute_methods :key, :raw_value, :description, :value_type, :deleted, :updated_at, :created_at
 
     # The changed_by attribute is used to temporarily store an identifier for the user
     # who made a change to a setting to be stored in the history table. This value is optional
     # and is cleared after the record is saved.
     attr_accessor :changed_by
 
-    # Rows are marked as deleted so that they can be taken into account in the caching strategy
-    # when determining if any rows have changed since the cache was filled. Deleted rows
-    # are excluded from queries by default so that they don't accidentally get included since
-    # they really don't exist.
-    default_scope -> { where(deleted: false) }
-    scope :with_deleted, -> { unscope(where: :deleted) }
-
-    # Scope to select just the data needed to load the setting values.
-    scope :runtime_data, -> { select([:id, :key, :value_type, :raw_value, :deleted]) }
-
-    has_many :histories, class_name: "History", foreign_key: :key, primary_key: :key
-
-    validates :value_type, inclusion: {in: VALUE_TYPES}
-    validates :key, presence: true, length: {maximum: 190}, uniqueness: true
+    validates :value_type, inclusion: {in: Setting::VALUE_TYPES}
+    validates :key, presence: true, length: {maximum: 190}
     validates :raw_value, length: {maximum: 4096}
     validate { validate_parsable_value(raw_value) }
 
-    after_find :clear_changed_by
     after_save :clear_changed_by
 
-    before_update :redact_history, if: :secret?
+    after_save :redact_history!, if: :history_needs_redacting?
 
-    before_save do
-      self.raw_value = serialize(raw_value) unless array?
-      if secret? && raw_value && (raw_value_changed? || !SecretKeys::Encryptor.encrypted?(raw_value))
-        self.raw_value = self.class.encrypt(raw_value)
-      end
-      record_value_change
-    end
-
-    after_commit do
-      self.class.cache&.delete(LAST_UPDATED_CACHE_KEY)
-    end
+    before_save :set_raw_value
 
     class << self
       attr_accessor :cache
+
+      attr_writer :storage
+
+      def storage
+        if defined?(@storage)
+          @storage
+        elsif defined?(::SuperSettings::Storage::ActiveRecordStorage)
+          ::SuperSettings::Storage::ActiveRecordStorage
+        else
+          raise ArgumentError.new("No storage class defined for #{name}")
+        end
+      end
+
+      # Return true if the storage class is fully setup. This should return false if,
+      # for example, the database table isn't yet created.
+      # @private
+      def ready?
+        @storage.ready?
+      end
+
+      def create!(attributes)
+        setting = new(attributes)
+        setting.save!
+        setting
+      end
+
+      def all_settings
+        storage.all.collect { |record| new(record) }
+      end
+
+      def updated_since(time)
+        storage.updated_since(time).collect { |record| new(record) }
+      end
+
+      def active_settings
+        storage.active_settings.collect { |record| new(record) }
+      end
+
+      def find_by_key(key)
+        record = storage.find_by_key(key)
+        if record
+          new(record)
+        end
+      end
 
       # Return the maximum updated at value from all the rows. This is used in the caching
       # scheme to determine if data needs to be reloaded from the database.
       # @return [Time]
       def last_updated_at
         fetch_from_cache(LAST_UPDATED_CACHE_KEY) do
-          with_deleted.maximum(:updated_at)
+          storage.last_updated_at
         end
-      end
-
-      # Set the secret key used for encrypting secret values. If this is not set,
-      # the value will be loaded from the `SUPER_SETTINGS_SECRET` environment
-      # variable. If that value is not set, arguments will not be encrypted.
-      #
-      # You can set multiple secrets by passing an array if you need to roll your secrets.
-      # The left most value in the array will be used as the encryption secret, but
-      # all the values will be tried when decrypting. That way if you have existing keys
-      # that were encrypted with a different secret, you can still make it available
-      # when decrypting. If you are using the environment variable, separate the keys
-      # with spaces.
-      #
-      # @param value [String] One or more secrets to use for encrypting arguments.
-      # @return [void]
-      def secret=(value)
-        @encryptors = make_encryptors(value)
       end
 
       # Bulk update settings in a single database transaction. No changes will be saved
@@ -129,47 +129,14 @@ module SuperSettings
       def bulk_update(params, changed_by = nil)
         all_valid, settings = update_settings(params, changed_by)
         if all_valid
-          transaction do
+          storage.transaction do
             settings.each do |setting|
-              begin
-                unless setting.save
-                  all_valid = false
-                  raise ActiveRecord::Rollback
-                end
-              rescue ActiveRecord::RecordNotUnique => e
-                # catch race condition on unique keys
-                raise e if setting.valid?
-                all_valid = false
-                raise ActiveRecord::Rollback
-              end
+              setting.save!
             end
           end
+          clear_last_updated_cache
         end
         [all_valid, settings]
-      end
-
-      # Encrypt a value for use with secret settings.
-      # @api private
-      def encrypt(value)
-        return nil if value.blank?
-        encryptor = encryptors.first
-        return value if encryptor.nil?
-        encryptor.encrypt(value)
-      end
-
-      # Decrypt a value for use with secret settings.
-      # @api private
-      def decrypt(value)
-        return nil if value.blank?
-        return value if encryptors.empty? || encryptors == [nil]
-        encryptors.each do |encryptor|
-          begin
-            return encryptor.decrypt(value) if encryptor
-          rescue OpenSSL::Cipher::CipherError
-            # Not the right key, try the next one
-          end
-        end
-        raise InvalidSecretError
       end
 
       # Determine the value type from a value.
@@ -190,6 +157,10 @@ module SuperSettings
         end
       end
 
+      def clear_last_updated_cache
+        cache&.delete(Setting::LAST_UPDATED_CACHE_KEY)
+      end
+
       private
 
       def update_settings(params, changed_by)
@@ -201,7 +172,7 @@ module SuperSettings
           next if setting_params[:key].blank?
           next if [:value_type, :value, :description, :delete].all? { |name| setting_params[name].blank? }
 
-          setting = Setting.with_deleted.find_by(key: setting_params[:key])
+          setting = Setting.find_by_key(setting_params[:key])
           unless setting
             next if setting_params[:delete].present?
             setting = Setting.new(key: setting_params[:key])
@@ -226,17 +197,6 @@ module SuperSettings
         [all_valid, changed.values]
       end
 
-      def encryptors
-        if !defined?(@encryptors) || @encryptors.empty?
-          @encryptors = make_encryptors(ENV["SUPER_SETTINGS_SECRET"].to_s.split)
-        end
-        @encryptors
-      end
-
-      def make_encryptors(secrets)
-        Array(secrets).map { |val| val.nil? ? nil : SecretKeys::Encryptor.from_password(val, SALT) }
-      end
-
       def fetch_from_cache(key, &block)
         if cache
           cache.fetch(key, &block)
@@ -244,6 +204,21 @@ module SuperSettings
           block.call
         end
       end
+    end
+
+    def initialize(attributes = {})
+      if attributes.is_a?(Storage)
+        @record = attributes
+      else
+        @record = self.class.storage.new
+        self.attributes = attributes
+        self.value_type ||= STRING
+      end
+    end
+
+    def key=(val)
+      key_will_change! unless key == val
+      @record.key = val
     end
 
     # @return [Object] the value of a setting coerced to the appropriate class depending on its value type.
@@ -258,6 +233,38 @@ module SuperSettings
     # Set the value of the setting.
     def value=(val)
       self.raw_value = (val.is_a?(Array) ? val.join("\n") : val)
+    end
+
+    def value_type=(val)
+      value_type_will_change! unless value_type == val
+      @record.value_type = val
+    end
+
+    def description=(val)
+      description_will_change! unless description == val
+      @record.description = val
+    end
+
+    def deleted=(val)
+      val = BooleanParser.cast(val)
+      deleted_will_change! unless deleted? == val
+      @record.deleted = val
+    end
+
+    def created_at=(val)
+      val = val&.to_time
+      created_at_will_change! unless created_at == val
+      @record.created_at = val
+    end
+
+    def updated_at=(val)
+      val = val&.to_time
+      updated_at_will_change! unless updated_at == val
+      @record.updated_at = val
+    end
+
+    def deleted
+      deleted?
     end
 
     # @return [true] if the setting has a string value type.
@@ -297,7 +304,18 @@ module SuperSettings
 
     # @return [true] if the setting is a secret setting and the value is encrypted in the database.
     def encrypted?
-      secret? && SecretKeys::Encryptor.encrypted?(raw_value)
+      secret? && Encryption.encrypted?(raw_value)
+    end
+
+    def save!
+      self.class.storage.transaction do
+        run_callbacks(:save) do
+          @record.save!
+          changes_applied
+        end
+      end
+      self.class.clear_last_updated_cache
+      clear_changes_information
     end
 
     # Mark the record as deleted. The record will not actually be deleted since it's still needed
@@ -306,11 +324,29 @@ module SuperSettings
       update!(deleted: true)
     end
 
+    def update!(attributes)
+      self.attributes = attributes
+      save!
+    end
+
+    def reload
+      @record.reload
+      clear_changed_by
+      clear_changes_information
+      self
+    end
+
+    # Return array of history items reflecting changes made to the setting over time. Items
+    # should be returned in reverse chronological order so that the most recent changes are first.
+    # @return [Array<SuperSettings::History>]
+    def history(limit:, offset: 0)
+      @record.history(limit: limit, offset: offset)
+    end
+
     # Serialize to a hash that is used for rendering JSON responses.
     # @return [Hash]
     def as_json(options = nil)
       attributes = {
-        id: id,
         key: key,
         value: value,
         value_type: value_type,
@@ -319,7 +355,12 @@ module SuperSettings
         updated_at: updated_at
       }
       attributes[:encrypted] = encrypted? if secret?
+      attributes[:deleted] = true if deleted?
       attributes
+    end
+
+    def to_json(options = nil)
+      as_json.to_json(options)
     end
 
     private
@@ -329,26 +370,26 @@ module SuperSettings
       return nil if value.blank?
 
       case value_type
-      when STRING
+      when Setting::STRING
         value.freeze
-      when INTEGER
+      when Setting::INTEGER
         Integer(value)
-      when FLOAT
+      when Setting::FLOAT
         Float(value)
-      when BOOLEAN
+      when Setting::BOOLEAN
         BooleanParser.cast(value)
-      when DATETIME
+      when Setting::DATETIME
         Time.parse(value).in_time_zone(Time.zone).freeze
-      when ARRAY
+      when Setting::ARRAY
         if value.is_a?(String)
-          value.split(ARRAY_DELIMITER).map(&:freeze).freeze
+          value.split(Setting::ARRAY_DELIMITER).map(&:freeze).freeze
         else
           Array(value).reject(&:blank?).map { |v| v.to_s.freeze }.freeze
         end
-      when SECRET
+      when Setting::SECRET
         begin
-          self.class.decrypt(value).freeze
-        rescue InvalidSecretError
+          Encryption.decrypt(value).freeze
+        rescue Encryption::InvalidSecretError
           nil
         end
       else
@@ -371,26 +412,31 @@ module SuperSettings
 
     def validate_parsable_value(value)
       if value.present? && coerce(value).nil?
-        if integer?
+        if value_type == Setting::INTEGER
           errors.add(:value, :not_an_integer)
-        elsif float?
+        elsif value_type == Setting::FLOAT
           errors.add(:value, :not_a_number)
-        elsif datetime?
+        elsif value_type == Setting::DATETIME
           errors.add(:value, :invalid)
         end
       end
     end
 
+    # Set the raw string value that will be persisted to the data store.
+    def set_raw_value
+      self.raw_value = serialize(raw_value) unless value_type == Setting::ARRAY
+      if value_type == Setting::SECRET && raw_value.present? && (raw_value_changed? || !Encryption.encrypted?(raw_value))
+        self.raw_value = Encryption.encrypt(raw_value)
+      end
+      record_value_change
+    end
+
     # Update the histories association whenever the value or key is changed.
     def record_value_change
       return unless raw_value_changed? || deleted_changed? || key_changed?
-      recorded_value = (deleted? || secret? ? nil : raw_value)
-      history_attributes = {value: recorded_value, deleted: deleted, changed_by: changed_by}
-      if new_record?
-        histories.build(history_attributes)
-      else
-        histories.create!(history_attributes)
-      end
+      recorded_value = (deleted? || value_type == Setting::SECRET ? nil : raw_value)
+      history_attributes = {value: recorded_value, deleted: deleted?, changed_by: changed_by}
+      @record.create_history(history_attributes)
     end
 
     # Clear the changed_by attribute.
@@ -398,12 +444,26 @@ module SuperSettings
       self.changed_by = nil
     end
 
-    # Remove the value stored on history records if the setting is changed to a secret since
-    # these are not stored encrypted in the database.
-    def redact_history
-      if secret? && value_type_changed?
-        histories.update_all(value: nil)
+    def history_needs_redacting?
+      return false unless value_type == Setting::SECRET
+      if defined?(value_type_previously_changed?)
+        value_type_previously_changed?
+      else
+        value_type_changed?
       end
+    end
+
+    def redact_history!
+      @record.send(:redact_history!)
+    end
+
+    def raw_value=(val)
+      raw_value_will_change! unless raw_value == val
+      @record.raw_value = val
+    end
+
+    def raw_value
+      @record.raw_value
     end
   end
 end

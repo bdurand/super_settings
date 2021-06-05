@@ -180,7 +180,7 @@ describe SuperSettings do
       expect(SuperSettings.get("foo")).to eq nil
       SuperSettings.set("foo", "bip")
       expect(SuperSettings.get("foo")).to eq "bip"
-      expect(SuperSettings::Setting.find_by(key: "foo").value).to eq "bip"
+      expect(SuperSettings::Setting.find_by_key("foo").value).to eq "bip"
     end
   end
 end

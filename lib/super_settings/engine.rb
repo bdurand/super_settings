@@ -27,11 +27,11 @@ module SuperSettings
       # Apply any overrides to the Setting model and load the settings into memory.
       ActiveSupport.on_load(:active_record) do
         if configuration.model.enhancement
-          Setting.class_eval(&configuration.model.enhancement)
+          Setting.storage.class_eval(&configuration.model.enhancement)
         end
 
         if configuration.model.history_enhancement
-          History.class_eval(&configuration.model.history_enhancement)
+          Setting.storage.const_get("HistoryItem").class_eval(&configuration.model.history_enhancement)
         end
 
         Setting.cache = (configuration.model.cache || Rails.cache)
@@ -41,7 +41,7 @@ module SuperSettings
           configuration.secret = nil
         end
 
-        if !SuperSettings.loaded? && Setting.table_exists?
+        if !SuperSettings.loaded? && Setting.storage.ready?
           begin
             SuperSettings.load_settings
           rescue => e

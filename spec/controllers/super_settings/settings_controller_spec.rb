@@ -31,7 +31,7 @@ describe SuperSettings::SettingsController, type: :controller do
   describe "show" do
     it "should have a REST endpoint" do
       request.headers["Accept"] = "application/json"
-      get :show, **request_params(id: setting_1.id.to_s)
+      get :show, **request_params(key: setting_1.key)
       expect(response.status).to eq 200
       expect(response.content_type).to include "application/json"
       expect(JSON.parse(response.body)).to eq JSON.parse(setting_1.to_json)
@@ -41,13 +41,12 @@ describe SuperSettings::SettingsController, type: :controller do
   describe "history" do
     it "should have a REST endpoint" do
       request.headers["Accept"] = "application/json"
-      get :history, **request_params(id: setting_1.id.to_s)
+      get :history, **request_params(key: setting_1.key)
       expect(response.status).to eq 200
       expect(response.content_type).to include "application/json"
       expect(JSON.parse(response.body)).to eq({
-        "id" => setting_1.id,
         "key" => setting_1.key,
-        "histories" => setting_1.histories.order(id: :desc).collect do |history|
+        "histories" => setting_1.history(limit: 100, offset: 0).collect do |history|
           JSON.parse({value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}.to_json)
         end
       })
@@ -55,19 +54,19 @@ describe SuperSettings::SettingsController, type: :controller do
   end
 
   describe "update" do
-    it "should update settings" do
+    it "should update settings from a hash" do
       post :update, **request_params({
         settings: {
-          setting_1.id.to_s => {
+          "setting.1" => {
             key: "string",
             value: "new value",
             value_type: "string"
           },
-          setting_2.id.to_s => {
+          "setting.2" => {
             key: "integer",
             delete: "1"
           },
-          "newrecord" => {
+          "setting.3" => {
             key: "newkey",
             value: "44",
             value_type: "integer"
@@ -77,13 +76,13 @@ describe SuperSettings::SettingsController, type: :controller do
       expect(response).to redirect_to(routes.url_for(host: "test.host", controller: "super_settings/settings", action: :index))
       expect(setting_1.reload.value).to eq "new value"
       expect(setting_2.reload.deleted?).to eq true
-      expect(SuperSettings::Setting.find_by(key: "newkey").value).to eq 44
+      expect(SuperSettings::Setting.find_by_key("newkey").value).to eq 44
     end
 
     it "should not update any settings if there is an error" do
       post :update, **request_params({
         settings: {
-          setting_1.id.to_s => {
+          "setting.1" => {
             key: "string",
             value: "new value",
             value_type: "string"
@@ -93,7 +92,7 @@ describe SuperSettings::SettingsController, type: :controller do
             value: "44",
             value_type: "integer"
           },
-          setting_2.id.to_s => {
+          "setting.2" => {
             key: "integer_setting",
             value_type: "invalid"
           }
@@ -101,7 +100,7 @@ describe SuperSettings::SettingsController, type: :controller do
       })
       expect(response.status).to eq 422
       expect(setting_1.reload.value).to eq "foobar"
-      expect(SuperSettings::Setting.find_by(key: "newkey")).to eq nil
+      expect(SuperSettings::Setting.find_by_key("newkey")).to eq nil
     end
 
     it "should update settings as a REST endpoint" do
@@ -129,7 +128,7 @@ describe SuperSettings::SettingsController, type: :controller do
       expect(JSON.parse(response.body)).to eq({"success" => true})
       expect(setting_1.reload.value).to eq "new value"
       expect(setting_2.reload.deleted?).to eq true
-      expect(SuperSettings::Setting.find_by(key: "newkey").value).to eq 44
+      expect(SuperSettings::Setting.find_by_key("newkey").value).to eq 44
     end
 
     it "should not update any settings on the REST endpoint if there is an error" do
@@ -153,7 +152,7 @@ describe SuperSettings::SettingsController, type: :controller do
       expect(response.status).to eq 422
       expect(JSON.parse(response.body)).to eq({"success" => false, "errors" => {"integer" => ["Value type is not included in the list"]}})
       expect(setting_1.reload.value).to eq "foobar"
-      expect(SuperSettings::Setting.find_by(key: "newkey")).to eq nil
+      expect(SuperSettings::Setting.find_by_key("newkey")).to eq nil
     end
   end
 end

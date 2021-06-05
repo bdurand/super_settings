@@ -33,7 +33,7 @@ module SuperSettings
     #   ...
     # ]
     def index
-      @settings = Setting.order(:key)
+      @settings = Setting.active_settings.sort_by(&:key)
       respond_to do |format|
         format.json { render json: @settings.as_json }
         format.html { render :index }
@@ -52,8 +52,12 @@ module SuperSettings
     #   updated_at: iso8601 string
     # }
     def show
-      setting = Setting.find(params[:id])
-      render json: setting.as_json
+      setting = Setting.find_by_key(params[:key])
+      if setting
+        render json: setting.as_json
+      else
+        render json: nil, status: 404
+      end
     end
 
     # The update operation uses a transaction to atomically update all settings.
@@ -109,10 +113,10 @@ module SuperSettings
             @changed_settings = settings.map do |setting|
               json = setting.as_json
               json[:errors] = setting.errors.full_messages if setting.errors.any?
-              json[:new_record] = setting.new_record?
+              json[:new_record] = !setting.persisted?
               json
             end
-            @settings = Setting.order(:key)
+            @settings = Setting.active_settings.sort_by(&:key)
             flash.now[:alert] = "Settings not saved"
             render :index, status: :unprocessable_entity
           end
@@ -135,28 +139,23 @@ module SuperSettings
     #   ]
     # }
     def history
-      @setting = Setting.find(params[:id])
-      @histories = @setting.histories.limit(HISTORY_PAGE_SIZE)
-      if params[:after].to_i > 0
-        @histories = @histories.where("id > ?", params[:after].to_i).order(id: :asc).reverse
-      else
-        @histories = @histories.order(id: :desc)
-        if params[:before].to_i > 0
-          @histories = @histories.where("id < ?", params[:before].to_i)
-        end
-      end
-      @histories = @histories.to_a
+      @setting = Setting.find_by_key(params[:key])
+      page = params[:page].to_i
+      page = 1 if page < 1
+      offset = HISTORY_PAGE_SIZE * (page - 1)
+      @histories = @setting.history(limit: HISTORY_PAGE_SIZE + 1, offset: offset)
 
       unless @histories.empty?
-        if @setting.histories.where("id > ?", @histories.first.id).exists?
-          @previous_page_url = super_settings.history_url(id: @setting.id, after: @histories.first.id)
+        if page > 1
+          @previous_page_url = super_settings.history_url(id: @setting.id, page: (page > 2 ? page - 1 : nil))
         end
-        if @setting.histories.where("id < ?", @histories.last.id).exists?
-          @next_page_url = super_settings.history_url(id: @setting.id, before: @histories.last.id)
+        if @histories.size > HISTORY_PAGE_SIZE
+          @histories = @histories.take(HISTORY_PAGE_SIZE)
+          @next_page_url = super_settings.history_url(id: @setting.id, page: page + 1)
         end
       end
 
-      payload = {id: @setting.id, key: @setting.key}
+      payload = {key: @setting.key}
       payload[:histories] = @histories.collect do |history|
         {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}
       end
