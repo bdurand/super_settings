@@ -7,8 +7,8 @@ describe SuperSettings::Setting do
     SuperSettings::Setting.cache = nil
   end
 
-  [SuperSettings::Storage::ActiveRecordStorage].each do |storage|
-    describe storage.class.name do
+  [SuperSettings::Storage::ActiveRecordStorage, SuperSettings::Storage::RedisStorage].each do |storage|
+    describe storage.name do
       before do
         SuperSettings::Setting.storage = storage
       end
@@ -284,15 +284,31 @@ describe SuperSettings::Setting do
       end
 
       describe "all_settings" do
-        it "should return all settings"
+        it "should return all settings" do
+          setting_1 = SuperSettings::Setting.create!(key: "setting.1", value: "foo")
+          setting_2 = SuperSettings::Setting.create!(key: "setting.2", value: "foo", deleted: true)
+          setting_3 = SuperSettings::Setting.create!(key: "setting.3", value: "foo")
+          expect(SuperSettings::Setting.all_settings.collect(&:key)).to match_array(["setting.1", "setting.2", "setting.3"])
+        end
       end
 
       describe "updated_since" do
-        it "should return all settings updated since a specified time"
+        it "should return all settings updated since a specified time" do
+          setting_1 = SuperSettings::Setting.create!(key: "setting.1", value: "foo", updated_at: 1.second.ago)
+          timestamp = Time.now
+          setting_2 = SuperSettings::Setting.create!(key: "setting.2", value: "foo", deleted: true)
+          setting_3 = SuperSettings::Setting.create!(key: "setting.3", value: "foo")
+          expect(SuperSettings::Setting.updated_since(timestamp).collect(&:key)).to match_array(["setting.2", "setting.3"])
+        end
       end
 
       describe "active_settings" do
-        it "should return only the active settings"
+        it "should return only the active settings" do
+          setting_1 = SuperSettings::Setting.create!(key: "setting.1", value: "foo")
+          setting_2 = SuperSettings::Setting.create!(key: "setting.2", value: "foo", deleted: true)
+          setting_3 = SuperSettings::Setting.create!(key: "setting.3", value: "foo")
+          expect(SuperSettings::Setting.active_settings.collect(&:key)).to match_array(["setting.1", "setting.3"])
+        end
       end
 
       describe "last_updated_at" do

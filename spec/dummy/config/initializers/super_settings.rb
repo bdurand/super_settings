@@ -23,18 +23,10 @@ unless ENV["SUPER_SETTINGS_NO_OVERRIDES"].present?
       current_user
     end
 
-    config.model.enhance do
-      before_save do
-        logger.debug("Overridden model definition")
-      end
-    end
-
-    config.model.enhance_history do
-      before_save do
-        logger.debug("Overridden history definition")
-      end
-    end
-
     config.model.cache = Rails.cache
+    config.model.storage = ENV["SUPER_SETTINGS_STORAGE"]
+    if config.model.storage.to_s == "redis"
+      SuperSettings::Storage::RedisStorage.redis = Redis.new(port: 7601, db: 0)
+    end
   end
 end

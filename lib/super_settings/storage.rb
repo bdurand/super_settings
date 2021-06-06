@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "storage/history"
-
 module SuperSettings
   module Storage
     extend ActiveSupport::Concern

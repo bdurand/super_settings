@@ -72,7 +72,7 @@ module SuperSettings
       end
 
       def all_settings
-        storage.all.collect { |record| new(record) }
+        storage.all_settings.collect { |record| new(record) }
       end
 
       def updated_since(time)
@@ -308,6 +308,10 @@ module SuperSettings
     end
 
     def save!
+      timestamp = Time.now
+      self.created_at ||= timestamp
+      self.updated_at = timestamp unless updated_at && updated_at_changed?
+
       self.class.storage.transaction do
         run_callbacks(:save) do
           @record.save!

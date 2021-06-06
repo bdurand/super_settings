@@ -10,27 +10,71 @@ module SuperSettings
 
       SETTINGS_KEY = "SuperSettings.settings"
       UPDATED_KEY = "SuperSettings.order_by_updated_at"
-      HISTORY_KEY = "SuperSettings.history"
 
-      class HistoryItem
+      class HistoryStorage
+        HISTORY_KEY_PREFIX = "SuperSettings.history"
+
         include ActiveModel::Model
 
-        extend ActiveModel::Callbacks
-        define_model_callbacks :validation
-
-        include History
-        attr_accessor :key, :value, :changed_by, :created_at
+        attr_accessor :key, :value, :changed_by, :deleted
+        attr_reader :created_at
 
         class << self
-          def destroy_all
-            # TODO
+          def find_all_by_key(key:, offset: 0, limit: nil)
+            end_index = (limit.nil? ? -1 : offset + limit - 1)
+            return [] unless end_index >= -1
+            payloads = RedisStorage.redis.lrange("#{HISTORY_KEY_PREFIX}.#{key}", offset, end_index)
+            payloads.collect do |json|
+              record = new(JSON.parse(json))
+              record.key = key.to_s
+              record
+            end
+          end
+
+          def create!(attributes)
+            record = new(attributes)
+            record.save!
+            record
+          end
+
+          def destroy_all_by_key(key)
+            RedisStorage.redis.del("#{HISTORY_KEY_PREFIX}.#{key}")
+          end
+
+          def redis_key(key)
+            "#{HISTORY_KEY_PREFIX}.#{key}"
           end
         end
 
-        def destroy
-          # TODO
+        def created_at=(val)
+          @created_at = (value.is_a?(Numeric) ? Time.at(value) : value&.to_time)
+        end
+
+        def save!
+          raise ArgumentError.new("Missing key") if key.blank?
+          RedisStorage.transaction do |redis|
+            redis.lpush(self.class.redis_key(key), payload_json.to_json)
+          end
+        end
+
+        def deleted?
+          !!(defined?(@deleted) && @deleted)
+        end
+
+        private
+
+        def payload_json
+          payload = {
+            value: value,
+            changed_by: changed_by,
+            created_at: created_at.to_f
+          }
+          payload[:deleted] = true if deleted?
+          payload
         end
       end
+
+      include ActiveModel::Model
 
       attr_reader :key, :raw_value, :description, :value_type, :updated_at, :created_at
       attr_accessor :changed_by
@@ -46,7 +90,7 @@ module SuperSettings
           return [] if keys.empty?
 
           settings = []
-          redis.mget(SETTINGS_KEY, *keys).each do |json|
+          redis.hmget(SETTINGS_KEY, *keys).each do |json|
             settings << load_from_json(json) if json
           end
           settings
@@ -87,15 +131,15 @@ module SuperSettings
             begin
               redis.multi do |multi_redis|
                 Thread.current[:super_settings_transaction_redis] = multi_redis
-                Thread.current[:super_settings_transaction_records] = []
+                Thread.current[:super_settings_transaction_after_commit] = []
                 block.call(multi_redis)
               end
-              Thread.current[:super_settings_transaction_records].each do |record|
-                record.run_callbacks(:commit)
-              end
+              after_commits = Thread.current[:super_settings_transaction_after_commit]
+              Thread.current[:super_settings_transaction_after_commit] = nil
+              after_commits.each(&:call)
             ensure
               Thread.current[:super_settings_transaction_redis] = nil
-              Thread.current[:super_settings_transaction_records] = nil
+              Thread.current[:super_settings_transaction_after_commit] = nil
             end
           end
         end
@@ -111,32 +155,21 @@ module SuperSettings
       end
 
       def history(limit:, offset: 0)
-        # TODO
+        HistoryStorage.find_all_by_key(key: key, limit: limit, offset: offset).collect do |record|
+          HistoryItem.new(key: key, value: record.value, changed_by: record.changed_by, created_at: record.created_at, deleted: record.deleted?)
+        end
       end
 
       def create_history(attributes)
-        self.class.transaction do |redis|
-          # TODO
-        end
+        HistoryStorage.create!(attributes.merge(key: key))
       end
 
       def save!
-        raise RecordInvalid unless valid?
-
         self.class.transaction do |redis|
-          run_callbacks(:save) do
-            timestamp = Time.now
-            self.created_at ||= timestamp
-            self.updated_at = timestamp
-
-            redis.hset(SETTINGS_KEY, key, payload_json)
-            redis.zadd(UPDATED_KEY, timestamp.to_f, key)
-
-            set_persisted!
-          end
-          Thread.current[:super_settings_transaction_records] << self
+          redis.hset(SETTINGS_KEY, key, payload_json)
+          redis.zadd(UPDATED_KEY, updated_at.to_f, key)
+          set_persisted!
         end
-
         true
       end
 
@@ -146,9 +179,10 @@ module SuperSettings
       end
 
       def destroy
-        self.class.redis.multi do |transaction|
-          transaction.hdel(SETTINGS_KEY, key)
-          transaction.zrem(UPDATED_KEY, key)
+        self.class.transaction do |redis|
+          redis.hdel(SETTINGS_KEY, key)
+          redis.zrem(UPDATED_KEY, key)
+          HistoryStorage.destroy_all_by_key(key)
         end
       end
 
@@ -191,10 +225,25 @@ module SuperSettings
       protected
 
       def redact_history!
-        # TODO
+        after_commit do
+          histories = HistoryStorage.find_all_by_key(key: key)
+          histories.each { |item| item.value = nil }
+          self.class.transaction do
+            HistoryStorage.destroy_all_by_key(key)
+            histories.each(&:save!)
+          end
+        end
       end
 
       private
+
+      def after_commit(&block)
+        if Thread.current[:super_settings_transaction_after_commit]
+          Thread.current[:super_settings_transaction_after_commit] << block
+        else
+          block.call
+        end
+      end
 
       def set_persisted!
         @persisted = true

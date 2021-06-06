@@ -59,34 +59,27 @@ module SuperSettings
     class Model
       # Specify the cache implementation to use for caching the last updated timestamp for reloading
       # changed records. Defaults to `Rails.cache`
-      attr_accessor :cache, :storage
+      attr_accessor :cache
 
-      # @api private
-      attr_reader :enhancement, :history_enhancement
+      attr_writer :storage
 
-      # Provide additional enhancements to the SuperSettings::Setting model. You can define methods
-      # on the model or call class methods like `after_save` if you want to define additional
-      # logic or behavior on the model. This is essentially the same as monkeypatching the class.
-      def enhance(&block)
-        @enhancement = block
-      end
-
-      # Provide additional enhancements to the SuperSettings::History model. You can define methods
-      # on the model or call class methods like `after_save` if you want to define additional
-      # logic or behavior on the model. This is essentially the same as monkeypatching the class.
-      def enhance_history(&block)
-        @history_enhancement = block
+      def storage
+        if defined?(@storage) && @storage
+          @storage
+        else
+          :active_record
+        end
       end
 
       def storage_class
         if storage.is_a?(Class)
           storage
         else
-          class_name = (storage || :active_record).to_s.classify
-          if Setting.const_defined?("#{class_name}Storage")
-            Setting.const_get("#{class_name}Storage")
+          class_name = storage.to_s.camelize
+          if Storage.const_defined?("#{class_name}Storage")
+            Storage.const_get("#{class_name}Storage")
           else
-            constantize(class_name)
+            class_name.constantize
           end
         end
       end

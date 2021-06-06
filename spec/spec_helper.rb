@@ -6,7 +6,7 @@ require File.expand_path("dummy/config/environment", __dir__)
 require "rspec-rails"
 require "rspec/rails"
 
-redis = Redis.new(port: 7601)
+redis = Redis.new(port: 7601, db: 1)
 
 RSpec.configure do |config|
   config.expect_with :rspec do |c|
@@ -15,10 +15,9 @@ RSpec.configure do |config|
 
   config.before do
     SuperSettings::Storage::ActiveRecordStorage.destroy_all
-    SuperSettings::Storage::ActiveRecordStorage::HistoryItem.destroy_all
+    SuperSettings::Storage::ActiveRecordStorage::HistoryStorage.destroy_all
 
     SuperSettings::Storage::RedisStorage.destroy_all
-    SuperSettings::Storage::RedisStorage::HistoryItem.destroy_all
 
     SuperSettings.clear_cache
     Rails.cache.clear if defined?(Rails.cache) && Rails.cache.respond_to?(:clear)

@@ -8,6 +8,7 @@ require_relative "super_settings/local_cache"
 require_relative "super_settings/encryption"
 require_relative "super_settings/controller_actions"
 require_relative "super_settings/setting"
+require_relative "super_settings/history_item"
 require_relative "super_settings/storage"
 require_relative "super_settings/version"
 

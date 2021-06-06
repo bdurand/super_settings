@@ -13,12 +13,17 @@ module SuperSettings
 
       include Storage
 
-      class HistoryItem < ApplicationRecord
+      class HistoryStorage < ApplicationRecord
         self.table_name = "super_settings_histories"
-        include History
+
+        # Since these models are created automatically on a callback, ensure that the data will
+        # fit into the database columns since we can't handle any validation errors.
+        before_validation do
+          self.changed_by = changed_by.to_s[0, 150] if changed_by.present?
+        end
       end
 
-      has_many :history_items, class_name: "#{name}::HistoryItem", foreign_key: :key, primary_key: :key
+      has_many :history_items, class_name: "#{name}::HistoryStorage", foreign_key: :key, primary_key: :key
 
       class << self
         def ready?
@@ -55,7 +60,9 @@ module SuperSettings
       end
 
       def history(limit:, offset: 0)
-        history_items.order(id: :desc).limit(limit).offset(offset)
+        history_items.order(id: :desc).limit(limit).offset(offset).collect do |record|
+          HistoryItem.new(key: key, value: record.value, changed_by: record.changed_by, created_at: record.created_at, deleted: record.deleted?)
+        end
       end
 
       def create_history(attributes)
