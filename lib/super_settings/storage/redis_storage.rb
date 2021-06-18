@@ -118,12 +118,6 @@ module SuperSettings
           Time.at(result[1])
         end
 
-        def create!(attributes)
-          setting = new(attributes)
-          setting.save!
-          setting
-        end
-
         def destroy_all
           all_settings.each(&:destroy)
         end
@@ -174,7 +168,7 @@ module SuperSettings
         HistoryStorage.create!(attributes.merge(key: key))
       end
 
-      def save!
+      def store!
         self.class.transaction do |redis|
           redis.hset(SETTINGS_KEY, key, payload_json)
           redis.zadd(UPDATED_KEY, updated_at.to_f, key)
@@ -228,7 +222,7 @@ module SuperSettings
         !!(defined?(@deleted) && @deleted)
       end
 
-      def persisted?
+      def stored?
         !!(defined?(@persisted) && @persisted)
       end
 

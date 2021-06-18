@@ -119,6 +119,10 @@ module SuperSettings
         self[:created_at] = val
       end
 
+      alias_method :stored?, :persisted?
+
+      alias_method :store!, :save!
+
       def history(limit:, offset: 0)
         history_items.order(id: :desc).limit(limit).offset(offset).collect do |record|
           HistoryItem.new(key: key, value: record.value, changed_by: record.changed_by, created_at: record.created_at, deleted: record.deleted?)

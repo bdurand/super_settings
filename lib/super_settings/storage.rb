@@ -142,6 +142,17 @@ module SuperSettings
       raise NotImplementedError
     end
 
+    # Persist the record to storage.
+    # @return [void]
+    def store!
+      raise NotImplementedError
+    end
+
+    # @return [Boolean] true if the record has been stored.
+    def stored?
+      raise NotImplementedError
+    end
+
     protected
 
     # Remove the value stored on history records if the setting is changed to a secret since

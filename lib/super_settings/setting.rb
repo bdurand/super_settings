@@ -19,7 +19,7 @@ module SuperSettings
 
     include ActiveModel::Model
 
-    delegate :key, :value_type, :description, :deleted?, :updated_at, :created_at, :persisted?, to: :@record
+    delegate :key, :value_type, :description, :deleted?, :updated_at, :created_at, to: :@record
     alias_method :deleted, :deleted?
 
     extend ActiveModel::Callbacks
@@ -319,12 +319,17 @@ module SuperSettings
 
       self.class.storage.transaction do
         run_callbacks(:save) do
-          @record.save!
+          @record.store!
           changes_applied
         end
       end
       self.class.clear_last_updated_cache
       clear_changes_information
+    end
+
+    # @return [Boolean] true if the record has been stored in the data storage engine.
+    def persisted?
+      @record.stored?
     end
 
     # Mark the record as deleted. The record will not actually be deleted since it's still needed
