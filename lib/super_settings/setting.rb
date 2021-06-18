@@ -220,6 +220,11 @@ module SuperSettings
       end
     end
 
+    # ActiveModel 5 and 5.1 do not define attributes=
+    unless instance_methods.include?(:attributes=)
+      alias_method :attributes=, :assign_attributes
+    end
+
     def key=(val)
       key_will_change! unless key == val
       @record.key = val
