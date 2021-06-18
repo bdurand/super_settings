@@ -189,7 +189,7 @@ GET /
 ```
 
 Response:
-```json
+```
 [
   {
     "key": string,
@@ -213,7 +213,7 @@ GET /setting?key=setting_key
 ```
 
 Response:
-```json
+```
 {
   "key": string,
   "value": object,
@@ -234,7 +234,7 @@ GET /setting/history?key=setting_key
 ```
 
 Response:
-```json
+```
 {
   "key": string,
   "histories": [
@@ -276,12 +276,12 @@ POST /
 You must provide a key in each element in the `settings` array. Providing a `value`, `value_type`, and/or `description` will insert or update the setting. Providing `delete: true` will delete the setting.
 
 Success Response (status code 200):
-```json
+```
 {"success": true}
 ```
 
 Error Response (status code 422):
-```json
+```
 {"success": false, "errors": [key: string, ...]}
 ```
 
@@ -332,7 +332,7 @@ SuperSettings.configure do |config|
   config.controller.define_changed_by do
     current_user.name
   end
-  
+
   # You can define the storage engine for the model. This can be either done either with a Class
   # object or with a symbol matching the underscored class name of a storage class defined under
   # the SuperSettings::Storage namespace.
