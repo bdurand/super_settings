@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module SuperSettings
+  # Abstraction over how a setting is stored and retrieved from the storage engine. Models
+  # must implement the methods module in this module that raise `NotImplementedError`.
   module Storage
     extend ActiveSupport::Concern
 
@@ -46,6 +48,90 @@ module SuperSettings
       def ready?
         true
       end
+    end
+
+    # @return [String] the key for the setting
+    def key
+      raise NotImplementedError
+    end
+
+    # Set the key for the setting.
+    # @param val [String]
+    # @return [void]
+    def key=(val)
+      raise NotImplementedError
+    end
+
+    # @return [String] the raw value for the setting before it is type cast.
+    def raw_value
+      raise NotImplementedError
+    end
+
+    # Set the raw value for the setting.
+    # @param val [String]
+    # @return [void]
+    def raw_value=(val)
+      raise NotImplementedError
+    end
+
+    # @return [String] the value type for the setting
+    def value_type
+      raise NotImplementedError
+    end
+
+    # Set the value type for the setting.
+    # @param val [String] one of string, integer, float, boolean, datetime, array, or secret
+    # @return [void]
+    def value_type=(val)
+      raise NotImplementedError
+    end
+
+    # @return [String] the description for the setting
+    def description
+      raise NotImplementedError
+    end
+
+    # Set the description for the setting.
+    # @param val [String]
+    # @return [void]
+    def description=(val)
+      raise NotImplementedError
+    end
+
+    # @return [Boolean] true if the setting is deleted
+    def deleted?
+      raise NotImplementedError
+    end
+
+    # Set the deleted flag for the setting.
+    # @param val [Boolean]
+    # @return [void]
+    def deleted=(val)
+      raise NotImplementedError
+    end
+
+    # @return [Time] the time the setting was last updated
+    def updated_at
+      raise NotImplementedError
+    end
+
+    # Set the last updated time for the setting.
+    # @param val [Time]
+    # @return [void]
+    def updated_at=(val)
+      raise NotImplementedError
+    end
+
+    # @return [Time] the time the setting was created
+    def created_at
+      raise NotImplementedError
+    end
+
+    # Set the created time for the setting.
+    # @param val [Time]
+    # @return [void]
+    def created_at=(val)
+      raise NotImplementedError
     end
 
     # Return array of history items reflecting changes made to the setting over time. Items

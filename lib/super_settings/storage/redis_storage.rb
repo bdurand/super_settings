@@ -3,6 +3,16 @@
 require "json"
 
 # Redis implementation of the SuperSettings::Storage model.
+#
+# You must define the redis connection to use by setting the redis attribute on the class.
+# This can either be a `Redis` object or a block that yields a `Redis` object. You can use the
+# block form if you need to get the `Redis` object at runtime instead of having a static object.
+#
+# ```ruby
+# SuperSettings::Storage::RedisStorage.redis = Redis.new(url: ENV["REDIS_URL"])
+#
+# SuperSettings::Storage::RedisStorage.redis = lambda { RedisClient.get(:settings) }
+# ```
 module SuperSettings
   module Storage
     class RedisStorage

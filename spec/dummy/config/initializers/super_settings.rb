@@ -26,7 +26,7 @@ unless ENV["SUPER_SETTINGS_NO_OVERRIDES"].present?
     config.model.cache = Rails.cache
     config.model.storage = ENV["SUPER_SETTINGS_STORAGE"]
     if config.model.storage.to_s == "redis"
-      SuperSettings::Storage::RedisStorage.redis = Redis.new(port: 7601, db: 0)
+      SuperSettings::Storage::RedisStorage.redis = Redis.new(url: ENV["REDIS_URL"])
     end
   end
 end

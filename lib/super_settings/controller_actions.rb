@@ -19,10 +19,13 @@ module SuperSettings
     end
 
     # Get all settings sorted by key. This endpoint may be called with a REST GET request.
+    #
+    # `GET /`
+    #
     # The response payload is:
+    # ```
     # [
     #   {
-    #     id: integer,
     #     key: string,
     #     value: object,
     #     value_type: string,
@@ -32,6 +35,7 @@ module SuperSettings
     #   },
     #   ...
     # ]
+    # ```
     def index
       @settings = Setting.active_settings.sort_by(&:key)
       respond_to do |format|
@@ -41,9 +45,16 @@ module SuperSettings
     end
 
     # Get a setting by id.
+    #
+    # `GET /setting`
+    #
+    # Query parameters
+    #
+    # * key - setting key
+    #
     # The response payload is:
+    # ```
     # {
-    #   id: integer,
     #   key: string,
     #   value: object,
     #   value_type: string,
@@ -51,6 +62,7 @@ module SuperSettings
     #   created_at: iso8601 string,
     #   updated_at: iso8601 string
     # }
+    # ```
     def show
       setting = Setting.find_by_key(params[:key])
       if setting
@@ -61,10 +73,14 @@ module SuperSettings
     end
 
     # The update operation uses a transaction to atomically update all settings.
-    # This endpoint may be called with a REST POST request. The format of the parameters
-    # is an array of hash with each setting identified by the key. The settings should include
-    # either value and value type (and optionally description) to insert or update a setting, or
-    # delete to delete the setting.
+    #
+    # `POST /settings`
+    #
+    # The format of the parameters is an array of hashes with each setting identified by the key.
+    # The settings should include either `value` and `value_type` (and optionally `description`) to
+    # insert or update a setting, or `delete` to delete the setting.
+    #
+    # ```
     # { settings: [
     #     {
     #       key: string,
@@ -79,8 +95,9 @@ module SuperSettings
     #     ...
     #   ]
     # }
+    # ```
     #
-    # The REST response format is either {success: true} or {success: false, errors: {key => message, ...}}
+    # The response will be either `{success: true}` or `{success: false, errors: {key => message, ...}}`
     def update
       # Parameters are passed as a hash from the web page form, but can be passed as an array in REST.
       parameters = (params[:settings].respond_to?(:values) ? params[:settings].values : params[:settings]) || {}
@@ -125,18 +142,27 @@ module SuperSettings
     end
 
     # Return the history of the setting.
+    #
+    # `GET /setting/history`
+    #
+    # Query parameters
+    #
+    # * key - setting key
+    # * page - page number
+    #
     # The response format is:
     # {
     #   key: string,
     #   histories: [
     #     {
-    #       key: string,
     #       value: object,
     #       changed_by: string,
     #       created_at: iso8601 string
     #     },
     #     ...
-    #   ]
+    #   ],
+    #   previous_page_url: string,
+    #   next_page_url: string
     # }
     def history
       @setting = Setting.find_by_key(params[:key])
@@ -147,11 +173,11 @@ module SuperSettings
 
       unless @histories.empty?
         if page > 1
-          @previous_page_url = super_settings.history_url(id: @setting.id, page: (page > 2 ? page - 1 : nil))
+          @previous_page_url = super_settings.history_url(key: @setting.key, page: (page > 2 ? page - 1 : nil))
         end
         if @histories.size > HISTORY_PAGE_SIZE
           @histories = @histories.take(HISTORY_PAGE_SIZE)
-          @next_page_url = super_settings.history_url(id: @setting.id, page: page + 1)
+          @next_page_url = super_settings.history_url(key: @setting.key, page: page + 1)
         end
       end
 

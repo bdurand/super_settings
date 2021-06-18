@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# ActiveRecord implementation of the SuperSettings::Storage model.
 module SuperSettings
   # Base class that the models extend from.
   class ApplicationRecord < ActiveRecord::Base
@@ -8,6 +7,11 @@ module SuperSettings
   end
 
   module Storage
+    # ActiveRecord implementation of the SuperSettings::Storage model.
+    #
+    # To use this model, you must run the migration included with the gem. The migration
+    # can be installed with `rake app:super_settings:install:migrations` if the gem is mounted
+    # as an engine in a Rails application.
     class ActiveRecordStorage < ApplicationRecord
       self.table_name = "super_settings"
 
@@ -57,6 +61,62 @@ module SuperSettings
             end
           end
         end
+      end
+
+      def key
+        self[:key]
+      end
+
+      def key=(val)
+        self[:key] = val
+      end
+
+      def raw_value
+        self[:raw_value]
+      end
+
+      def raw_value=(val)
+        self[:raw_value] = val
+      end
+
+      def value_type
+        self[:value_type]
+      end
+
+      def value_type=(val)
+        self[:value_type] = val
+      end
+
+      def description
+        self[:description]
+      end
+
+      def description=(val)
+        self[:description] = val
+      end
+
+      def deleted?
+        !!self[:deleted]
+      end
+
+      def deleted=(val)
+        self[:deleted] = val
+      end
+
+      def updated_at
+        self[:updated_at]
+      end
+
+      def updated_at=(val)
+        self[:updated_at] = val
+      end
+
+      def created_at
+        self[:created_at]
+      end
+
+      def created_at=(val)
+        self[:created_at] = val
       end
 
       def history(limit:, offset: 0)

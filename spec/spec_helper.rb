@@ -5,8 +5,9 @@ ENV["RAILS_ENV"] ||= "test"
 require File.expand_path("dummy/config/environment", __dir__)
 require "rspec-rails"
 require "rspec/rails"
+require "dotenv/load"
 
-redis = Redis.new(port: 7601, db: 1)
+redis = Redis.new(url: ENV["REDIS_URL"])
 
 RSpec.configure do |config|
   config.expect_with :rspec do |c|

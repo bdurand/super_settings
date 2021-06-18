@@ -3,6 +3,7 @@
 .rspec
 .ruby-version
 .yardoc
+.env
 Gemfile.lock
 gemfiles/*.gemfile.lock
 log/*.log

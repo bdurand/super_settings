@@ -63,6 +63,9 @@ module SuperSettings
 
       attr_writer :storage
 
+      # Specify the storage engine to use for persisting settings. The value can either be specified
+      # as a full class name or an underscored class name for a storage classed defined in the
+      # `SuperSettings::Storage` namespace. The default storage engine is `SuperSettings::Storage::ActiveRecord`.
       def storage
         if defined?(@storage) && @storage
           @storage
@@ -71,6 +74,8 @@ module SuperSettings
         end
       end
 
+      # @return [Class]
+      # @api private
       def storage_class
         if storage.is_a?(Class)
           storage

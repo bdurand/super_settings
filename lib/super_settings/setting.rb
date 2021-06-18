@@ -20,6 +20,7 @@ module SuperSettings
     include ActiveModel::Model
 
     delegate :key, :value_type, :description, :deleted?, :updated_at, :created_at, :persisted?, to: :@record
+    alias_method :deleted, :deleted?
 
     extend ActiveModel::Callbacks
     define_model_callbacks :save
@@ -46,8 +47,11 @@ module SuperSettings
     class << self
       attr_accessor :cache
 
+      # Set the storage class to use for persisting data.
       attr_writer :storage
 
+      # @return [Class] The storage class to use for persisting data.
+      # @api private
       def storage
         if defined?(@storage)
           @storage
@@ -235,6 +239,8 @@ module SuperSettings
       self.raw_value = (val.is_a?(Array) ? val.join("\n") : val)
     end
 
+    # Set the value type of the setting.
+    # @param val (String) one of string, integer, float, boolean, datetime, array, or secret.
     def value_type=(val)
       value_type_will_change! unless value_type == val
       @record.value_type = val
@@ -245,6 +251,8 @@ module SuperSettings
       @record.description = val
     end
 
+    # Set the deleted flag on the setting. Deleted settings are not visible but are not actually
+    # removed from the data store.
     def deleted=(val)
       val = BooleanParser.cast(val)
       deleted_will_change! unless deleted? == val
@@ -261,10 +269,6 @@ module SuperSettings
       val = val&.to_time
       updated_at_will_change! unless updated_at == val
       @record.updated_at = val
-    end
-
-    def deleted
-      deleted?
     end
 
     # @return [true] if the setting has a string value type.
@@ -307,6 +311,7 @@ module SuperSettings
       secret? && Encryption.encrypted?(raw_value)
     end
 
+    # Save the setting to the data storage engine.
     def save!
       timestamp = Time.now
       self.created_at ||= timestamp
