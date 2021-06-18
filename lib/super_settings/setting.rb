@@ -215,14 +215,9 @@ module SuperSettings
         @record = attributes
       else
         @record = self.class.storage.new
-        self.attributes = attributes
+        assign_attributes(attributes)
         self.value_type ||= STRING
       end
-    end
-
-    # ActiveModel 5 and 5.1 do not define attributes=
-    unless instance_methods.include?(:attributes=)
-      alias_method :attributes=, :assign_attributes
     end
 
     def key=(val)
@@ -339,7 +334,7 @@ module SuperSettings
     end
 
     def update!(attributes)
-      self.attributes = attributes
+      assign_attributes(attributes)
       save!
     end
 

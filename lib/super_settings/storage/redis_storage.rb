@@ -184,7 +184,7 @@ module SuperSettings
       end
 
       def reload
-        self.attributes = JSON.parse(self.class.redis.hget(SETTINGS_KEY, key))
+        assign_attributes(JSON.parse(self.class.redis.hget(SETTINGS_KEY, key)))
         self
       end
 
