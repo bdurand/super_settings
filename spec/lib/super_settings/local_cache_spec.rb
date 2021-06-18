@@ -23,7 +23,7 @@ describe SuperSettings::LocalCache do
     it "should cache a key for the refresh_interval of the cache" do
       cache.refresh_interval = 0.1
       expect(cache["key.1"]).to eq 1
-      SuperSettings::Setting.find_by(key: "key.1").update!(value: 10)
+      SuperSettings::Setting.find_by_key("key.1").update!(value: 10)
       expect(cache["key.1"]).to eq 1
       sleep(0.1)
       expect(cache["key.1"]).to eq 10
@@ -60,9 +60,9 @@ describe SuperSettings::LocalCache do
 
     it "should load updated records" do
       cache.load_settings
-      SuperSettings::Setting.with_deleted.find_by(key: "key.1").update!(value: 10)
-      SuperSettings::Setting.with_deleted.find_by(key: "key.2").update!(deleted: false)
-      SuperSettings::Setting.with_deleted.find_by(key: "key.3").update!(deleted: true)
+      SuperSettings::Setting.find_by_key("key.1").update!(value: 10)
+      SuperSettings::Setting.all_settings.detect { |setting| setting.key == "key.2" }.update!(deleted: false)
+      SuperSettings::Setting.find_by_key("key.3").update!(deleted: true)
       SuperSettings::Setting.create!(key: "key.4", value: 4, value_type: :integer)
       expect(cache["key.1"]).to eq 1
       expect(cache["key.2"]).to eq 2
@@ -92,7 +92,7 @@ describe SuperSettings::LocalCache do
 
     it "should include keys with nil values, but not undefined keys" do
       SuperSettings::Setting.create!(key: "key.4", value: nil, value_type: :integer)
-      SuperSettings::Setting.with_deleted.find_by(key: "key.3").update!(deleted: true)
+      SuperSettings::Setting.find_by_key("key.3").update!(deleted: true)
       cache["key.5"]
       expect(cache.to_h).to eq("key.1" => 1, "key.4" => nil)
     end

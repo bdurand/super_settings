@@ -46,7 +46,7 @@ module SuperSettings
         if @refreshing
           value = NOT_DEFINED
         else
-          setting = Setting.find_by(key: key)
+          setting = Setting.find_by_key(key)
           value = (setting ? setting.value : NOT_DEFINED)
           # Guard against caching too many cache missees; at some point it's better to slam
           # the database rather than run out of memory.
@@ -116,9 +116,8 @@ module SuperSettings
       begin
         values = {}
         start_time = Time.now
-        finder = Setting.runtime_data
-        finder.each do |setting|
-          values[setting.key] = setting.value
+        Setting.active_settings.each do |setting|
+          values[setting.key] = setting.value.freeze
         end
         set_cache_values(start_time) { values }
       ensure
@@ -184,8 +183,7 @@ module SuperSettings
     def merge_load(last_refresh_time)
       changed_settings = {}
       start_time = Time.now
-      finder = Setting.with_deleted.runtime_data.where("updated_at >= ?", last_refresh_time - 1)
-      finder.each do |setting|
+      Setting.updated_since(last_refresh_time - 1).each do |setting|
         value = (setting.deleted? ? NOT_DEFINED : setting.value)
         changed_settings[setting.key] = value
       end

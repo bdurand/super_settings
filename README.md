@@ -3,7 +3,7 @@
 [![Continuous Integration](https://github.com/bdurand/super_settings/actions/workflows/continuous_integration.yml/badge.svg)](https://github.com/bdurand/super_settings/actions/workflows/continuous_integration.yml)
 [![Ruby Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://github.com/testdouble/standard)
 
-This gem provides a mechanism for application runtime settings. Settings are stored in a database using ActiveRecord, but cached locally in memory for quick, efficient access.
+This gem provides a mechanism for application runtime settings. Settings are persisted in a database, but cached locally in memory for quick, efficient access.
 
 The motivation behind this is that an application tends to accumulate a lot of settings over time. A lot of these may end up in environment variables or hard coded in YAML files or sprinkled through various models as additional columns. All of these methods of configuration have their place and are completely appropriate for various purposes. However, this can lead to issues if you need to change a value quickly in production:
 
@@ -26,6 +26,7 @@ SuperSettings can be used on its own, or as a part of a larger configuration str
   * [Defaults](#defaults)
 * [Data Model](#data_model)
   * [Encrypted Secrets](#encrypted_secrets)
+  * [Storage Engines](#storage_engines)
 * [Rails Engine](#rails_engine)
   * [Web UI](#web_ui)
   * [REST API](#rest_api)
@@ -140,6 +141,12 @@ rake super_settings:encrypt_secrets
 
 Encryption only changes how values are stored in the database. Encrypted secrets are protected from someone gaining direct access to your database or a database backup and should be used if you are storing sensitive values. However, the values are not encrypted in the REST API or web UI. You must take appropriate measures to secure these if you choose to use them.
 
+#### Storage Engines
+
+This gem has built in support for persisting data either in a relational database via ActiveRecord, or in a Redis database using the [redis](https://github.com/redis/redis-rb) gem. Additional storage engines can be built by creating a class that includes `SuperSettings::Storage` and implements the unimplemented methods in that module.
+
+The storage engine can be defined by setting `SuperSettings::Setting.storage` with a Class. The default storage engine uses ActiveRecord to store data in the application database. Note that each storage class may also require additional configuration. For instance the Redis storage class requires you to provide a connection to a Redis database.
+
 ### Rails Engine
 
 The gem ships with a Rails engine that provides a web UI and a REST API for creating and maintaining the settings. To use these, you need to mount the engine routes in your application's `config/routes.rb` file. The routes can be mounted under any prefix you'd like.
@@ -185,7 +192,6 @@ Response:
 ```json
 [
   {
-    "id": integer,
     "key": string,
     "value": object,
     "value_type": string,
@@ -203,13 +209,12 @@ The encrypted attribute is only returned if the setting has a value type of secr
 ##### Get Setting
 
 ```http
-GET /settings/:id
+GET /setting?key=setting_key
 ```
 
 Response:
 ```json
 {
-  "id": integer,
   "key": string,
   "value": object,
   "value_type": string,
@@ -225,17 +230,15 @@ The encrypted attribute is only returned if the setting has a value type of secr
 ##### Get Setting History
 
 ```http
-GET /setting/:id/history
+GET /setting/history?key=setting_key
 ```
 
 Response:
 ```json
 {
-  "id": integer,
   "key": string,
   "histories": [
     {
-      "key": string,
       "value": object,
       "changed_by": string,
       "created_at": iso8601string
@@ -329,13 +332,11 @@ SuperSettings.configure do |config|
   config.controller.define_changed_by do
     current_user.name
   end
-
-  # The models can also have code injected into them with these methods:
-  # config.model.enhance do
-  # end
-  #
-  # config.model.enhance_history do
-  # end
+  
+  # You can define the storage engine for the model. This can be either done either with a Class
+  # object or with a symbol matching the underscored class name of a storage class defined under
+  # the SuperSettings::Storage namespace.
+  # config.model.storage = :active_record
 
   # You can also specify a cache implementation to use to cache the last updated timestamp
   # for model changes. By default this will use `Rails.cache`.

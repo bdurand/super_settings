@@ -61,21 +61,32 @@ module SuperSettings
       # changed records. Defaults to `Rails.cache`
       attr_accessor :cache
 
-      # @api private
-      attr_reader :enhancement, :history_enhancement
+      attr_writer :storage
 
-      # Provide additional enhancements to the SuperSettings::Setting model. You can define methods
-      # on the model or call class methods like `after_save` if you want to define additional
-      # logic or behavior on the model. This is essentially the same as monkeypatching the class.
-      def enhance(&block)
-        @enhancement = block
+      # Specify the storage engine to use for persisting settings. The value can either be specified
+      # as a full class name or an underscored class name for a storage classed defined in the
+      # `SuperSettings::Storage` namespace. The default storage engine is `SuperSettings::Storage::ActiveRecord`.
+      def storage
+        if defined?(@storage) && @storage
+          @storage
+        else
+          :active_record
+        end
       end
 
-      # Provide additional enhancements to the SuperSettings::History model. You can define methods
-      # on the model or call class methods like `after_save` if you want to define additional
-      # logic or behavior on the model. This is essentially the same as monkeypatching the class.
-      def enhance_history(&block)
-        @history_enhancement = block
+      # @return [Class]
+      # @api private
+      def storage_class
+        if storage.is_a?(Class)
+          storage
+        else
+          class_name = storage.to_s.camelize
+          if Storage.const_defined?("#{class_name}Storage")
+            Storage.const_get("#{class_name}Storage")
+          else
+            class_name.constantize
+          end
+        end
       end
     end
 

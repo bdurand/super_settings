@@ -5,6 +5,9 @@ ENV["RAILS_ENV"] ||= "test"
 require File.expand_path("dummy/config/environment", __dir__)
 require "rspec-rails"
 require "rspec/rails"
+require "dotenv/load"
+
+redis = Redis.new(url: ENV["REDIS_URL"])
 
 RSpec.configure do |config|
   config.expect_with :rspec do |c|
@@ -12,8 +15,11 @@ RSpec.configure do |config|
   end
 
   config.before do
-    SuperSettings::Setting.with_deleted.destroy_all
-    SuperSettings::History.destroy_all
+    SuperSettings::Storage::ActiveRecordStorage.destroy_all
+    SuperSettings::Storage::ActiveRecordStorage::HistoryStorage.destroy_all
+
+    SuperSettings::Storage::RedisStorage.destroy_all
+
     SuperSettings.clear_cache
     Rails.cache.clear if defined?(Rails.cache) && Rails.cache.respond_to?(:clear)
   end
@@ -28,7 +34,9 @@ Dir.glob(File.expand_path("../db/migrate/*.rb", __dir__)).sort.each do |path|
   class_name = File.basename(path).sub(/\.rb/, "").split("_", 2).last.camelcase
   class_name.constantize.migrate(:up)
 end
-SuperSettings::Setting.reset_column_information
+SuperSettings::Storage::ActiveRecordStorage.reset_column_information
+
+SuperSettings::Storage::RedisStorage.redis = redis
 
 I18n.locale = :en
 

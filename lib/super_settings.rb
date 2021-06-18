@@ -5,19 +5,15 @@ require "secret_keys"
 require_relative "super_settings/boolean_parser"
 require_relative "super_settings/configuration"
 require_relative "super_settings/local_cache"
+require_relative "super_settings/encryption"
 require_relative "super_settings/controller_actions"
+require_relative "super_settings/setting"
+require_relative "super_settings/history_item"
+require_relative "super_settings/storage"
 require_relative "super_settings/version"
 
 if defined?(Rails::Engine)
   require_relative "super_settings/engine"
-  ActiveSupport.on_load(:active_record) do
-    require_relative "super_settings/setting"
-    require_relative "super_settings/history"
-  end
-else
-  require "active_record"
-  require_relative "super_settings/setting"
-  require_relative "super_settings/history"
 end
 
 # This is the main interface to the access settings.
@@ -133,7 +129,7 @@ module SuperSettings
     # @param value_type [String, Symbol] the value type to set; if the setting does not already exist,
     #   this will be inferred from the value.
     def set(key, value, value_type: nil)
-      setting = Setting.find_by(key: key)
+      setting = Setting.find_by_key(key)
       if setting
         setting.value_type = value_type if value_type
       else
@@ -196,7 +192,7 @@ module SuperSettings
     #
     # @param value [String, Array]
     def secret=(value)
-      Setting.secret = value
+      Encryption.secret = value
       load_settings if loaded?
     end
 

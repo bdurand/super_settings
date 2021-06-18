@@ -19,10 +19,13 @@ module SuperSettings
     end
 
     # Get all settings sorted by key. This endpoint may be called with a REST GET request.
+    #
+    # `GET /`
+    #
     # The response payload is:
+    # ```
     # [
     #   {
-    #     id: integer,
     #     key: string,
     #     value: object,
     #     value_type: string,
@@ -32,8 +35,9 @@ module SuperSettings
     #   },
     #   ...
     # ]
+    # ```
     def index
-      @settings = Setting.order(:key)
+      @settings = Setting.active_settings.sort_by(&:key)
       respond_to do |format|
         format.json { render json: @settings.as_json }
         format.html { render :index }
@@ -41,9 +45,16 @@ module SuperSettings
     end
 
     # Get a setting by id.
+    #
+    # `GET /setting`
+    #
+    # Query parameters
+    #
+    # * key - setting key
+    #
     # The response payload is:
+    # ```
     # {
-    #   id: integer,
     #   key: string,
     #   value: object,
     #   value_type: string,
@@ -51,16 +62,25 @@ module SuperSettings
     #   created_at: iso8601 string,
     #   updated_at: iso8601 string
     # }
+    # ```
     def show
-      setting = Setting.find(params[:id])
-      render json: setting.as_json
+      setting = Setting.find_by_key(params[:key])
+      if setting
+        render json: setting.as_json
+      else
+        render json: nil, status: 404
+      end
     end
 
     # The update operation uses a transaction to atomically update all settings.
-    # This endpoint may be called with a REST POST request. The format of the parameters
-    # is an array of hash with each setting identified by the key. The settings should include
-    # either value and value type (and optionally description) to insert or update a setting, or
-    # delete to delete the setting.
+    #
+    # `POST /settings`
+    #
+    # The format of the parameters is an array of hashes with each setting identified by the key.
+    # The settings should include either `value` and `value_type` (and optionally `description`) to
+    # insert or update a setting, or `delete` to delete the setting.
+    #
+    # ```
     # { settings: [
     #     {
     #       key: string,
@@ -75,8 +95,9 @@ module SuperSettings
     #     ...
     #   ]
     # }
+    # ```
     #
-    # The REST response format is either {success: true} or {success: false, errors: {key => message, ...}}
+    # The response will be either `{success: true}` or `{success: false, errors: {key => message, ...}}`
     def update
       # Parameters are passed as a hash from the web page form, but can be passed as an array in REST.
       parameters = (params[:settings].respond_to?(:values) ? params[:settings].values : params[:settings]) || {}
@@ -109,10 +130,10 @@ module SuperSettings
             @changed_settings = settings.map do |setting|
               json = setting.as_json
               json[:errors] = setting.errors.full_messages if setting.errors.any?
-              json[:new_record] = setting.new_record?
+              json[:new_record] = !setting.persisted?
               json
             end
-            @settings = Setting.order(:key)
+            @settings = Setting.active_settings.sort_by(&:key)
             flash.now[:alert] = "Settings not saved"
             render :index, status: :unprocessable_entity
           end
@@ -121,42 +142,46 @@ module SuperSettings
     end
 
     # Return the history of the setting.
+    #
+    # `GET /setting/history`
+    #
+    # Query parameters
+    #
+    # * key - setting key
+    # * page - page number
+    #
     # The response format is:
     # {
     #   key: string,
     #   histories: [
     #     {
-    #       key: string,
     #       value: object,
     #       changed_by: string,
     #       created_at: iso8601 string
     #     },
     #     ...
-    #   ]
+    #   ],
+    #   previous_page_url: string,
+    #   next_page_url: string
     # }
     def history
-      @setting = Setting.find(params[:id])
-      @histories = @setting.histories.limit(HISTORY_PAGE_SIZE)
-      if params[:after].to_i > 0
-        @histories = @histories.where("id > ?", params[:after].to_i).order(id: :asc).reverse
-      else
-        @histories = @histories.order(id: :desc)
-        if params[:before].to_i > 0
-          @histories = @histories.where("id < ?", params[:before].to_i)
-        end
-      end
-      @histories = @histories.to_a
+      @setting = Setting.find_by_key(params[:key])
+      page = params[:page].to_i
+      page = 1 if page < 1
+      offset = HISTORY_PAGE_SIZE * (page - 1)
+      @histories = @setting.history(limit: HISTORY_PAGE_SIZE + 1, offset: offset)
 
       unless @histories.empty?
-        if @setting.histories.where("id > ?", @histories.first.id).exists?
-          @previous_page_url = super_settings.history_url(id: @setting.id, after: @histories.first.id)
+        if page > 1
+          @previous_page_url = super_settings.history_url(key: @setting.key, page: (page > 2 ? page - 1 : nil))
         end
-        if @setting.histories.where("id < ?", @histories.last.id).exists?
-          @next_page_url = super_settings.history_url(id: @setting.id, before: @histories.last.id)
+        if @histories.size > HISTORY_PAGE_SIZE
+          @histories = @histories.take(HISTORY_PAGE_SIZE)
+          @next_page_url = super_settings.history_url(key: @setting.key, page: page + 1)
         end
       end
 
-      payload = {id: @setting.id, key: @setting.key}
+      payload = {key: @setting.key}
       payload[:histories] = @histories.collect do |history|
         {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}
       end

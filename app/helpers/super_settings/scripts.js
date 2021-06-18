@@ -241,16 +241,19 @@
   }
 
   // Get the URL for making an API call to the specified action and id.
-  function apiURL(action, id) {
+  function apiURL(action, params) {
     let url = document.querySelector("#settings-table").dataset.apiUrl;
     if (url.endsWith("/")) {
       url = url.substring(0, url.length - 1);
     }
-    if (id) {
-      url += "/" + id;
-    }
     if (action) {
       url += "/" + action;
+    }
+    if (params) {
+      const queryString = Object.keys(params).map(function(key) {
+        return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
+      }).join('&');
+      url += "?" + queryString
     }
     return url;
   }
@@ -416,13 +419,12 @@
     event.preventDefault();
     const modal = document.querySelector("#modal");
     const content = document.querySelector(".super-settings-modal-content");
-    let url = "";
-    if (event.target.href) {
-      url = event.target.href
-    } else {
-      const id = event.target.closest("tr").dataset.id;
-      url = apiURL("history", id)
+    const id = event.target.closest("tr").dataset.id;
+    const setting = findSetting(id);
+    if (!(setting && setting.key)) {
+      return;
     }
+    const url = apiURL("history", {key: setting.key})
     fetch(url, {credentials: "same-origin", headers: new Headers({"Accept": "application/json"})})
     .then(
       function(response) {
@@ -588,12 +590,16 @@
   function renderSettingsTable(settings, changes) {
     const tbody = document.querySelector("#settings-table tbody");
     settings.forEach(function(setting) {
+      const randomId = "setting" + Math.floor((Math.random() * 0xFFFFFFFFFFFFFF)).toString(16);
+      setting.id ||= randomId;
       const row = settingRow(setting);
       tbody.appendChild(row);
       bindSettingControlEvents(row);
     });
     if (changes) {
       changes.forEach(function(setting) {
+        const randomId = "setting" + Math.floor((Math.random() * 0xFFFFFFFFFFFFFF)).toString(16);
+        setting.id ||= randomId;
         addRowToTable(editSettingRow(setting));
       });
     }

@@ -24,30 +24,28 @@ module SuperSettings
         end
       end
 
-      # Apply any overrides to the Setting model and load the settings into memory.
-      ActiveSupport.on_load(:active_record) do
-        if configuration.model.enhancement
-          Setting.class_eval(&configuration.model.enhancement)
-        end
-
-        if configuration.model.history_enhancement
-          History.class_eval(&configuration.model.history_enhancement)
-        end
-
+      model_load_block = proc do
         Setting.cache = (configuration.model.cache || Rails.cache)
+        Setting.storage = configuration.model.storage_class
 
         if configuration.secret.present?
           SuperSettings.secret = configuration.secret
           configuration.secret = nil
         end
 
-        if !SuperSettings.loaded? && Setting.table_exists?
+        if !SuperSettings.loaded? && Setting.storage.ready?
           begin
             SuperSettings.load_settings
           rescue => e
             Rails.logger&.warn(e)
           end
         end
+      end
+
+      if configuration.model.storage.to_s == "active_record"
+        ActiveSupport.on_load(:active_record, &model_load_block)
+      else
+        model_load_block.call
       end
     end
   end
