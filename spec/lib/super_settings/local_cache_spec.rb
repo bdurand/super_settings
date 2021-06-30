@@ -14,6 +14,8 @@ describe SuperSettings::LocalCache do
   describe "get key" do
     it "should lazy load the cache" do
       expect(cache.loaded?).to eq false
+      cache["key.1"]
+      cache.wait_for_load
       expect(cache["key.1"]).to eq 1
       expect(cache.loaded?).to eq true
       expect(cache.size).to eq 2
@@ -22,22 +24,30 @@ describe SuperSettings::LocalCache do
 
     it "should cache a key for the refresh_interval of the cache" do
       cache.refresh_interval = 0.1
+      cache["key.1"]
+      cache.wait_for_load
       expect(cache["key.1"]).to eq 1
       SuperSettings::Setting.find_by_key("key.1").update!(value: 10)
       expect(cache["key.1"]).to eq 1
       sleep(0.1)
+      cache["key.1"]
+      cache.wait_for_load
       expect(cache["key.1"]).to eq 10
     end
 
     it "should cache missing keys" do
       cache.load_settings
       cache.refresh_interval = 0.1
+      cache["key.4"]
+      cache.wait_for_load
       expect(cache["key.4"]).to eq nil
       expect(cache.size).to eq 3
       expect(cache).to include("key.4")
 
       SuperSettings::Setting.create!(key: "key.4", value: 4, value_type: :integer)
       sleep(0.1)
+      cache["key.4"]
+      cache.wait_for_load
       expect(cache["key.4"]).to eq 4
     end
   end
@@ -87,6 +97,7 @@ describe SuperSettings::LocalCache do
 
   describe "to_h" do
     it "should return a hash loaded with all the settings" do
+      cache.load_settings
       expect(cache.to_h).to eq("key.1" => 1, "key.3" => 3)
     end
 
@@ -94,6 +105,7 @@ describe SuperSettings::LocalCache do
       SuperSettings::Setting.create!(key: "key.4", value: nil, value_type: :integer)
       SuperSettings::Setting.find_by_key("key.3").update!(deleted: true)
       cache["key.5"]
+      cache.wait_for_load
       expect(cache.to_h).to eq("key.1" => 1, "key.4" => nil)
     end
   end

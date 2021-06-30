@@ -50,8 +50,9 @@ module SuperSettings
           value = (setting ? setting.value : NOT_DEFINED)
           # Guard against caching too many cache missees; at some point it's better to slam
           # the database rather than run out of memory.
-          if setting || size < 100_000
+          if setting || @cache.size < 100_000
             @lock.synchronize do
+              # For case where one thread could be iterating over the cache while it's updated causing an error
               @cache = @cache.merge(key => value).freeze
             end
           end
@@ -104,7 +105,7 @@ module SuperSettings
     end
 
     # Load all the settings from the database into the cache.
-    def load_settings
+    def load_settings(asynchronous = false)
       return if @refreshing
 
       @lock.synchronize do
@@ -113,20 +114,28 @@ module SuperSettings
         @next_check_at = Time.now + @refresh_interval
       end
 
-      begin
-        values = {}
-        start_time = Time.now
-        Setting.active_settings.each do |setting|
-          values[setting.key] = setting.value.freeze
+      load_block = lambda do
+        begin
+          values = {}
+          start_time = Time.now
+          Setting.active_settings.each do |setting|
+            values[setting.key] = setting.value.freeze
+          end
+          set_cache_values(start_time) { values }
+        ensure
+          @refreshing = false
         end
-        set_cache_values(start_time) { values }
-      ensure
-        @refreshing = false
+      end
+
+      if asynchronous
+        Thread.new(&load_block)
+      else
+        load_block.call
       end
     end
 
     # Load only settings that have changed since the last load.
-    def refresh
+    def refresh(asynchronous = false)
       last_refresh_time = @last_refreshed
       return if last_refresh_time.nil?
       return if @refreshing
@@ -138,13 +147,21 @@ module SuperSettings
         @refreshing = true
       end
 
-      begin
-        last_db_update = Setting.last_updated_at
-        if last_db_update.nil? || last_db_update >= last_refresh_time - 1
-          merge_load(last_refresh_time)
+      refresh_block = lambda do
+        begin
+          last_db_update = Setting.last_updated_at
+          if last_db_update.nil? || last_db_update >= last_refresh_time - 1
+            merge_load(last_refresh_time)
+          end
+        ensure
+          @refreshing = false
         end
-      ensure
-        @refreshing = false
+      end
+
+      if asynchronous
+        Thread.new(&refresh_block)
+      else
+        refresh_block.call
       end
     end
 
@@ -177,6 +194,15 @@ module SuperSettings
       end
     end
 
+    # Wait for the settings to be loaded if a new load was triggered. This can happen asynchronously.
+    # @api private
+    def wait_for_load
+      loop do
+        return unless @refreshing
+        sleep(0.001)
+      end
+    end
+
     private
 
     # Load just the settings have that changed since the specified timestamp.
@@ -199,9 +225,9 @@ module SuperSettings
         @lock.synchronize do
           return unless previous_cache_id == @cache.object_id
         end
-        load_settings
+        load_settings(true)
       elsif Time.now >= @next_check_at
-        refresh
+        refresh(true)
       end
     end
 

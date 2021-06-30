@@ -57,7 +57,7 @@ module SuperSettings
         end
 
         def created_at=(val)
-          @created_at = (value.is_a?(Numeric) ? Time.at(value) : value&.to_time)
+          @created_at = (val.is_a?(Numeric) ? Time.at(val) : val&.to_time)
         end
 
         def save!
@@ -158,17 +158,19 @@ module SuperSettings
         end
       end
 
-      def history(limit:, offset: 0)
+      def history(limit: nil, offset: 0)
         HistoryStorage.find_all_by_key(key: key, limit: limit, offset: offset).collect do |record|
           HistoryItem.new(key: key, value: record.value, changed_by: record.changed_by, created_at: record.created_at, deleted: record.deleted?)
         end
       end
 
-      def create_history(attributes)
-        HistoryStorage.create!(attributes.merge(key: key))
+      def create_history(changed_by:, created_at:, value: nil, deleted: false)
+        HistoryStorage.create!(key: key, value: value, deleted: deleted, changed_by: changed_by, created_at: created_at)
       end
 
       def store!
+        self.updated_at ||= Time.now
+        self.created_at ||= updated_at
         self.class.transaction do |redis|
           redis.hset(SETTINGS_KEY, key, payload_json)
           redis.zadd(UPDATED_KEY, updated_at.to_f, key)
@@ -234,7 +236,7 @@ module SuperSettings
           histories.each { |item| item.value = nil }
           self.class.transaction do
             HistoryStorage.destroy_all_by_key(key)
-            histories.each(&:save!)
+            histories.reverse.each(&:save!)
           end
         end
       end

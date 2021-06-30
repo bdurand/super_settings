@@ -27,6 +27,7 @@ describe SuperSettings do
   describe "get" do
     it "should get a string value" do
       SuperSettings::Setting.create!(key: "key", value: "foo", value_type: :string)
+      SuperSettings.load_settings
       expect(SuperSettings.get("key")).to eq "foo"
     end
 
@@ -39,6 +40,7 @@ describe SuperSettings do
   describe "integer" do
     it "should get an integer value" do
       SuperSettings::Setting.create!(key: "key", value: "1", value_type: :string)
+      SuperSettings.load_settings
       expect(SuperSettings.integer("key")).to eq 1
     end
 
@@ -51,6 +53,7 @@ describe SuperSettings do
   describe "float" do
     it "should get a float value" do
       SuperSettings::Setting.create!(key: "key", value: "1.2", value_type: :string)
+      SuperSettings.load_settings
       expect(SuperSettings.float("key")).to eq 1.2
     end
 
@@ -63,9 +66,10 @@ describe SuperSettings do
   describe "enabled?" do
     it "should get a boolean value" do
       SuperSettings::Setting.create!(key: "key.on", value: "on", value_type: :string)
-      SuperSettings::Setting.create!(key: "key.off", value: "off", value_type: :string)
+      SuperSettings::Setting.create!(key: "key.off", value: "off", value_type: :boolean)
+      SuperSettings.load_settings
       expect(SuperSettings.enabled?("key.on")).to eq true
-      expect(SuperSettings.enabled?("key.off")).to eq true
+      expect(SuperSettings.enabled?("key.off")).to eq false
     end
 
     it "should return a default if the key is not defined" do
@@ -77,6 +81,7 @@ describe SuperSettings do
   describe "datetime" do
     it "should get a datetime value" do
       SuperSettings::Setting.create!(key: "key", value: "2021-04-14T23:45", value_type: :string)
+      SuperSettings.load_settings
       expect(SuperSettings.datetime("key")).to eq Time.new(2021, 4, 14, 23, 45)
     end
 
@@ -90,6 +95,7 @@ describe SuperSettings do
   describe "array" do
     it "should get an array of strings" do
       SuperSettings::Setting.create!(key: "key", value: "foo", value_type: :string)
+      SuperSettings.load_settings
       expect(SuperSettings.array("key")).to eq ["foo"]
     end
 
@@ -106,6 +112,7 @@ describe SuperSettings do
       SuperSettings::Setting.create!(key: "A1.B2", value: 2, value_type: :integer)
       SuperSettings::Setting.create!(key: "A2.B1.C-1", value: "bip")
       SuperSettings::Setting.create!(key: "A2.B1.C-2", value: nil)
+      SuperSettings.load_settings
     end
 
     it "should return a nested hash from all the settings if no key is provided" do
@@ -170,6 +177,7 @@ describe SuperSettings do
   describe "set" do
     it "updates a setting in the database and cache" do
       setting = SuperSettings::Setting.create!(key: "foo", value: "bar")
+      SuperSettings.load_settings
       expect(SuperSettings.get("foo")).to eq "bar"
       SuperSettings.set("foo", "bip")
       expect(SuperSettings.get("foo")).to eq "bip"

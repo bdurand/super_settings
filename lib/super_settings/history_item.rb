@@ -8,6 +8,7 @@ module SuperSettings
     attr_writer :deleted
 
     def deleted?
+      # Stupid strict mode...
       !!(defined?(@deleted) && @deleted)
     end
 

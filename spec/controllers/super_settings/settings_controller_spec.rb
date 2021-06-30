@@ -46,9 +46,30 @@ describe SuperSettings::SettingsController, type: :controller do
       expect(response.content_type).to include "application/json"
       expect(JSON.parse(response.body)).to eq({
         "key" => setting_1.key,
-        "histories" => setting_1.history(limit: 100, offset: 0).collect do |history|
+        "histories" => setting_1.history(limit: nil, offset: 0).collect do |history|
           JSON.parse({value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}.to_json)
         end
+      })
+    end
+
+    it "should include pagination parameters" do
+      setting_1.value = "2"
+      setting_1.save!
+      setting_1.value = "3"
+      setting_1.save!
+      setting_1.value = "4"
+      setting_1.save!
+      request.headers["Accept"] = "application/json"
+      get :history, **request_params(key: setting_1.key, limit: 2, offset: 1)
+      expect(response.status).to eq 200
+      expect(response.content_type).to include "application/json"
+      expect(JSON.parse(response.body)).to eq({
+        "key" => setting_1.key,
+        "histories" => setting_1.history(limit: 2, offset: 1).collect do |history|
+          JSON.parse({value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}.to_json)
+        end,
+        "previous_page_url" => "http://test.host/super_settings/history?key=string&limit=2&offset=0",
+        "next_page_url" => "http://test.host/super_settings/history?key=string&limit=2&offset=3"
       })
     end
   end
@@ -153,6 +174,33 @@ describe SuperSettings::SettingsController, type: :controller do
       expect(JSON.parse(response.body)).to eq({"success" => false, "errors" => {"integer" => ["Value type is not included in the list"]}})
       expect(setting_1.reload.value).to eq "foobar"
       expect(SuperSettings::Setting.find_by_key("newkey")).to eq nil
+    end
+  end
+
+  describe "last_updated_at" do
+    it "should return the timestamp of the last updated setting" do
+      request.headers["Accept"] = "application/json"
+      time = Time.at(1.minute.from_now.to_i)
+      setting_1.updated_at = time
+      setting_1.save!
+      get :last_updated_at
+      expect(response.status).to eq 200
+      expect(response.content_type).to include "application/json"
+      expect(JSON.parse(response.body)).to eq({"last_updated_at" => time.utc.iso8601})
+    end
+  end
+
+  describe "updated_since" do
+    it "should return settings updated since a given time" do
+      request.headers["Accept"] = "application/json"
+      setting_1.updated_at = 2.minutes.from_now
+      setting_1.save!
+      setting_2.updated_at = 2.minutes.from_now
+      setting_2.save!
+      get :updated_since, **request_params(time: 1.minute.from_now)
+      expect(response.status).to eq 200
+      expect(response.content_type).to include "application/json"
+      expect(JSON.parse(response.body)["settings"]).to match_array([JSON.parse(setting_1.to_json), JSON.parse(setting_2.to_json)])
     end
   end
 end

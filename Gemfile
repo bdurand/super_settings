@@ -6,6 +6,7 @@ gem "rails"
 gem "rspec-rails", "~> 4.1"
 gem "sqlite3"
 gem "redis"
+gem "webmock"
 
 group :development, :test do
   gem "dotenv-rails"

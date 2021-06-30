@@ -353,7 +353,7 @@ module SuperSettings
     # Return array of history items reflecting changes made to the setting over time. Items
     # should be returned in reverse chronological order so that the most recent changes are first.
     # @return [Array<SuperSettings::History>]
-    def history(limit:, offset: 0)
+    def history(limit: nil, offset: 0)
       @record.history(limit: limit, offset: offset)
     end
 
@@ -449,7 +449,7 @@ module SuperSettings
     def record_value_change
       return unless raw_value_changed? || deleted_changed? || key_changed?
       recorded_value = (deleted? || value_type == Setting::SECRET ? nil : raw_value)
-      history_attributes = {value: recorded_value, deleted: deleted?, changed_by: changed_by}
+      history_attributes = {value: recorded_value, deleted: deleted?, changed_by: changed_by, created_at: Time.now}
       @record.create_history(history_attributes)
     end
 

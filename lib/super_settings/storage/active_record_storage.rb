@@ -123,17 +123,20 @@ module SuperSettings
 
       alias_method :store!, :save!
 
-      def history(limit:, offset: 0)
-        history_items.order(id: :desc).limit(limit).offset(offset).collect do |record|
+      def history(limit: nil, offset: 0)
+        finder = history_items.order(id: :desc).offset(offset)
+        finder = finder.limit(limit) if limit
+        finder.collect do |record|
           HistoryItem.new(key: key, value: record.value, changed_by: record.changed_by, created_at: record.created_at, deleted: record.deleted?)
         end
       end
 
-      def create_history(attributes)
+      def create_history(changed_by:, created_at:, value: nil, deleted: false)
+        history_attributes = {value: value, deleted: deleted, changed_by: changed_by, created_at: created_at}
         if persisted?
-          history_items.create!(attributes)
+          history_items.create!(history_attributes)
         else
-          history_items.build(attributes)
+          history_items.build(history_attributes)
         end
       end
 
