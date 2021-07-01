@@ -200,7 +200,7 @@ describe SuperSettings::SettingsController, type: :controller do
       get :updated_since, **request_params(time: 1.minute.from_now)
       expect(response.status).to eq 200
       expect(response.content_type).to include "application/json"
-      expect(JSON.parse(response.body)["settings"]).to match_array([JSON.parse(setting_1.to_json), JSON.parse(setting_2.to_json)])
+      expect(JSON.parse(response.body)).to match_array([JSON.parse(setting_1.to_json), JSON.parse(setting_2.to_json)])
     end
   end
 end

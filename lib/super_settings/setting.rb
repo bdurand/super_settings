@@ -449,8 +449,7 @@ module SuperSettings
     def record_value_change
       return unless raw_value_changed? || deleted_changed? || key_changed?
       recorded_value = (deleted? || value_type == Setting::SECRET ? nil : raw_value)
-      history_attributes = {value: recorded_value, deleted: deleted?, changed_by: changed_by, created_at: Time.now}
-      @record.create_history(history_attributes)
+      @record.create_history(value: recorded_value, deleted: deleted?, changed_by: changed_by, created_at: Time.now)
     end
 
     # Clear the changed_by attribute.
