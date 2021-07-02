@@ -61,6 +61,10 @@ module SuperSettings
             end
           end
         end
+
+        def with_connection(&block)
+          ActiveRecord::Base.connection_pool.with_connection { yield }
+        end
       end
 
       def key

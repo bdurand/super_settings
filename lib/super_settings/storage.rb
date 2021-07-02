@@ -48,6 +48,11 @@ module SuperSettings
       def ready?
         true
       end
+
+      # Implementing classes can override this method to setup a thread safe connection within a block.
+      def with_connection(&block)
+        yield
+      end
     end
 
     # @return [String] the key for the setting

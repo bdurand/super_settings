@@ -113,4 +113,31 @@ describe SuperSettings::Storage::RedisStorage do
       expect(histories.collect(&:changed_by)).to eq ["you", "me"]
     end
   end
+
+  describe "connection pool" do
+    it "should work without a connection pool" do
+      setting = SuperSettings::Storage::RedisStorage.new(key: "setting_1", raw_value: "1")
+      setting.store!
+      SuperSettings::Storage::RedisStorage.with_connection do
+        settings = SuperSettings::Storage::RedisStorage.all_settings
+        expect(settings.collect(&:key)).to match_array(["setting_1"])
+      end
+    end
+
+    it "should work with a connection pool" do
+      redis = SuperSettings::Storage::RedisStorage.with_redis { |r| r }
+      connection_pool = ConnectionPool.new(size: 1) { redis }
+      SuperSettings::Storage::RedisStorage.redis = connection_pool
+      begin
+        setting = SuperSettings::Storage::RedisStorage.new(key: "setting_1", raw_value: "1")
+        setting.store!
+        SuperSettings::Storage::RedisStorage.with_connection do
+          settings = SuperSettings::Storage::RedisStorage.all_settings
+          expect(settings.collect(&:key)).to match_array(["setting_1"])
+        end
+      ensure
+        SuperSettings::Storage::RedisStorage.redis = redis
+      end
+    end
+  end
 end
