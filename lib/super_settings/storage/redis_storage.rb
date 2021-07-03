@@ -33,7 +33,7 @@ module SuperSettings
           def find_all_by_key(key:, offset: 0, limit: nil)
             end_index = (limit.nil? ? -1 : offset + limit - 1)
             return [] unless end_index >= -1
-            payloads = RedisStorage.redis.lrange("#{HISTORY_KEY_PREFIX}.#{key}", offset, end_index)
+            payloads = RedisStorage.with_redis { |redis| redis.lrange("#{HISTORY_KEY_PREFIX}.#{key}", offset, end_index) }
             payloads.collect do |json|
               record = new(JSON.parse(json))
               record.key = key.to_s
@@ -48,7 +48,9 @@ module SuperSettings
           end
 
           def destroy_all_by_key(key)
-            RedisStorage.redis.del("#{HISTORY_KEY_PREFIX}.#{key}")
+            RedisStorage.transaction do |redis|
+              redis.del("#{HISTORY_KEY_PREFIX}.#{key}")
+            end
           end
 
           def redis_key(key)
@@ -57,7 +59,7 @@ module SuperSettings
         end
 
         def created_at=(val)
-          @created_at = (value.is_a?(Numeric) ? Time.at(value) : value&.to_time)
+          @created_at = (val.is_a?(Numeric) ? Time.at(val) : val&.to_time)
         end
 
         def save!
@@ -91,29 +93,33 @@ module SuperSettings
 
       class << self
         def all_settings
-          redis.hgetall(SETTINGS_KEY).values.collect { |json| load_from_json(json) }
+          with_redis do |redis|
+            redis.hgetall(SETTINGS_KEY).values.collect { |json| load_from_json(json) }
+          end
         end
 
         def updated_since(time)
-          min_score = time.to_time.to_f
-          keys = redis.zrangebyscore(UPDATED_KEY, min_score, "+inf")
-          return [] if keys.empty?
+          with_redis do |redis|
+            min_score = time.to_time.to_f
+            keys = redis.zrangebyscore(UPDATED_KEY, min_score, "+inf")
+            return [] if keys.empty?
 
-          settings = []
-          redis.hmget(SETTINGS_KEY, *keys).each do |json|
-            settings << load_from_json(json) if json
+            settings = []
+            redis.hmget(SETTINGS_KEY, *keys).each do |json|
+              settings << load_from_json(json) if json
+            end
+            settings
           end
-          settings
         end
 
         def find_by_key(key)
-          json = redis.hget(SETTINGS_KEY, key)
+          json = with_redis { |redis| redis.hget(SETTINGS_KEY, key) }
           return nil unless json
           load_from_json(json)
         end
 
         def last_updated_at
-          result = redis.zrevrange(UPDATED_KEY, 0, 1, withscores: true).first
+          result = with_redis { |redis| redis.zrevrange(UPDATED_KEY, 0, 1, withscores: true).first }
           return nil unless result
           Time.at(result[1])
         end
@@ -124,8 +130,13 @@ module SuperSettings
 
         attr_writer :redis
 
-        def redis
-          @redis.is_a?(Proc) ? @redis.call : @redis
+        def with_redis(&block)
+          connection = (@redis.is_a?(Proc) ? @redis.call : @redis)
+          if defined?(ConnectionPool) && connection.is_a?(ConnectionPool)
+            connection.with(&block)
+          else
+            block.call(connection)
+          end
         end
 
         def transaction(&block)
@@ -133,14 +144,16 @@ module SuperSettings
             block.call(Thread.current[:super_settings_transaction_redis])
           else
             begin
-              redis.multi do |multi_redis|
-                Thread.current[:super_settings_transaction_redis] = multi_redis
-                Thread.current[:super_settings_transaction_after_commit] = []
-                block.call(multi_redis)
+              with_redis do |redis|
+                redis.multi do |multi_redis|
+                  Thread.current[:super_settings_transaction_redis] = multi_redis
+                  Thread.current[:super_settings_transaction_after_commit] = []
+                  block.call(multi_redis)
+                end
+                after_commits = Thread.current[:super_settings_transaction_after_commit]
+                Thread.current[:super_settings_transaction_after_commit] = nil
+                after_commits.each(&:call)
               end
-              after_commits = Thread.current[:super_settings_transaction_after_commit]
-              Thread.current[:super_settings_transaction_after_commit] = nil
-              after_commits.each(&:call)
             ensure
               Thread.current[:super_settings_transaction_redis] = nil
               Thread.current[:super_settings_transaction_after_commit] = nil
@@ -158,17 +171,19 @@ module SuperSettings
         end
       end
 
-      def history(limit:, offset: 0)
+      def history(limit: nil, offset: 0)
         HistoryStorage.find_all_by_key(key: key, limit: limit, offset: offset).collect do |record|
           HistoryItem.new(key: key, value: record.value, changed_by: record.changed_by, created_at: record.created_at, deleted: record.deleted?)
         end
       end
 
-      def create_history(attributes)
-        HistoryStorage.create!(attributes.merge(key: key))
+      def create_history(changed_by:, created_at:, value: nil, deleted: false)
+        HistoryStorage.create!(key: key, value: value, deleted: deleted, changed_by: changed_by, created_at: created_at)
       end
 
       def store!
+        self.updated_at ||= Time.now
+        self.created_at ||= updated_at
         self.class.transaction do |redis|
           redis.hset(SETTINGS_KEY, key, payload_json)
           redis.zadd(UPDATED_KEY, updated_at.to_f, key)
@@ -178,7 +193,8 @@ module SuperSettings
       end
 
       def reload
-        assign_attributes(JSON.parse(self.class.redis.hget(SETTINGS_KEY, key)))
+        data = self.class.with_redis { |redis| redis.hget(SETTINGS_KEY, key) }
+        assign_attributes(JSON.parse(data))
         self
       end
 
@@ -234,7 +250,7 @@ module SuperSettings
           histories.each { |item| item.value = nil }
           self.class.transaction do
             HistoryStorage.destroy_all_by_key(key)
-            histories.each(&:save!)
+            histories.reverse.each(&:save!)
           end
         end
       end

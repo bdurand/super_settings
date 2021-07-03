@@ -102,7 +102,7 @@ module SuperSettings
     attr_accessor :secret
 
     # Set the number of seconds that settings will be cached locally before the database
-    # is checked for updates. Defaults to five seconds.
+    # is checked for updates. Defaults to 5 seconds.
     attr_accessor :refresh_interval
 
     def initialize

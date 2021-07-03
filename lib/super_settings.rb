@@ -14,6 +14,8 @@ require_relative "super_settings/version"
 
 if defined?(Rails::Engine)
   require_relative "super_settings/engine"
+else
+  require "active_model/all"
 end
 
 # This is the main interface to the access settings.
@@ -144,17 +146,21 @@ module SuperSettings
     # Load the settings from the database into the in memory cache.
     def load_settings
       local_cache.load_settings
+      local_cache.wait_for_load
+      nil
     end
 
     # Force refresh the settings in the in memory cache to be in sync with the database.
     def refresh_settings
       local_cache.refresh
+      nil
     end
 
     # Reset the in memory cache. The cache will be automatically reloaded the next time
     # you access a setting.
     def clear_cache
       local_cache.reset
+      nil
     end
 
     # Return true if the in memory cache has been loaded from the database.

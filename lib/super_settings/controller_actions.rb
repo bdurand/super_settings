@@ -11,8 +11,6 @@ module SuperSettings
   module ControllerActions
     extend ActiveSupport::Concern
 
-    HISTORY_PAGE_SIZE = 25
-
     included do
       layout "super_settings/settings"
       helper SettingsHelper
@@ -127,7 +125,7 @@ module SuperSettings
             render json: {success: false, errors: errors}, status: :unprocessable_entity
           end
           format.html do
-            @changed_settings = settings.map do |setting|
+            @changed_settings = settings.collect do |setting|
               json = setting.as_json
               json[:errors] = setting.errors.full_messages if setting.errors.any?
               json[:new_record] = !setting.persisted?
@@ -148,9 +146,11 @@ module SuperSettings
     # Query parameters
     #
     # * key - setting key
-    # * page - page number
+    # * limit - number of history items to return
+    # * offset - index to start fetching items from (most recent items are first)
     #
     # The response format is:
+    # ```
     # {
     #   key: string,
     #   histories: [
@@ -164,30 +164,72 @@ module SuperSettings
     #   previous_page_url: string,
     #   next_page_url: string
     # }
+    # ```
     def history
-      @setting = Setting.find_by_key(params[:key])
-      page = params[:page].to_i
-      page = 1 if page < 1
-      offset = HISTORY_PAGE_SIZE * (page - 1)
-      @histories = @setting.history(limit: HISTORY_PAGE_SIZE + 1, offset: offset)
+      setting = Setting.find_by_key(params[:key])
+      offset = [params[:offset].to_i, 0].max
+      limit = params[:limit].to_i
+      fetch_limit = (limit > 0 ? limit + 1 : nil)
+      histories = setting.history(limit: fetch_limit, offset: offset)
 
-      unless @histories.empty?
-        if page > 1
-          @previous_page_url = super_settings.history_url(key: @setting.key, page: (page > 2 ? page - 1 : nil))
+      if limit > 0 && !histories.empty?
+        if offset > 0
+          previous_page_url = super_settings.history_url(key: setting.key, offset: [offset - limit, 0].max, limit: limit)
         end
-        if @histories.size > HISTORY_PAGE_SIZE
-          @histories = @histories.take(HISTORY_PAGE_SIZE)
-          @next_page_url = super_settings.history_url(key: @setting.key, page: page + 1)
+        if histories.size > limit
+          histories = histories.take(limit)
+          next_page_url = super_settings.history_url(key: setting.key, offset: offset + limit, limit: limit)
         end
       end
 
-      payload = {key: @setting.key}
-      payload[:histories] = @histories.collect do |history|
-        {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}
+      payload = {key: setting.key}
+      payload[:histories] = histories.collect do |history|
+        history_values = {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}
+        history_values[:deleted] = true if history.deleted?
+        history_values
       end
-      payload[:previous_page_url] = @previous_page_url if @previous_page_url
-      payload[:next_page_url] = @next_page_url if @next_page_url
+      payload[:previous_page_url] = previous_page_url if previous_page_url
+      payload[:next_page_url] = next_page_url if next_page_url
       render json: payload
+    end
+
+    # Return the timestamp of the most recently updated setting.
+    #
+    # `GET /last_updated_at`
+    #    #
+    # The response payload is:
+    # {
+    #   last_updated_at: iso8601 string
+    # }
+    def last_updated_at
+      render json: {last_updated_at: Setting.last_updated_at.utc.iso8601}
+    end
+
+    # Return settings that have been updated since a specified timestamp.
+    #
+    # `GET /updated_since`
+    #
+    # Query parameters
+    #
+    # * time - iso8601 string
+    #
+    # The response payload is:
+    # ```
+    # [
+    #   {
+    #     key: string,
+    #     value: object,
+    #     value_type: string,
+    #     description string,
+    #     created_at: iso8601 string,
+    #     updated_at: iso8601 string
+    #   },
+    #   ...
+    # ]
+    # ```
+    def updated_since
+      settings = Setting.updated_since(params[:time])
+      render json: settings.as_json
     end
   end
 end

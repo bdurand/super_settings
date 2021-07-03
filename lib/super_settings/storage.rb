@@ -48,6 +48,11 @@ module SuperSettings
       def ready?
         true
       end
+
+      # Implementing classes can override this method to setup a thread safe connection within a block.
+      def with_connection(&block)
+        yield
+      end
     end
 
     # @return [String] the key for the setting
@@ -137,8 +142,12 @@ module SuperSettings
     # Return array of history items reflecting changes made to the setting over time. Items
     # should be returned in reverse chronological order so that the most recent changes are first.
     # @return [Array<SuperSettings::History>]
-    def history(limit:, offset: 0)
-      # Must be implemented by a concrete class.
+    def history(limit: nil, offset: 0)
+      raise NotImplementedError
+    end
+
+    # Create a history item for the setting
+    def create_history(changed_by:, created_at:, value: nil, deleted: false)
       raise NotImplementedError
     end
 
@@ -153,6 +162,10 @@ module SuperSettings
       raise NotImplementedError
     end
 
+    def ==(other)
+      other.is_a?(self.class) && other.key == key
+    end
+
     protected
 
     # Remove the value stored on history records if the setting is changed to a secret since
@@ -164,6 +177,7 @@ module SuperSettings
   end
 end
 
+require_relative "storage/http_storage"
 require_relative "storage/redis_storage"
 if ActiveSupport.respond_to?(:on_load)
   ActiveSupport.on_load(:active_record) do

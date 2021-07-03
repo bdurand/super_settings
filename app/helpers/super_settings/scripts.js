@@ -424,7 +424,7 @@
     if (!(setting && setting.key)) {
       return;
     }
-    const url = apiURL("history", {key: setting.key})
+    const url = apiURL("history", {key: setting.key, limit: 25})
     fetch(url, {credentials: "same-origin", headers: new Headers({"Accept": "application/json"})})
     .then(
       function(response) {

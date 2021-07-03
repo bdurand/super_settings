@@ -2,10 +2,14 @@
 
 ENV["RAILS_ENV"] ||= "test"
 
+db_file = File.expand_path("dummy/db/test.sqlite3", __dir__)
+File.unlink(db_file) if File.exist?(db_file)
+
 require File.expand_path("dummy/config/environment", __dir__)
 require "rspec-rails"
 require "rspec/rails"
 require "dotenv/load"
+require "webmock/rspec"
 
 redis = Redis.new(url: ENV["REDIS_URL"])
 
@@ -37,6 +41,8 @@ end
 SuperSettings::Storage::ActiveRecordStorage.reset_column_information
 
 SuperSettings::Storage::RedisStorage.redis = redis
+
+SuperSettings::Storage::HttpStorage.base_url = "https://example.com/settings"
 
 I18n.locale = :en
 
