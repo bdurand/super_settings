@@ -4,9 +4,12 @@ module SuperSettings
   # Abstraction over how a setting is stored and retrieved from the storage engine. Models
   # must implement the methods module in this module that raise `NotImplementedError`.
   module Storage
-    extend ActiveSupport::Concern
-
     class RecordInvalid < StandardError
+    end
+
+    def self.included(base)
+      base.extend(ClassMethods)
+      base.include(Attributes) unless base.instance_methods.include?(:attributes=)
     end
 
     module ClassMethods
@@ -51,6 +54,11 @@ module SuperSettings
 
       # Implementing classes can override this method to setup a thread safe connection within a block.
       def with_connection(&block)
+        yield
+      end
+
+      # Implementing classes can override this method to wrap an operation in an atomic transaction.
+      def with_transaction(&block)
         yield
       end
     end
@@ -179,7 +187,7 @@ end
 
 require_relative "storage/http_storage"
 require_relative "storage/redis_storage"
-if ActiveSupport.respond_to?(:on_load)
+if defined?(ActiveSupport) && ActiveSupport.respond_to?(:on_load)
   ActiveSupport.on_load(:active_record) do
     require_relative "storage/active_record_storage"
   end

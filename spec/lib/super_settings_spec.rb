@@ -181,7 +181,7 @@ describe SuperSettings do
       expect(SuperSettings.get("foo")).to eq "bar"
       SuperSettings.set("foo", "bip")
       expect(SuperSettings.get("foo")).to eq "bip"
-      expect(setting.reload.value).to eq "bip"
+      expect(SuperSettings::Setting.find_by_key(setting.key).value).to eq "bip"
     end
 
     it "creates a setting in the database and cache" do

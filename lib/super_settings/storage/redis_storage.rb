@@ -24,7 +24,7 @@ module SuperSettings
       class HistoryStorage
         HISTORY_KEY_PREFIX = "SuperSettings.history"
 
-        include ActiveModel::Model
+        include SuperSettings::Attributes
 
         attr_accessor :key, :value, :changed_by, :deleted
         attr_reader :created_at
@@ -48,7 +48,7 @@ module SuperSettings
           end
 
           def destroy_all_by_key(key)
-            RedisStorage.transaction do |redis|
+            RedisStorage.with_transaction do |redis|
               redis.del("#{HISTORY_KEY_PREFIX}.#{key}")
             end
           end
@@ -59,12 +59,12 @@ module SuperSettings
         end
 
         def created_at=(val)
-          @created_at = (val.is_a?(Numeric) ? Time.at(val) : val&.to_time)
+          @created_at = SuperSettings::Coerce.time(val)
         end
 
         def save!
-          raise ArgumentError.new("Missing key") if key.blank?
-          RedisStorage.transaction do |redis|
+          raise ArgumentError.new("Missing key") if Coerce.blank?(key)
+          RedisStorage.with_transaction do |redis|
             redis.lpush(self.class.redis_key(key), payload_json.to_json)
           end
         end
@@ -86,8 +86,6 @@ module SuperSettings
         end
       end
 
-      include ActiveModel::Model
-
       attr_reader :key, :raw_value, :description, :value_type, :updated_at, :created_at
       attr_accessor :changed_by
 
@@ -99,8 +97,9 @@ module SuperSettings
         end
 
         def updated_since(time)
+          time = SuperSettings::Coerce.time(time)
           with_redis do |redis|
-            min_score = time.to_time.to_f
+            min_score = time.to_f
             keys = redis.zrangebyscore(UPDATED_KEY, min_score, "+inf")
             return [] if keys.empty?
 
@@ -139,7 +138,7 @@ module SuperSettings
           end
         end
 
-        def transaction(&block)
+        def with_transaction(&block)
           if Thread.current[:super_settings_transaction_redis]
             block.call(Thread.current[:super_settings_transaction_redis])
           else
@@ -184,7 +183,7 @@ module SuperSettings
       def store!
         self.updated_at ||= Time.now
         self.created_at ||= updated_at
-        self.class.transaction do |redis|
+        self.class.with_transaction do |redis|
           redis.hset(SETTINGS_KEY, key, payload_json)
           redis.zadd(UPDATED_KEY, updated_at.to_f, key)
           set_persisted!
@@ -194,12 +193,12 @@ module SuperSettings
 
       def reload
         data = self.class.with_redis { |redis| redis.hget(SETTINGS_KEY, key) }
-        assign_attributes(JSON.parse(data))
+        self.attributes = JSON.parse(data)
         self
       end
 
       def destroy
-        self.class.transaction do |redis|
+        self.class.with_transaction do |redis|
           redis.hdel(SETTINGS_KEY, key)
           redis.zrem(UPDATED_KEY, key)
           HistoryStorage.destroy_all_by_key(key)
@@ -207,31 +206,31 @@ module SuperSettings
       end
 
       def key=(value)
-        @key = (value.blank? ? nil : value.to_s)
+        @key = (Coerce.blank?(value) ? nil : value.to_s)
       end
 
       def raw_value=(value)
-        @raw_value = (value.blank? ? nil : value.to_s)
+        @raw_value = (Coerce.blank?(value) ? nil : value.to_s)
       end
 
       def value_type=(value)
-        @value_type = (value.blank? ? nil : value.to_s)
+        @value_type = (Coerce.blank?(value) ? nil : value.to_s)
       end
 
       def description=(value)
-        @description = (value.blank? ? nil : value.to_s)
+        @description = (Coerce.blank?(value) ? nil : value.to_s)
       end
 
       def deleted=(value)
-        @deleted = BooleanParser.cast(value)
+        @deleted = Coerce.boolean(value)
       end
 
       def created_at=(value)
-        @created_at = (value.is_a?(Numeric) ? Time.at(value) : value&.to_time)
+        @created_at = SuperSettings::Coerce.time(value)
       end
 
       def updated_at=(value)
-        @updated_at = (value.is_a?(Numeric) ? Time.at(value) : value&.to_time)
+        @updated_at = SuperSettings::Coerce.time(value)
       end
 
       def deleted?
@@ -248,7 +247,7 @@ module SuperSettings
         after_commit do
           histories = HistoryStorage.find_all_by_key(key: key)
           histories.each { |item| item.value = nil }
-          self.class.transaction do
+          self.class.with_transaction do
             HistoryStorage.destroy_all_by_key(key)
             histories.reverse.each(&:save!)
           end

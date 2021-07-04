@@ -10,6 +10,8 @@ unless ENV["SUPER_SETTINGS_NO_OVERRIDES"].present?
     config.controller.superclass = ::ApplicationController
 
     config.controller.enhance do
+      protect_from_forgery
+
       before_action do
         logger.debug("Overridden controller definition")
       end

@@ -54,16 +54,12 @@ module SuperSettings
           maximum(:updated_at)
         end
 
-        def save_settings!(settings)
-          transaction do
-            settings.each do |setting|
-              setting.save!
-            end
-          end
+        def with_connection(&block)
+          ActiveRecord::Base.connection_pool.with_connection(&block)
         end
 
-        def with_connection(&block)
-          ActiveRecord::Base.connection_pool.with_connection { yield }
+        def with_transaction(&block)
+          transaction(&block)
         end
       end
 

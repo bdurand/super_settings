@@ -2,11 +2,14 @@
 
 require "secret_keys"
 
-require_relative "super_settings/boolean_parser"
+require_relative "super_settings/application"
+require_relative "super_settings/coerce"
 require_relative "super_settings/configuration"
 require_relative "super_settings/local_cache"
 require_relative "super_settings/encryption"
+require_relative "super_settings/rest_api"
 require_relative "super_settings/controller_actions"
+require_relative "super_settings/attributes"
 require_relative "super_settings/setting"
 require_relative "super_settings/history_item"
 require_relative "super_settings/storage"
@@ -14,8 +17,6 @@ require_relative "super_settings/version"
 
 if defined?(Rails::Engine)
   require_relative "super_settings/engine"
-else
-  require "active_model/all"
 end
 
 # This is the main interface to the access settings.
@@ -60,7 +61,7 @@ module SuperSettings
     # @return [Boolean]
     def enabled?(key, default = false)
       val = local_cache[key]
-      val.nil? ? BooleanParser.cast(default) : !!val
+      Coerce.boolean(val.nil? ? default : val)
     end
 
     # Get a setting value cast to a Time.
@@ -70,7 +71,7 @@ module SuperSettings
     # @return [Time]
     def datetime(key, default = nil)
       val = local_cache[key]
-      (val.nil? ? default : val)&.to_time
+      Coerce.time(val.nil? ? default : val)
     end
 
     # Get a setting value cast to an array of strings.
@@ -102,7 +103,7 @@ module SuperSettings
     def hash(key = nil, default = nil, delimiter: ".", max_depth: nil)
       flattened = local_cache.to_h
       root_key = ""
-      if key.present?
+      if Coerce.present?(key)
         root_key = "#{key}#{delimiter}"
         reduced_hash = {}
         flattened.each do |k, v|

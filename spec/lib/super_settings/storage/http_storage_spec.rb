@@ -45,12 +45,12 @@ describe SuperSettings::Storage::HttpStorage do
 
   describe "updated_since" do
     it "should return settings updated since a timestamp" do
-      setting_1 = SuperSettings::Storage::HttpStorage.new(key: "setting_1", raw_value: "1", updated_at: 10.minutes.ago)
-      setting_2 = SuperSettings::Storage::HttpStorage.new(key: "setting_2", raw_value: "2", updated_at: 5.minutes.ago)
+      setting_1 = SuperSettings::Storage::HttpStorage.new(key: "setting_1", raw_value: "1", updated_at: Time.now - 100)
+      setting_2 = SuperSettings::Storage::HttpStorage.new(key: "setting_2", raw_value: "2", updated_at: Time.now - 50)
       setting_3 = SuperSettings::Storage::HttpStorage.new(key: "setting_3", raw_value: "3")
-      payload = [setting_2, setting_3]
-      time = 6.minutes.ago
-      stub_request(:get, "https://example.com/settings/updated_since").with(query: {time: time.to_param}).to_return(body: payload.to_json, headers: {"Content-Type" => "application/json"})
+      payload = [SuperSettings::Setting.new(setting_2), SuperSettings::Setting.new(setting_3)]
+      time = Time.now - 60
+      stub_request(:get, "https://example.com/settings/updated_since").with(query: {time: time.to_s}).to_return(body: payload.to_json, headers: {"Content-Type" => "application/json"})
       settings = SuperSettings::Storage::HttpStorage.updated_since(time)
       expect(settings.collect(&:class).uniq).to eq [SuperSettings::Storage::HttpStorage]
       expect(settings.collect(&:key)).to match_array(["setting_2", "setting_3"])
@@ -59,10 +59,10 @@ describe SuperSettings::Storage::HttpStorage do
 
   describe "find_by_key" do
     it "should return settings updated since a timestamp" do
-      setting_1 = SuperSettings::Storage::HttpStorage.new(key: "setting_1", raw_value: "1", updated_at: 10.minutes.ago)
-      setting_2 = SuperSettings::Storage::HttpStorage.new(key: "setting_2", raw_value: "2", updated_at: 5.minutes.ago)
-      stub_request(:get, "https://example.com/settings/setting").with(query: {key: "setting_1"}).to_return(body: setting_1.to_json, headers: {"Content-Type" => "application/json"})
-      stub_request(:get, "https://example.com/settings/setting").with(query: {key: "setting_2"}).to_return(body: setting_2.to_json, headers: {"Content-Type" => "application/json"})
+      setting_1 = SuperSettings::Storage::HttpStorage.new(key: "setting_1", raw_value: "1", updated_at: Time.now - 100)
+      setting_2 = SuperSettings::Storage::HttpStorage.new(key: "setting_2", raw_value: "2", updated_at: Time.now - 50)
+      stub_request(:get, "https://example.com/settings/setting").with(query: {key: "setting_1"}).to_return(body: SuperSettings::Setting.new(setting_1).to_json, headers: {"Content-Type" => "application/json"})
+      stub_request(:get, "https://example.com/settings/setting").with(query: {key: "setting_2"}).to_return(body: SuperSettings::Setting.new(setting_2).to_json, headers: {"Content-Type" => "application/json"})
       stub_request(:get, "https://example.com/settings/setting").with(query: {key: "not_exist"}).to_return(status: 404)
       expect(SuperSettings::Storage::HttpStorage.find_by_key("setting_1")).to eq setting_1
       expect(SuperSettings::Storage::HttpStorage.find_by_key("setting_2")).to eq setting_2
@@ -81,7 +81,7 @@ describe SuperSettings::Storage::HttpStorage do
 
   describe "attributes" do
     it "should cast all the attributes" do
-      setting = SuperSettings::Storage::HttpStorage.new(key: "key", raw_value: "1", value_type: "integer", description: "text", updated_at: Time.now, created_at: 1.minute.ago)
+      setting = SuperSettings::Storage::HttpStorage.new(key: "key", raw_value: "1", value_type: "integer", description: "text", updated_at: Time.now, created_at: Time.now - 10)
       expect(setting.stored?).to eq false
 
       payload = {settings: [{key: "key", value: "1", value_type: "integer", description: "text"}]}
@@ -99,7 +99,7 @@ describe SuperSettings::Storage::HttpStorage do
     end
 
     it "should handle a store response with errors" do
-      setting = SuperSettings::Storage::HttpStorage.new(key: "key", raw_value: "1", value_type: "integer", description: "text", updated_at: Time.now, created_at: 1.minute.ago)
+      setting = SuperSettings::Storage::HttpStorage.new(key: "key", raw_value: "1", value_type: "integer", description: "text", updated_at: Time.now, created_at: Time.now - 10)
       expect(setting.stored?).to eq false
 
       payload = {settings: [{key: "key", value: "1", value_type: "integer", description: "text"}]}
@@ -107,7 +107,6 @@ describe SuperSettings::Storage::HttpStorage do
       setting.store!
 
       expect(setting.stored?).to eq false
-      expect(setting.errors[:base]).to eq ["failed"]
     end
   end
 
@@ -115,9 +114,9 @@ describe SuperSettings::Storage::HttpStorage do
     it "should fetch the setting history" do
       setting = SuperSettings::Storage::HttpStorage.new(key: "key", raw_value: "1")
       payload = [
-        {value: nil, changed_by: "Bob", created_at: 1.minute.ago, deleted: true},
-        {value: "2", changed_by: "you", created_at: 2.minutes.ago},
-        {value: "1", changed_by: "me", created_at: 3.minutes.ago}
+        {value: nil, changed_by: "Bob", created_at: Time.now - 10, deleted: true},
+        {value: "2", changed_by: "you", created_at: Time.now - 20},
+        {value: "1", changed_by: "me", created_at: Time.now - 30}
       ]
       stub_request(:get, "https://example.com/settings/setting/history").with(query: {key: "key"}).to_return(body: {histories: payload}.to_json, headers: {"Content-Type" => "application/json"})
       histories = setting.history
