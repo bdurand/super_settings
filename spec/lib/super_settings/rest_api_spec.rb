@@ -3,12 +3,12 @@
 require_relative "../../spec_helper"
 
 describe SuperSettings::RestAPI do
-  let!(:setting_1) { SuperSettings::Setting.create!(key: "string", value_type: :string, value: "foobar") }
-  let!(:setting_2) { SuperSettings::Setting.create!(key: "integer", value_type: :integer, value: 4) }
-  let!(:setting_3) { SuperSettings::Setting.create!(key: "float", value_type: :float, value: 12.5) }
-  let!(:setting_4) { SuperSettings::Setting.create!(key: "boolean", value_type: :boolean, value: true) }
-  let!(:setting_5) { SuperSettings::Setting.create!(key: "datetime", value_type: :datetime, value: Time.now) }
-  let!(:setting_6) { SuperSettings::Setting.create!(key: "array", value_type: :array, value: ["foo", "bar"]) }
+  let!(:setting_1) { SuperSettings::Setting.create!(key: "string", value_type: :string, value: "foobar").tap { |object| SuperSettings::Setting.find_by_key(object.key) } }
+  let!(:setting_2) { SuperSettings::Setting.create!(key: "integer", value_type: :integer, value: 4).tap { |object| SuperSettings::Setting.find_by_key(object.key) } }
+  let!(:setting_3) { SuperSettings::Setting.create!(key: "float", value_type: :float, value: 12.5).tap { |object| SuperSettings::Setting.find_by_key(object.key) } }
+  let!(:setting_4) { SuperSettings::Setting.create!(key: "boolean", value_type: :boolean, value: true).tap { |object| SuperSettings::Setting.find_by_key(object.key) } }
+  let!(:setting_5) { SuperSettings::Setting.create!(key: "datetime", value_type: :datetime, value: Time.now).tap { |object| SuperSettings::Setting.find_by_key(object.key) } }
+  let!(:setting_6) { SuperSettings::Setting.create!(key: "array", value_type: :array, value: ["foo", "bar"]).tap { |object| SuperSettings::Setting.find_by_key(object.key) } }
 
   before do
     SuperSettings.load_settings
@@ -111,6 +111,8 @@ describe SuperSettings::RestAPI do
       time = Time.at(Time.now + 10.to_i)
       setting_1.updated_at = time
       setting_1.save!
+      setting_1_key = setting_1.key
+      setting_1 = SuperSettings::Setting.find_by_key(setting_1_key)
       response = SuperSettings::RestAPI.last_updated_at
       expect(response).to eq({last_updated_at: time.utc.iso8601})
     end
@@ -120,8 +122,12 @@ describe SuperSettings::RestAPI do
     it "should return settings updated since a given time" do
       setting_1.updated_at = Time.now + 20
       setting_1.save!
+      setting_1_key = setting_1.key
+      setting_1 = SuperSettings::Setting.find_by_key(setting_1_key)
       setting_2.updated_at = Time.now + 20
       setting_2.save!
+      setting_2_key = setting_2.key
+      setting_2 = SuperSettings::Setting.find_by_key(setting_2_key)
       response = SuperSettings::RestAPI.updated_since(Time.now + 5)
       expect(response).to match_array([setting_1.as_json, setting_2.as_json])
     end

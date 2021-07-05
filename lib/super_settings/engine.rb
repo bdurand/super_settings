@@ -5,7 +5,7 @@ module SuperSettings
   # settings overriding behavior in the Configuration as well as eager loading the settings
   # into memory.
   class Engine < Rails::Engine
-    isolate_namespace ::SuperSettings
+    isolate_namespace SuperSettings
 
     config.after_initialize do
       # Call the deferred initialization block.

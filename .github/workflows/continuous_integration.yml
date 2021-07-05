@@ -30,7 +30,7 @@ jobs:
       fail-fast: false
       matrix:
         combo:
-          - rails: "latest"
+          - rails: "none"
             ruby: "3.0"
           - rails: "6.1"
             ruby: "2.7"
@@ -62,7 +62,7 @@ jobs:
             gem uninstall bundler --all
             gem install bundler --no-document --version ${{ matrix.combo.bundler }}
           fi
-          if [ "${{ matrix.combo.rails }}" != "latest" ] && [ "${{ matrix.combo.rails }}" != "" ]; then
+          if [ "${{ matrix.combo.rails }}" != "none" ] && [ "${{ matrix.combo.rails }}" != "" ]; then
             echo "using gemfile gemfiles/rails_${{ matrix.combo.rails }}.gemfile"
             bundle config set gemfile "gemfiles/rails_${{ matrix.combo.rails }}.gemfile"
           fi

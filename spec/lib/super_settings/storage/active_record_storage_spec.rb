@@ -65,6 +65,7 @@ if defined?(SuperSettings::Storage::ActiveRecordStorage)
         setting_1.save!
         setting_2 = SuperSettings::Storage::ActiveRecordStorage.new(key: "setting_2", raw_value: "2", updated_at: Time.at(Time.now - 50.to_i))
         setting_2.save!
+        setting_2 = SuperSettings::Storage::ActiveRecordStorage.find_by_key(setting_2.key)
         expect(SuperSettings::Storage::ActiveRecordStorage.last_updated_at).to eq setting_2.updated_at
       end
     end
