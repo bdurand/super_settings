@@ -46,14 +46,14 @@ module SuperSettings
       end
 
       class << self
-        def all_settings
-          call_api(:get, "/").collect do |attributes|
+        def all
+          call_api(:get, "/settings").collect do |attributes|
             new(attributes)
           end
         end
 
         def updated_since(time)
-          call_api(:get, "/updated_since", time: time).collect do |attributes|
+          call_api(:get, "/settings/updated_since", time: time).collect do |attributes|
             new(attributes)
           end
         end
@@ -67,7 +67,7 @@ module SuperSettings
         end
 
         def last_updated_at
-          value = call_api(:get, "/last_updated_at")["last_updated_at"]
+          value = call_api(:get, "/settings/last_updated_at")["last_updated_at"]
           SuperSettings::Coerce.time(value)
         end
 
@@ -141,7 +141,7 @@ module SuperSettings
 
         def api_uri(path, params)
           uri = URI("#{base_url.chomp("/")}#{path}")
-          unless params&.empty?
+          if params && !params.empty?
             q = []
             q << uri.query unless uri.query.to_s.empty?
             params.each do |name, value|
@@ -164,7 +164,7 @@ module SuperSettings
         end
       end
 
-      def store!
+      def save!
         payload = {key: key}
         if deleted?
           payload[:deleted] = true
@@ -175,7 +175,7 @@ module SuperSettings
         end
 
         begin
-          call_api(:post, "/", settings: [payload])
+          call_api(:post, "/settings", settings: [payload])
           set_persisted!
         rescue InvalidRecordError
           return false
@@ -237,7 +237,7 @@ module SuperSettings
         !!(defined?(@deleted) && @deleted)
       end
 
-      def stored?
+      def persisted?
         !!(defined?(@persisted) && @persisted)
       end
 
@@ -255,6 +255,10 @@ module SuperSettings
 
       def call_api(method, path, params = {})
         self.class.send(:call_api, method, path, params)
+      end
+
+      def encrypted=(value)
+        # No op; needed for API compatibility
       end
     end
   end

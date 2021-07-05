@@ -48,7 +48,7 @@ module SuperSettings
           end
 
           def destroy_all_by_key(key)
-            RedisStorage.with_transaction do |redis|
+            RedisStorage.transaction do |redis|
               redis.del("#{HISTORY_KEY_PREFIX}.#{key}")
             end
           end
@@ -64,7 +64,7 @@ module SuperSettings
 
         def save!
           raise ArgumentError.new("Missing key") if Coerce.blank?(key)
-          RedisStorage.with_transaction do |redis|
+          RedisStorage.transaction do |redis|
             redis.lpush(self.class.redis_key(key), payload_json.to_json)
           end
         end
@@ -90,7 +90,7 @@ module SuperSettings
       attr_accessor :changed_by
 
       class << self
-        def all_settings
+        def all
           with_redis do |redis|
             redis.hgetall(SETTINGS_KEY).values.collect { |json| load_from_json(json) }
           end
@@ -124,7 +124,7 @@ module SuperSettings
         end
 
         def destroy_all
-          all_settings.each(&:destroy)
+          all.each(&:destroy)
         end
 
         attr_writer :redis
@@ -138,7 +138,7 @@ module SuperSettings
           end
         end
 
-        def with_transaction(&block)
+        def transaction(&block)
           if Thread.current[:super_settings_transaction_redis]
             block.call(Thread.current[:super_settings_transaction_redis])
           else
@@ -180,10 +180,10 @@ module SuperSettings
         HistoryStorage.create!(key: key, value: value, deleted: deleted, changed_by: changed_by, created_at: created_at)
       end
 
-      def store!
+      def save!
         self.updated_at ||= Time.now
         self.created_at ||= updated_at
-        self.class.with_transaction do |redis|
+        self.class.transaction do |redis|
           redis.hset(SETTINGS_KEY, key, payload_json)
           redis.zadd(UPDATED_KEY, updated_at.to_f, key)
           set_persisted!
@@ -191,14 +191,8 @@ module SuperSettings
         true
       end
 
-      def reload
-        data = self.class.with_redis { |redis| redis.hget(SETTINGS_KEY, key) }
-        self.attributes = JSON.parse(data)
-        self
-      end
-
       def destroy
-        self.class.with_transaction do |redis|
+        self.class.transaction do |redis|
           redis.hdel(SETTINGS_KEY, key)
           redis.zrem(UPDATED_KEY, key)
           HistoryStorage.destroy_all_by_key(key)
@@ -237,7 +231,7 @@ module SuperSettings
         !!(defined?(@deleted) && @deleted)
       end
 
-      def stored?
+      def persisted?
         !!(defined?(@persisted) && @persisted)
       end
 
@@ -247,7 +241,7 @@ module SuperSettings
         after_commit do
           histories = HistoryStorage.find_all_by_key(key: key)
           histories.each { |item| item.value = nil }
-          self.class.with_transaction do
+          self.class.transaction do
             HistoryStorage.destroy_all_by_key(key)
             histories.reverse.each(&:save!)
           end

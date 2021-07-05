@@ -4,6 +4,7 @@ gemspec
 
 gem "redis"
 gem "connection_pool"
+gem "rack"
 gem "webmock"
 
 group :development, :test do

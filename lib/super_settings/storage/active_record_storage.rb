@@ -1,23 +1,27 @@
 # frozen_string_literal: true
 
 module SuperSettings
-  # Base class that the models extend from.
-  class ApplicationRecord < ActiveRecord::Base
-    self.abstract_class = true
-  end
-
   module Storage
     # ActiveRecord implementation of the SuperSettings::Storage model.
     #
     # To use this model, you must run the migration included with the gem. The migration
     # can be installed with `rake app:super_settings:install:migrations` if the gem is mounted
     # as an engine in a Rails application.
-    class ActiveRecordStorage < ApplicationRecord
-      self.table_name = "super_settings"
+    class ActiveRecordStorage
+      # Base class that the models extend from.
+      class ApplicationRecord < ActiveRecord::Base
+        self.abstract_class = true
+      end
+
+      class Model < ApplicationRecord
+        self.table_name = "super_settings"
+
+        has_many :history_items, class_name: "SuperSettings::Storage::ActiveRecordStorage::HistoryModel", foreign_key: :key, primary_key: :key
+      end
 
       include Storage
 
-      class HistoryStorage < ApplicationRecord
+      class HistoryModel < ApplicationRecord
         self.table_name = "super_settings_histories"
 
         # Since these models are created automatically on a callback, ensure that the data will
@@ -27,104 +31,65 @@ module SuperSettings
         end
       end
 
-      has_many :history_items, class_name: "#{name}::HistoryStorage", foreign_key: :key, primary_key: :key
-
       class << self
-        def ready?
-          table_exists?
+        def all
+          if Model.table_exists?
+            Model.all.collect { |model| new(model) }
+          else
+            []
+          end
         end
 
-        def all_settings
-          all.to_a
-        end
-
-        def active_settings
-          where(deleted: false).to_a
+        def active
+          if Model.table_exists?
+            Model.where(deleted: false).collect { |model| new(model) }
+          else
+            []
+          end
         end
 
         def updated_since(time)
-          where("updated_at > ?", time).to_a
+          if Model.table_exists?
+            Model.where("updated_at > ?", time).collect { |model| new(model) }
+          else
+            []
+          end
         end
 
         def find_by_key(key)
-          where(deleted: false).find_by(key: key)
+          model = Model.where(deleted: false).find_by(key: key) if Model.table_exists?
+          new(model) if model
         end
 
         def last_updated_at
-          maximum(:updated_at)
+          if Model.table_exists?
+            Model.maximum(:updated_at)
+          end
         end
 
         def with_connection(&block)
-          ActiveRecord::Base.connection_pool.with_connection(&block)
+          Model.connection_pool.with_connection(&block)
         end
 
-        def with_transaction(&block)
-          transaction(&block)
+        def transaction(&block)
+          Model.transaction(&block)
         end
       end
 
-      def key
-        self[:key]
+      delegate :key, :key=, :raw_value, :raw_value=, :value_type, :value_type=, :description, :description=,
+        :deleted?, :deleted=, :updated_at, :updated_at=, :created_at, :created_at=, :persisted?, :save!,
+        to: :@model
+
+      def initialize(attributes = {})
+        @model = if attributes.is_a?(Model)
+          attributes
+        else
+          Model.new(attributes)
+        end
       end
-
-      def key=(val)
-        self[:key] = val
-      end
-
-      def raw_value
-        self[:raw_value]
-      end
-
-      def raw_value=(val)
-        self[:raw_value] = val
-      end
-
-      def value_type
-        self[:value_type]
-      end
-
-      def value_type=(val)
-        self[:value_type] = val
-      end
-
-      def description
-        self[:description]
-      end
-
-      def description=(val)
-        self[:description] = val
-      end
-
-      def deleted?
-        !!self[:deleted]
-      end
-
-      def deleted=(val)
-        self[:deleted] = val
-      end
-
-      def updated_at
-        self[:updated_at]
-      end
-
-      def updated_at=(val)
-        self[:updated_at] = val
-      end
-
-      def created_at
-        self[:created_at]
-      end
-
-      def created_at=(val)
-        self[:created_at] = val
-      end
-
-      alias_method :stored?, :persisted?
-
-      alias_method :store!, :save!
 
       def history(limit: nil, offset: 0)
-        finder = history_items.order(id: :desc).offset(offset)
+        finder = @model.history_items.order(id: :desc).offset(offset)
         finder = finder.limit(limit) if limit
         finder.collect do |record|
           HistoryItem.new(key: key, value: record.value, changed_by: record.changed_by, created_at: record.created_at, deleted: record.deleted?)
@@ -133,17 +98,17 @@ module SuperSettings
 
       def create_history(changed_by:, created_at:, value: nil, deleted: false)
         history_attributes = {value: value, deleted: deleted, changed_by: changed_by, created_at: created_at}
-        if persisted?
-          history_items.create!(history_attributes)
+        if @model.persisted?
+          @model.history_items.create!(history_attributes)
         else
-          history_items.build(history_attributes)
+          @model.history_items.build(history_attributes)
         end
       end
 
       protected
 
       def redact_history!
-        history_items.update_all(value: nil)
+        @model.history_items.update_all(value: nil)
       end
     end
   end

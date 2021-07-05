@@ -15,7 +15,7 @@ if defined?(SuperSettings::SettingsController)
 
     describe "root" do
       it "should show the single page application" do
-        get :index
+        get :root
         expect(response.status).to eq 200
         expect(response.content_type).to include "text/html"
       end
@@ -71,8 +71,8 @@ if defined?(SuperSettings::SettingsController)
           "histories" => setting_1.history(limit: 2, offset: 1).collect do |history|
             JSON.parse({value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}.to_json)
           end,
-          "previous_page_url" => "http://test.host/super_settings/history?key=string&limit=2&offset=0",
-          "next_page_url" => "http://test.host/super_settings/history?key=string&limit=2&offset=3"
+          "previous_page_params" => {"key" => "string", "limit" => 2, "offset" => 0},
+          "next_page_params" => {"key" => "string", "limit" => 2, "offset" => 3}
         })
       end
     end
@@ -90,7 +90,7 @@ if defined?(SuperSettings::SettingsController)
             },
             {
               key: "integer",
-              delete: "1"
+              deleted: true
             },
             {
               key: "newkey",
@@ -101,32 +101,35 @@ if defined?(SuperSettings::SettingsController)
         }.to_json
         expect(response.status).to eq 200
         expect(JSON.parse(response.body)).to eq({"success" => true})
-        expect(setting_1.reload.value).to eq "new value"
-        expect(setting_2.reload.deleted?).to eq true
+        expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "new value"
+        expect(SuperSettings::Setting.all.detect { |s| s.key == setting_2.key }.deleted?).to eq true
         expect(SuperSettings::Setting.find_by_key("newkey").value).to eq 44
       end
 
       it "should not update any settings on the REST endpoint if there is an error" do
         request.headers["Accept"] = "application/json"
-        post :update, **request_params(settings: [
-          {
-            key: "string",
-            value: "new value",
-            value_type: "string"
-          },
-          {
-            key: "newkey",
-            value: "44",
-            value_type: "integer"
-          },
-          {
-            key: "integer",
-            value_type: "invalid"
-          }
-        ])
+        request.headers["Content-Type"] = "application/json"
+        post :update, body: {
+          settings: [
+            {
+              key: "string",
+              value: "new value",
+              value_type: "string"
+            },
+            {
+              key: "newkey",
+              value: "44",
+              value_type: "integer"
+            },
+            {
+              key: "integer",
+              value_type: "invalid"
+            }
+          ]
+        }.to_json
         expect(response.status).to eq 422
         expect(JSON.parse(response.body)).to eq({"success" => false, "errors" => {"integer" => ["value type must be one of string, integer, float, boolean, datetime, array, secret"]}})
-        expect(setting_1.reload.value).to eq "foobar"
+        expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "foobar"
         expect(SuperSettings::Setting.find_by_key("newkey")).to eq nil
       end
     end

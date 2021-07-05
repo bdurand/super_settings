@@ -4,6 +4,7 @@ source "https://rubygems.org"
 
 gem "redis"
 gem "connection_pool"
+gem "rack"
 gem "webmock"
 gem "rails", "~> 6.0.0"
 gem "rspec-rails", "~> 4.1"

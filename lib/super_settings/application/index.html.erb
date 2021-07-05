@@ -18,7 +18,7 @@
         Save <span class="count"></span> Changes
       </button>
 
-      <strong class="js-flash" style="display:inline-block; margin-left:3rem;"></strong>
+      <strong class="js-flash" style="display:none; margin-left:3rem;"></strong>
     </div>
 
     <table class="table table-striped" id="settings-table">
@@ -164,12 +164,5 @@
     </tbody>
   </table>
 </template>
-
-<script>
-  const SuperSettings = {
-    settings: <%= @settings.to_json.html_safe %>,
-    changes: <%= Array(@changed_settings).to_json.html_safe %>
-  }
-</script>
 
 <%= javascript_tag %>

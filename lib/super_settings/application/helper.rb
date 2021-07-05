@@ -29,6 +29,7 @@ module SuperSettings
         <script>
           #{File.read(File.join(__dir__, "scripts.js"))}
           #{File.read(File.join(__dir__, "api.js"))}
+          #{Configuration.instance.controller.javascript}
         </script>
       HTML
     end
@@ -72,7 +73,7 @@ module SuperSettings
 
     # Return the application name set by the configuration or a default value.
     def application_name
-      Configuration.instance.controller.application_name || "Application"
+      ERB::Util.html_escape(Configuration.instance.controller.application_name || "Application")
     end
 
     # Render the header for the web pages using values set in the configuration.

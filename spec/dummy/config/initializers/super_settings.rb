@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 unless ENV["SUPER_SETTINGS_NO_OVERRIDES"].present?
   SuperSettings.configure do |config|
     config.controller.application_name = "Test"
@@ -17,7 +19,7 @@ unless ENV["SUPER_SETTINGS_NO_OVERRIDES"].present?
       end
 
       def current_user
-        "Test User"
+        request.env["HTTP_AUTHORIZATION"]&.sub("Bearer ", "")
       end
     end
 
@@ -25,10 +27,14 @@ unless ENV["SUPER_SETTINGS_NO_OVERRIDES"].present?
       current_user
     end
 
+    config.controller.javascript = "SuperSettingsAPI.headers['Authorization'] = 'User'"
+
     config.model.cache = Rails.cache
     config.model.storage = ENV["SUPER_SETTINGS_STORAGE"]
     if config.model.storage.to_s == "redis"
-      SuperSettings::Storage::RedisStorage.redis = Redis.new(url: ENV["REDIS_URL"])
+      SuperSettings::Storage::RedisStorage.redis = Redis.new(url: ENV["SUPER_SETTINGS_REDIS_URL"])
+    elsif config.model.storage.to_s == "http"
+      SuperSettings::Storage::HttpStorage.redis = ENV["SUPER_SETTINGS_BASE_URL"]
     end
   end
 end

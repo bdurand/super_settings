@@ -55,16 +55,16 @@ module SuperSettings
         setting
       end
 
-      def all_settings
-        storage.all_settings.collect { |record| new(record) }
+      def all
+        storage.all.collect { |record| new(record) }
       end
 
       def updated_since(time)
         storage.updated_since(time).collect { |record| new(record) }
       end
 
-      def active_settings
-        storage.active_settings.collect { |record| new(record) }
+      def active
+        storage.active.collect { |record| new(record) }
       end
 
       def find_by_key(key)
@@ -98,7 +98,7 @@ module SuperSettings
       #   },
       #   {
       #     key: "setting-to-delete",
-      #     delete: true
+      #     deleted: true
       #   }
       # ])
       # ```
@@ -113,7 +113,7 @@ module SuperSettings
       def bulk_update(params, changed_by = nil)
         all_valid, settings = update_settings(params, changed_by)
         if all_valid
-          storage.with_transaction do
+          storage.transaction do
             settings.each do |setting|
               setting.save!
             end
@@ -154,15 +154,14 @@ module SuperSettings
         params.each do |setting_params|
           setting_params = stringify_keys(setting_params)
           next if Coerce.blank?(setting_params["key"])
-          next if ["value_type", "value", "description", "delete"].all? { |name| Coerce.blank?(setting_params[name]) }
-
+          next if ["value_type", "value", "description", "deleted"].all? { |name| Coerce.blank?(setting_params[name]) }
           setting = Setting.find_by_key(setting_params["key"])
           unless setting
             next if Coerce.present?(setting_params["delete"])
             setting = Setting.new(key: setting_params["key"])
           end
 
-          if Coerce.boolean(setting_params["delete"])
+          if Coerce.boolean(setting_params["deleted"])
             setting.deleted = true
             setting.changed_by = changed_by
           else
@@ -337,8 +336,8 @@ module SuperSettings
       self.created_at ||= timestamp
       self.updated_at = timestamp unless updated_at && changed?(:updated_at)
 
-      self.class.storage.with_transaction do
-        @record.store!
+      self.class.storage.transaction do
+        @record.save!
       end
 
       begin
@@ -351,7 +350,7 @@ module SuperSettings
 
     # @return [Boolean] true if the record has been stored in the data storage engine.
     def persisted?
-      @record.stored?
+      @record.persisted?
     end
 
     # @return [Boolean] true if the record has valid data.

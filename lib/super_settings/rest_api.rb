@@ -24,7 +24,7 @@ module SuperSettings
       # ]
       # ```
       def index
-        settings = Setting.active_settings.sort_by(&:key)
+        settings = Setting.active.sort_by(&:key)
         settings.collect(&:as_json)
       end
 
@@ -57,7 +57,7 @@ module SuperSettings
       #
       # The format of the parameters is an array of hashes with each setting identified by the key.
       # The settings should include either `value` and `value_type` (and optionally `description`) to
-      # insert or update a setting, or `delete` to delete the setting.
+      # insert or update a setting, or `deleted` to delete the setting.
       #
       # ```
       # { settings: [
@@ -69,16 +69,16 @@ module SuperSettings
       #     },
       #     {
       #       key: string,
-      #       delete: boolean,
+      #       deleted: boolean,
       #     },
       #     ...
       #   ]
       # }
       # ```
       #
-      # The response will be either `{success: true}` or `{success: false, errors: {key => message, ...}}`
+      # The response will be either `{success: true}` or `{success: false, errors: {key => [string], ...}}`
       def update(settings_params, changed_by = nil)
-        all_valid, settings = Setting.bulk_update(settings_params, changed_by)
+        all_valid, settings = Setting.bulk_update(Array(settings_params), changed_by)
         if all_valid
           {success: true}
         else

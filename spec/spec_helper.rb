@@ -23,7 +23,7 @@ if defined?(Rails)
     class_name = File.basename(path).sub(/\.rb/, "").split("_", 2).last.camelcase
     class_name.constantize.migrate(:up)
   end
-  SuperSettings::Storage::ActiveRecordStorage.reset_column_information
+  SuperSettings::Storage::ActiveRecordStorage::Model.reset_column_information
 
   SuperSettings::Setting.storage = SuperSettings::Storage::ActiveRecordStorage
 else
@@ -33,7 +33,10 @@ end
 
 require "webmock/rspec"
 
-redis = Redis.new(url: ENV["REDIS_URL"])
+redis = Redis.new(url: ENV["TEST_REDIS_URL"])
+if redis
+  SuperSettings::Storage::RedisStorage.redis = redis
+end
 
 RSpec.configure do |config|
   config.expect_with :rspec do |c|
@@ -42,12 +45,14 @@ RSpec.configure do |config|
 
   config.before do
     if defined?(Rails)
-      SuperSettings::Storage::ActiveRecordStorage.destroy_all
-      SuperSettings::Storage::ActiveRecordStorage::HistoryStorage.destroy_all
+      SuperSettings::Storage::ActiveRecordStorage::Model.destroy_all
+      SuperSettings::Storage::ActiveRecordStorage::HistoryModel.destroy_all
       config.render_views = true
     end
 
-    SuperSettings::Storage::RedisStorage.destroy_all
+    if redis
+      SuperSettings::Storage::RedisStorage.destroy_all
+    end
 
     SuperSettings::Storage::TestStorage.clear
 
@@ -59,9 +64,7 @@ RSpec.configure do |config|
   config.order = :random
 end
 
-SuperSettings::Storage::RedisStorage.redis = redis
-
-SuperSettings::Storage::HttpStorage.base_url = "https://example.com/settings"
+SuperSettings::Storage::HttpStorage.base_url = "https://example.com/super_settings"
 
 I18n.locale = :en if defined?(I18n)
 

@@ -31,7 +31,7 @@ module SuperSettings
           @history = {}
         end
 
-        def all_settings
+        def all
           settings.values.collect do |attributes|
             setting = new(attributes)
             setting.send(:set_persisted!)
@@ -72,7 +72,7 @@ module SuperSettings
         self.class.history(key).unshift(item)
       end
 
-      def store!
+      def save!
         self.updated_at ||= Time.now
         self.created_at ||= updated_at
         if defined?(@original_key) && @original_key
@@ -116,7 +116,7 @@ module SuperSettings
         !!(defined?(@deleted) && @deleted)
       end
 
-      def stored?
+      def persisted?
         !!(defined?(@persisted) && @persisted)
       end
 

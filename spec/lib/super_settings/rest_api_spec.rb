@@ -68,7 +68,7 @@ describe SuperSettings::RestAPI do
         },
         {
           key: "integer",
-          delete: "1"
+          deleted: true
         },
         {
           key: "newkey",
@@ -78,7 +78,7 @@ describe SuperSettings::RestAPI do
       ])
       expect(response).to eq({success: true})
       expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "new value"
-      expect(SuperSettings::Setting.find_by_key(setting_2.key).deleted?).to eq true
+      expect(SuperSettings::Setting.all.detect { |s| s.key == setting_2.key }.deleted?).to eq true
       expect(SuperSettings::Setting.find_by_key("newkey").value).to eq 44
     end
 

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= application_name %> Settings</title>
+    <%= layout_style_tag %>
+  </head>
+
+  <body class="super_settings">
+    <header>
+      <h1 class="logo">
+        <%= application_header %>
+      </h1>
+    </header>
+    <div class="container">
+      <%= yield %>
+    </div>
+  </body>
+</html>
