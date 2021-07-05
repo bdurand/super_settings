@@ -3,6 +3,14 @@
 ENV["BUNDLE_GEMFILE"] ||= File.expand_path("../../../Gemfile", __dir__)
 
 require "bundler/setup" if File.exist?(ENV["BUNDLE_GEMFILE"])
+
+# Rails is not an explicit dependency but if we are running with it for tests we need to make
+# sure ActiveSupport is loaded before the SuperSettings gem
+begin
+  require "active_support/all"
+rescue LoadError
+end
+
 Bundler.require(:default, :test)
 
 require_relative "../lib/super_settings/storage/test_storage"

@@ -23,6 +23,8 @@ describe SuperSettings::RestAPI do
 
   describe "show" do
     it "should have a REST endpoint" do
+      setting_1_key = setting_1.key
+      setting_1 = SuperSettings::Setting.find_by_key(setting_1_key)
       response = SuperSettings::RestAPI.show(setting_1.key)
       expect(response).to eq setting_1.as_json
     end
