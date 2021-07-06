@@ -27,7 +27,7 @@ if defined?(SuperSettings::SettingsController)
         get :index
         expect(response.status).to eq 200
         expect(response.content_type).to include "application/json"
-        expect(JSON.parse(response.body)).to eq [setting_6, setting_4, setting_5, setting_3, setting_2, setting_1].collect { |s| JSON.parse(s.to_json) }
+        expect(JSON.parse(response.body)["settings"]).to eq [setting_6, setting_4, setting_5, setting_3, setting_2, setting_1].collect { |s| JSON.parse(s.to_json) }
       end
     end
 
@@ -157,7 +157,7 @@ if defined?(SuperSettings::SettingsController)
         get :updated_since, **request_params(time: Time.now + 10)
         expect(response.status).to eq 200
         expect(response.content_type).to include "application/json"
-        expect(JSON.parse(response.body)).to match_array([JSON.parse(setting_1.to_json), JSON.parse(setting_2.to_json)])
+        expect(JSON.parse(response.body)["settings"]).to match_array([JSON.parse(setting_1.to_json), JSON.parse(setting_2.to_json)])
       end
     end
   end

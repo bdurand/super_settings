@@ -47,13 +47,13 @@ module SuperSettings
 
       class << self
         def all
-          call_api(:get, "/settings").collect do |attributes|
+          call_api(:get, "/settings")["settings"].collect do |attributes|
             new(attributes)
           end
         end
 
         def updated_since(time)
-          call_api(:get, "/settings/updated_since", time: time).collect do |attributes|
+          call_api(:get, "/settings/updated_since", time: time)["settings"].collect do |attributes|
             new(attributes)
           end
         end
