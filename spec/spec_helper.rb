@@ -41,7 +41,7 @@ end
 
 require "webmock/rspec"
 
-redis = Redis.new(url: ENV["TEST_REDIS_URL"])
+redis = Redis.new(url: ENV["TEST_REDIS_URL"]) if ENV["TEST_REDIS_URL"]
 if redis
   SuperSettings::Storage::RedisStorage.redis = redis
 end

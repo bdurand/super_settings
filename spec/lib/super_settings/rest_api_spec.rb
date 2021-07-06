@@ -21,7 +21,7 @@ describe SuperSettings::RestAPI do
   describe "index" do
     it "should return the settingd" do
       response = SuperSettings::RestAPI.index
-      expect(response).to eq [reload(setting_6), reload(setting_4), reload(setting_5), reload(setting_3), reload(setting_2), reload(setting_1)].collect(&:as_json)
+      expect(response[:settings]).to eq [reload(setting_6), reload(setting_4), reload(setting_5), reload(setting_3), reload(setting_2), reload(setting_1)].collect(&:as_json)
     end
   end
 
@@ -127,7 +127,7 @@ describe SuperSettings::RestAPI do
       setting_2.updated_at = Time.now + 20
       setting_2.save!
       response = SuperSettings::RestAPI.updated_since(Time.now + 5)
-      expect(response).to match_array([reload(setting_1).as_json, reload(setting_2).as_json])
+      expect(response[:settings]).to match_array([reload(setting_1).as_json, reload(setting_2).as_json])
     end
   end
 end

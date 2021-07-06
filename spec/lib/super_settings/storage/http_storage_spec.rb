@@ -6,13 +6,13 @@ describe SuperSettings::Storage::HttpStorage do
   describe "http settings" do
     it "should add query parameters on a GET request" do
       allow(SuperSettings::Storage::HttpStorage).to receive(:query_params).and_return({foo: "bar"})
-      stub_request(:get, "https://example.com/super_settings/settings").with(query: {foo: "bar"}).to_return(body: [].to_json, headers: {"Content-Type" => "application/json"})
+      stub_request(:get, "https://example.com/super_settings/settings").with(query: {foo: "bar"}).to_return(body: {settings: []}.to_json, headers: {"Content-Type" => "application/json"})
       SuperSettings::Storage::HttpStorage.all
     end
 
     it "should add headers to the request" do
       allow(SuperSettings::Storage::HttpStorage).to receive(:headers).and_return({"Foo" => "bar"})
-      stub_request(:get, "https://example.com/super_settings/settings").with(headers: {"Accept" => "application/json", "Foo" => "bar"}).to_return(body: [].to_json, headers: {"Content-Type" => "application/json"})
+      stub_request(:get, "https://example.com/super_settings/settings").with(headers: {"Accept" => "application/json", "Foo" => "bar"}).to_return(body: {settings: []}.to_json, headers: {"Content-Type" => "application/json"})
       SuperSettings::Storage::HttpStorage.all
     end
   end
@@ -22,7 +22,7 @@ describe SuperSettings::Storage::HttpStorage do
       setting_1 = SuperSettings::Setting.new(key: "setting_1", value: "1")
       setting_2 = SuperSettings::Setting.new(key: "setting_2", deleted: true)
       setting_3 = SuperSettings::Setting.new(key: "setting_3", value: "3")
-      payload = [setting_1, setting_2, setting_3]
+      payload = {settings: [setting_1, setting_2, setting_3]}
       stub_request(:get, "https://example.com/super_settings/settings").to_return(body: payload.to_json, headers: {"Content-Type" => "application/json"})
       settings = SuperSettings::Storage::HttpStorage.all
       expect(settings.collect(&:class).uniq).to eq [SuperSettings::Storage::HttpStorage]
@@ -35,7 +35,7 @@ describe SuperSettings::Storage::HttpStorage do
       setting_1 = SuperSettings::Setting.new(key: "setting_1", value: "1")
       setting_2 = SuperSettings::Setting.new(key: "setting_2", deleted: true)
       setting_3 = SuperSettings::Setting.new(key: "setting_3", value: "3")
-      payload = [setting_1, setting_2, setting_3]
+      payload = {settings: [setting_1, setting_2, setting_3]}
       stub_request(:get, "https://example.com/super_settings/settings").to_return(body: payload.to_json, headers: {"Content-Type" => "application/json"})
       settings = SuperSettings::Storage::HttpStorage.active
       expect(settings.collect(&:class).uniq).to eq [SuperSettings::Storage::HttpStorage]
@@ -48,7 +48,7 @@ describe SuperSettings::Storage::HttpStorage do
       setting_1 = SuperSettings::Storage::HttpStorage.new(key: "setting_1", raw_value: "1", updated_at: Time.now - 100)
       setting_2 = SuperSettings::Storage::HttpStorage.new(key: "setting_2", raw_value: "2", updated_at: Time.now - 50)
       setting_3 = SuperSettings::Storage::HttpStorage.new(key: "setting_3", raw_value: "3")
-      payload = [SuperSettings::Setting.new(setting_2), SuperSettings::Setting.new(setting_3)]
+      payload = {settings: [SuperSettings::Setting.new(setting_2), SuperSettings::Setting.new(setting_3)]}
       time = Time.now - 60
       stub_request(:get, "https://example.com/super_settings/settings/updated_since").with(query: {time: time.to_s}).to_return(body: payload.to_json, headers: {"Content-Type" => "application/json"})
       settings = SuperSettings::Storage::HttpStorage.updated_since(time)

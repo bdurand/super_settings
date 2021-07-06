@@ -25,7 +25,7 @@ module SuperSettings
       # ```
       def index
         settings = Setting.active.sort_by(&:key)
-        settings.collect(&:as_json)
+        {settings: settings.collect(&:as_json)}
       end
 
       # Get a setting by id.
@@ -187,7 +187,7 @@ module SuperSettings
       def updated_since(time)
         time = Coerce.time(time)
         settings = Setting.updated_since(time)
-        settings.collect(&:as_json)
+        {settings: settings.collect(&:as_json)}
       end
     end
   end

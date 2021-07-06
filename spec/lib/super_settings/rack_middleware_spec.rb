@@ -44,7 +44,7 @@ describe SuperSettings::RackMiddleware do
       expect(response[0]).to eq 200
       expect(response[1]).to match("Content-Type" => "application/json; charset=utf-8")
       body = response[2].first
-      expect(JSON.parse(body)).to eq [setting_6, setting_4, setting_5, setting_3, setting_2, setting_1].collect { |s| JSON.parse(s.to_json) }
+      expect(JSON.parse(body)["settings"]).to eq [setting_6, setting_4, setting_5, setting_3, setting_2, setting_1].collect { |s| JSON.parse(s.to_json) }
     end
 
     it "should return a forbidden response if access is denied" do
@@ -124,7 +124,7 @@ describe SuperSettings::RackMiddleware do
       expect(response[0]).to eq 200
       expect(response[1]).to match("Content-Type" => "application/json; charset=utf-8")
       body = response[2].first
-      expect(JSON.parse(body)).to match_array([JSON.parse(setting_1.to_json), JSON.parse(setting_2.to_json)])
+      expect(JSON.parse(body)["settings"]).to match_array([JSON.parse(setting_1.to_json), JSON.parse(setting_2.to_json)])
     end
 
     it "should return a forbidden response if access is denied" do
