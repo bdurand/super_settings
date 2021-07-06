@@ -2,15 +2,14 @@ source "https://rubygems.org"
 
 gemspec
 
-gem "rails"
-gem "rspec-rails", "~> 4.1"
-gem "sqlite3"
 gem "redis"
 gem "connection_pool"
+gem "rack"
 gem "webmock"
 
 group :development, :test do
-  gem "dotenv-rails"
+  gem "rspec", "~> 3.10"
+  gem "dotenv"
   gem "appraisal"
   gem "standard", "~>1.0"
 end

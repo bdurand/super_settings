@@ -24,7 +24,7 @@ module SuperSettings
       class HistoryStorage
         HISTORY_KEY_PREFIX = "SuperSettings.history"
 
-        include ActiveModel::Model
+        include SuperSettings::Attributes
 
         attr_accessor :key, :value, :changed_by, :deleted
         attr_reader :created_at
@@ -59,11 +59,11 @@ module SuperSettings
         end
 
         def created_at=(val)
-          @created_at = (val.is_a?(Numeric) ? Time.at(val) : val&.to_time)
+          @created_at = SuperSettings::Coerce.time(val)
         end
 
         def save!
-          raise ArgumentError.new("Missing key") if key.blank?
+          raise ArgumentError.new("Missing key") if Coerce.blank?(key)
           RedisStorage.transaction do |redis|
             redis.lpush(self.class.redis_key(key), payload_json.to_json)
           end
@@ -86,21 +86,20 @@ module SuperSettings
         end
       end
 
-      include ActiveModel::Model
-
       attr_reader :key, :raw_value, :description, :value_type, :updated_at, :created_at
       attr_accessor :changed_by
 
       class << self
-        def all_settings
+        def all
           with_redis do |redis|
             redis.hgetall(SETTINGS_KEY).values.collect { |json| load_from_json(json) }
           end
         end
 
         def updated_since(time)
+          time = SuperSettings::Coerce.time(time)
           with_redis do |redis|
-            min_score = time.to_time.to_f
+            min_score = time.to_f
             keys = redis.zrangebyscore(UPDATED_KEY, min_score, "+inf")
             return [] if keys.empty?
 
@@ -125,7 +124,7 @@ module SuperSettings
         end
 
         def destroy_all
-          all_settings.each(&:destroy)
+          all.each(&:destroy)
         end
 
         attr_writer :redis
@@ -181,7 +180,7 @@ module SuperSettings
         HistoryStorage.create!(key: key, value: value, deleted: deleted, changed_by: changed_by, created_at: created_at)
       end
 
-      def store!
+      def save!
         self.updated_at ||= Time.now
         self.created_at ||= updated_at
         self.class.transaction do |redis|
@@ -190,12 +189,6 @@ module SuperSettings
           set_persisted!
         end
         true
-      end
-
-      def reload
-        data = self.class.with_redis { |redis| redis.hget(SETTINGS_KEY, key) }
-        assign_attributes(JSON.parse(data))
-        self
       end
 
       def destroy
@@ -207,38 +200,38 @@ module SuperSettings
       end
 
       def key=(value)
-        @key = (value.blank? ? nil : value.to_s)
+        @key = (Coerce.blank?(value) ? nil : value.to_s)
       end
 
       def raw_value=(value)
-        @raw_value = (value.blank? ? nil : value.to_s)
+        @raw_value = (Coerce.blank?(value) ? nil : value.to_s)
       end
 
       def value_type=(value)
-        @value_type = (value.blank? ? nil : value.to_s)
+        @value_type = (Coerce.blank?(value) ? nil : value.to_s)
       end
 
       def description=(value)
-        @description = (value.blank? ? nil : value.to_s)
+        @description = (Coerce.blank?(value) ? nil : value.to_s)
       end
 
       def deleted=(value)
-        @deleted = BooleanParser.cast(value)
+        @deleted = Coerce.boolean(value)
       end
 
       def created_at=(value)
-        @created_at = (value.is_a?(Numeric) ? Time.at(value) : value&.to_time)
+        @created_at = SuperSettings::Coerce.time(value)
       end
 
       def updated_at=(value)
-        @updated_at = (value.is_a?(Numeric) ? Time.at(value) : value&.to_time)
+        @updated_at = SuperSettings::Coerce.time(value)
       end
 
       def deleted?
         !!(defined?(@deleted) && @deleted)
       end
 
-      def stored?
+      def persisted?
         !!(defined?(@persisted) && @persisted)
       end
 

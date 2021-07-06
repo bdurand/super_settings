@@ -71,7 +71,7 @@ describe SuperSettings::LocalCache do
     it "should load updated records" do
       cache.load_settings
       SuperSettings::Setting.find_by_key("key.1").update!(value: 10)
-      SuperSettings::Setting.all_settings.detect { |setting| setting.key == "key.2" }.update!(deleted: false)
+      SuperSettings::Setting.all.detect { |setting| setting.key == "key.2" }.update!(deleted: false)
       SuperSettings::Setting.find_by_key("key.3").update!(deleted: true)
       SuperSettings::Setting.create!(key: "key.4", value: 4, value_type: :integer)
       expect(cache["key.1"]).to eq 1

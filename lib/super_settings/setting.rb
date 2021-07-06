@@ -17,32 +17,12 @@ module SuperSettings
 
     ARRAY_DELIMITER = /[\n\r]+/.freeze
 
-    include ActiveModel::Model
-
-    delegate :key, :value_type, :description, :deleted?, :updated_at, :created_at, to: :@record
-    alias_method :deleted, :deleted?
-
-    extend ActiveModel::Callbacks
-    define_model_callbacks :save
-
-    include ActiveModel::Dirty
-    define_attribute_methods :key, :raw_value, :description, :value_type, :deleted, :updated_at, :created_at
+    include Attributes
 
     # The changed_by attribute is used to temporarily store an identifier for the user
     # who made a change to a setting to be stored in the history table. This value is optional
     # and is cleared after the record is saved.
     attr_accessor :changed_by
-
-    validates :value_type, inclusion: {in: Setting::VALUE_TYPES}
-    validates :key, presence: true, length: {maximum: 190}
-    validates :raw_value, length: {maximum: 4096}
-    validate { validate_parsable_value(raw_value) }
-
-    after_save :clear_changed_by
-
-    after_save :redact_history!, if: :history_needs_redacting?
-
-    before_save :set_raw_value
 
     class << self
       attr_accessor :cache
@@ -75,16 +55,16 @@ module SuperSettings
         setting
       end
 
-      def all_settings
-        storage.all_settings.collect { |record| new(record) }
+      def all
+        storage.all.collect { |record| new(record) }
       end
 
       def updated_since(time)
         storage.updated_since(time).collect { |record| new(record) }
       end
 
-      def active_settings
-        storage.active_settings.collect { |record| new(record) }
+      def active
+        storage.active.collect { |record| new(record) }
       end
 
       def find_by_key(key)
@@ -118,7 +98,7 @@ module SuperSettings
       #   },
       #   {
       #     key: "setting-to-delete",
-      #     delete: true
+      #     deleted: true
       #   }
       # ])
       # ```
@@ -172,25 +152,22 @@ module SuperSettings
         all_valid = true
 
         params.each do |setting_params|
-          setting_params = setting_params.with_indifferent_access if setting_params.is_a?(Hash)
-          next if setting_params[:key].blank?
-          next if [:value_type, :value, :description, :delete].all? { |name| setting_params[name].blank? }
-
-          setting = Setting.find_by_key(setting_params[:key])
+          setting_params = stringify_keys(setting_params)
+          next if Coerce.blank?(setting_params["key"])
+          next if ["value_type", "value", "description", "deleted"].all? { |name| Coerce.blank?(setting_params[name]) }
+          setting = Setting.find_by_key(setting_params["key"])
           unless setting
-            next if setting_params[:delete].present?
-            setting = Setting.new(key: setting_params[:key])
+            next if Coerce.present?(setting_params["delete"])
+            setting = Setting.new(key: setting_params["key"])
           end
 
-          if BooleanParser.cast(setting_params[:delete])
+          if Coerce.boolean(setting_params["deleted"])
             setting.deleted = true
             setting.changed_by = changed_by
           else
-            setting.value_type = setting_params[:value_type] if setting_params.include?(:value_type)
-            if setting_params.include?(:value)
-              setting.value = (setting.boolean? ? setting_params[:value].present? : setting_params[:value])
-            end
-            setting.description = setting_params[:description] if setting_params.include?(:description)
+            setting.value_type = setting_params["value_type"] if setting_params.include?("value_type")
+            setting.value = setting_params["value"] if setting_params.include?("value")
+            setting.description = setting_params["description"] if setting_params.include?("description")
             setting.deleted = false if setting.deleted?
             setting.changed_by = changed_by
             all_valid &= setting.valid?
@@ -208,20 +185,35 @@ module SuperSettings
           block.call
         end
       end
+
+      def stringify_keys(hash)
+        transformed = {}
+        hash.each do |key, value|
+          transformed[key.to_s] = value
+        end
+        transformed
+      end
     end
 
     def initialize(attributes = {})
+      @changes = {}
+      @errors = {}
       if attributes.is_a?(Storage)
         @record = attributes
       else
         @record = self.class.storage.new
-        assign_attributes(attributes)
+        self.attributes = attributes
         self.value_type ||= STRING
       end
     end
 
+    def key
+      @record.key
+    end
+
     def key=(val)
-      key_will_change! unless key == val
+      val = val&.to_s
+      will_change!(:key, val) unless key == val
       @record.key = val
     end
 
@@ -236,38 +228,64 @@ module SuperSettings
 
     # Set the value of the setting.
     def value=(val)
-      self.raw_value = (val.is_a?(Array) ? val.join("\n") : val)
+      val = (val.is_a?(Array) ? val.join("\n") : serialize(val))
+      self.raw_value = val
+    end
+
+    def value_type
+      @record.value_type
     end
 
     # Set the value type of the setting.
     # @param val (String) one of string, integer, float, boolean, datetime, array, or secret.
     def value_type=(val)
-      value_type_will_change! unless value_type == val
+      val = val&.to_s
+      will_change!(:value_type, val) unless value_type == val
       @record.value_type = val
     end
 
+    def description
+      @record.description
+    end
+
     def description=(val)
-      description_will_change! unless description == val
+      val = val&.to_s
+      val = nil if val&.empty?
+      will_change!(:description, val) unless description == val
       @record.description = val
     end
+
+    def deleted?
+      @record.deleted?
+    end
+
+    alias_method :deleted, :deleted?
 
     # Set the deleted flag on the setting. Deleted settings are not visible but are not actually
     # removed from the data store.
     def deleted=(val)
-      val = BooleanParser.cast(val)
-      deleted_will_change! unless deleted? == val
+      val = Coerce.boolean(val)
+      will_change!(:deleted, val) unless deleted? == val
       @record.deleted = val
     end
 
+    def created_at
+      @record.created_at
+    end
+
     def created_at=(val)
-      val = val&.to_time
-      created_at_will_change! unless created_at == val
+      val = Coerce.time(val)
+      will_change!(:created_at, val) unless created_at == val
       @record.created_at = val
     end
 
+    def updated_at
+      @record.updated_at
+    end
+
     def updated_at=(val)
-      val = val&.to_time
-      updated_at_will_change! unless updated_at == val
+      val = Coerce.time(val)
+      will_change!(:updated_at, val) unless updated_at == val
       @record.updated_at = val
     end
 
@@ -313,24 +331,36 @@ module SuperSettings
 
     # Save the setting to the data storage engine.
     def save!
+      set_raw_value
       timestamp = Time.now
       self.created_at ||= timestamp
-      self.updated_at = timestamp unless updated_at && updated_at_changed?
+      self.updated_at = timestamp unless updated_at && changed?(:updated_at)
 
       self.class.storage.transaction do
-        run_callbacks(:save) do
-          @record.store!
-          changes_applied
-        end
+        @record.save!
       end
-      self.class.clear_last_updated_cache
-      clear_changes_information
+
+      begin
+        self.class.clear_last_updated_cache
+        redact_history! if history_needs_redacting?
+      ensure
+        clear_changes
+      end
     end
 
     # @return [Boolean] true if the record has been stored in the data storage engine.
     def persisted?
-      @record.stored?
+      @record.persisted?
     end
+
+    # @return [Boolean] true if the record has valid data.
+    def valid?
+      validate!
+      @errors.empty?
+    end
+
+    # @return [Hash<String, Array<String>>] hash of errors generated from the last call to `valid?`
+    attr_reader :errors
 
     # Mark the record as deleted. The record will not actually be deleted since it's still needed
     # for caching purposes, but it will no longer be returned by queries.
@@ -339,15 +369,8 @@ module SuperSettings
     end
 
     def update!(attributes)
-      assign_attributes(attributes)
+      self.attributes = attributes
       save!
-    end
-
-    def reload
-      @record.reload
-      clear_changed_by
-      clear_changes_information
-      self
     end
 
     # Return array of history items reflecting changes made to the setting over time. Items
@@ -381,7 +404,7 @@ module SuperSettings
 
     # Coerce a value for the appropriate value type.
     def coerce(value)
-      return nil if value.blank?
+      return nil if value.respond_to?(:empty?) ? value.empty? : value.to_s.empty?
 
       case value_type
       when Setting::STRING
@@ -391,14 +414,14 @@ module SuperSettings
       when Setting::FLOAT
         Float(value)
       when Setting::BOOLEAN
-        BooleanParser.cast(value)
+        Coerce.boolean(value)
       when Setting::DATETIME
-        Time.parse(value).in_time_zone(Time.zone).freeze
+        Coerce.time(value).freeze
       when Setting::ARRAY
         if value.is_a?(String)
           value.split(Setting::ARRAY_DELIMITER).map(&:freeze).freeze
         else
-          Array(value).reject(&:blank?).map { |v| v.to_s.freeze }.freeze
+          Array(value).reject { |v| v.respond_to?(:empty?) ? v.empty? : v.to_s.empty? }.collect { |v| v.to_s.freeze }.freeze
         end
       when Setting::SECRET
         begin
@@ -415,7 +438,7 @@ module SuperSettings
 
     # Format the value so it can be saved as a string in the database.
     def serialize(value)
-      if value.blank?
+      if value.nil? || value.to_s.empty?
         nil
       elsif value.is_a?(Time) || value.is_a?(DateTime)
         value.utc.iso8601(6)
@@ -424,22 +447,9 @@ module SuperSettings
       end
     end
 
-    def validate_parsable_value(value)
-      if value.present? && coerce(value).nil?
-        if value_type == Setting::INTEGER
-          errors.add(:value, :not_an_integer)
-        elsif value_type == Setting::FLOAT
-          errors.add(:value, :not_a_number)
-        elsif value_type == Setting::DATETIME
-          errors.add(:value, :invalid)
-        end
-      end
-    end
-
     # Set the raw string value that will be persisted to the data store.
     def set_raw_value
-      self.raw_value = serialize(raw_value) unless value_type == Setting::ARRAY
-      if value_type == Setting::SECRET && raw_value.present? && (raw_value_changed? || !Encryption.encrypted?(raw_value))
+      if value_type == Setting::SECRET && !raw_value.to_s.empty? && (changed?(:raw_value) || !Encryption.encrypted?(raw_value))
         self.raw_value = Encryption.encrypt(raw_value)
       end
       record_value_change
@@ -447,23 +457,32 @@ module SuperSettings
 
     # Update the histories association whenever the value or key is changed.
     def record_value_change
-      return unless raw_value_changed? || deleted_changed? || key_changed?
+      return unless changed?(:raw_value) || changed?(:deleted) || changed?(:key)
       recorded_value = (deleted? || value_type == Setting::SECRET ? nil : raw_value)
       @record.create_history(value: recorded_value, deleted: deleted?, changed_by: changed_by, created_at: Time.now)
     end
 
-    # Clear the changed_by attribute.
-    def clear_changed_by
+    def clear_changes
+      @changes = {}
       self.changed_by = nil
     end
 
-    def history_needs_redacting?
-      return false unless value_type == Setting::SECRET
-      if defined?(value_type_previously_changed?)
-        value_type_previously_changed?
-      else
-        value_type_changed?
+    def will_change!(attribute, value)
+      attribute = attribute.to_s
+      change = @changes[attribute]
+      unless change
+        change = [send(attribute)]
+        @changes[attribute] = change
       end
+      change[1] = value # rubocop:disable Lint/UselessSetterCall
+    end
+
+    def changed?(attribute)
+      @changes.include?(attribute.to_s)
+    end
+
+    def history_needs_redacting?
+      value_type == Setting::SECRET && changed?(:value_type)
     end
 
     def redact_history!
@@ -471,12 +490,47 @@ module SuperSettings
     end
 
     def raw_value=(val)
-      raw_value_will_change! unless raw_value == val
+      val = val&.to_s
+      val = nil if val&.empty?
+      will_change!(:raw_value, val) unless raw_value == val
+      @raw_value = val
       @record.raw_value = val
     end
 
     def raw_value
       @record.raw_value
+    end
+
+    def validate!
+      if key.to_s.empty?
+        add_error(:key, "cannot be empty")
+      elsif key.to_s.size > 190
+        add_error(:key, "must be less than 190 characters")
+      end
+
+      add_error(:value_type, "must be one of #{Setting::VALUE_TYPES.join(", ")}") unless Setting::VALUE_TYPES.include?(value_type)
+
+      add_error(:value, "must be less than 4096 characters") if raw_value.to_s.size > 4096
+
+      if !raw_value.nil? && coerce(raw_value).nil?
+        if value_type == Setting::INTEGER
+          add_error(:value, "must be an integer")
+        elsif value_type == Setting::FLOAT
+          add_error(:value, "must be a number")
+        elsif value_type == Setting::DATETIME
+          add_error(:value, "is not a valid datetime")
+        end
+      end
+    end
+
+    def add_error(attribute, message)
+      attribute = attribute.to_s
+      attribute_errors = @errors[attribute]
+      unless attribute_errors
+        attribute_errors = []
+        @errors[attribute] = attribute_errors
+      end
+      attribute_errors << "#{attribute.tr("_", " ")} #{message}"
     end
   end
 end

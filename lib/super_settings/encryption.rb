@@ -33,7 +33,7 @@ module SuperSettings
       # Encrypt a value for use with secret settings.
       # @api private
       def encrypt(value)
-        return nil if value.blank?
+        return nil if Coerce.blank?(value)
         encryptor = encryptors.first
         return value if encryptor.nil?
         encryptor.encrypt(value)
@@ -42,7 +42,7 @@ module SuperSettings
       # Decrypt a value for use with secret settings.
       # @api private
       def decrypt(value)
-        return nil if value.blank?
+        return nil if Coerce.blank?(value)
         return value if encryptors.empty? || encryptors == [nil]
         encryptors.each do |encryptor|
           begin

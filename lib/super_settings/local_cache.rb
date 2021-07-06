@@ -119,7 +119,7 @@ module SuperSettings
           values = {}
           start_time = Time.now
           Setting.storage.with_connection do
-            Setting.active_settings.each do |setting|
+            Setting.active.each do |setting|
               values[setting.key] = setting.value.freeze
             end
           end
@@ -192,7 +192,7 @@ module SuperSettings
     # Update a single setting directly into the cache.
     # @api private
     def update_setting(setting)
-      return if setting.key.blank?
+      return if Coerce.blank?(setting.key)
       @lock.synchronize do
         @cache = @cache.merge(setting.key => setting.value)
       end

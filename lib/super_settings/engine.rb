@@ -33,7 +33,7 @@ module SuperSettings
           configuration.secret = nil
         end
 
-        if !SuperSettings.loaded? && Setting.storage.ready?
+        if !SuperSettings.loaded?
           begin
             SuperSettings.load_settings
           rescue => e

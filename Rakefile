@@ -14,10 +14,12 @@ RDoc::Task.new(:rdoc) do |rdoc|
   rdoc.rdoc_files.include("lib/**/*.rb")
 end
 
-APP_RAKEFILE = File.expand_path("spec/dummy/Rakefile", __dir__)
-load "rails/tasks/engine.rake"
+if defined?(Rails)
+  APP_RAKEFILE = File.expand_path("spec/dummy/Rakefile", __dir__)
+  load "rails/tasks/engine.rake"
 
-load "rails/tasks/statistics.rake"
+  load "rails/tasks/statistics.rake"
+end
 
 require "bundler/gem_tasks"
 

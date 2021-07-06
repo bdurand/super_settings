@@ -4,22 +4,25 @@ module SuperSettings
   # Abstraction over how a setting is stored and retrieved from the storage engine. Models
   # must implement the methods module in this module that raise `NotImplementedError`.
   module Storage
-    extend ActiveSupport::Concern
-
     class RecordInvalid < StandardError
+    end
+
+    def self.included(base)
+      base.extend(ClassMethods)
+      base.include(Attributes) unless base.instance_methods.include?(:attributes=)
     end
 
     module ClassMethods
       # Storage classes must implent this method to return all settings included deleted ones.
       # @return [Array<SuperSetting::Setting::Storage>]
-      def all_settings
+      def all
         raise NotImplementedError
       end
 
       # Return all non-deleted settings.
       # @return [Array<SuperSetting::Setting::Storage>]
-      def active_settings
-        all_settings.reject(&:deleted?)
+      def active
+        all.reject(&:deleted?)
       end
 
       # Storage classes must implement this method to return all settings updates since the
@@ -51,6 +54,11 @@ module SuperSettings
 
       # Implementing classes can override this method to setup a thread safe connection within a block.
       def with_connection(&block)
+        yield
+      end
+
+      # Implementing classes can override this method to wrap an operation in an atomic transaction.
+      def transaction(&block)
         yield
       end
     end
@@ -153,12 +161,12 @@ module SuperSettings
 
     # Persist the record to storage.
     # @return [void]
-    def store!
+    def save!
       raise NotImplementedError
     end
 
     # @return [Boolean] true if the record has been stored.
-    def stored?
+    def persisted?
       raise NotImplementedError
     end
 
@@ -179,7 +187,7 @@ end
 
 require_relative "storage/http_storage"
 require_relative "storage/redis_storage"
-if ActiveSupport.respond_to?(:on_load)
+if defined?(ActiveSupport) && ActiveSupport.respond_to?(:on_load)
   ActiveSupport.on_load(:active_record) do
     require_relative "storage/active_record_storage"
   end

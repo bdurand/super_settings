@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+
+ENV['BUNDLE_GEMFILE'] ||= "Gemfile"
+require 'bundler/setup' if File.exist?(ENV['BUNDLE_GEMFILE'])
+
+require "dotenv/load"
+
+require_relative "../lib/super_settings"
+
+default_app = lambda { |env| [404, {"Content-Type" => "text/plain"}, ["Not found"]] }
+app = SuperSettings::RackMiddleware.new(default_app)
+options = Rack::Server::Options.new.parse!(ARGV)
+
+storage = (ARGV[0] || "redis")
+if storage == "redis"
+  require "redis"
+  SuperSettings::Setting.storage = SuperSettings::Storage::RedisStorage
+  SuperSettings::Storage::RedisStorage.redis = Redis.new(url: ENV["REDIS_URL"])
+elsif storage == "http"
+  SuperSettings::Setting.storage = SuperSettings::Storage::HttpStorage
+  SuperSettings::Storage::HttpStorage.base_url = ENV["SUPER_SETTINGS_BASE_URL"]
+else
+  STDERR.puts "Usage: #{$0} [redis | http]"
+end
+
+Rack::Server.start(options.merge(app: app))

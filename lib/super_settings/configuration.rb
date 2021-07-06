@@ -29,6 +29,10 @@ module SuperSettings
       # Optional URL for a link back to the rest of the application.
       attr_accessor :application_link
 
+      # Javascript to inject into the settings application HTML page. This can be used, for example,
+      # to set authorization credentials stored client side to access the settings API.
+      attr_accessor :javascript
+
       # Enhance the controller. You can define methods or call controller class methods like
       # `before_action`, etc. in the block. These will be applied to the engine controller.
       # This is essentially the same a monkeypatching the controller class.

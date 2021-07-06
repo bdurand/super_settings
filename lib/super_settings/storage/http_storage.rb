@@ -14,8 +14,6 @@ module SuperSettings
       DEFAULT_HEADERS = {"Accept" => "application/json"}.freeze
       DEFAULT_TIMEOUT = 5.0
 
-      include ActiveModel::Model
-
       attr_reader :key, :raw_value, :description, :value_type, :updated_at, :created_at
 
       class Error < StandardError
@@ -34,12 +32,12 @@ module SuperSettings
       end
 
       class HistoryStorage
-        include ActiveModel::Model
+        include SuperSettings::Attributes
 
         attr_accessor :key, :value, :changed_by, :deleted
 
         def created_at=(val)
-          @created_at = (value.is_a?(Numeric) ? Time.at(value) : value&.to_time)
+          @created_at = SuperSettings::Coerce.time(val)
         end
 
         def deleted?
@@ -48,14 +46,14 @@ module SuperSettings
       end
 
       class << self
-        def all_settings
-          call_api(:get, "/").collect do |attributes|
+        def all
+          call_api(:get, "/settings").collect do |attributes|
             new(attributes)
           end
         end
 
         def updated_since(time)
-          call_api(:get, "/updated_since", time: time.to_param).collect do |attributes|
+          call_api(:get, "/settings/updated_since", time: time).collect do |attributes|
             new(attributes)
           end
         end
@@ -69,7 +67,8 @@ module SuperSettings
         end
 
         def last_updated_at
-          call_api(:get, "/last_updated_at")["last_updated_at"]&.to_time
+          value = call_api(:get, "/settings/last_updated_at")["last_updated_at"]
+          SuperSettings::Coerce.time(value)
         end
 
         attr_accessor :base_url
@@ -92,7 +91,7 @@ module SuperSettings
 
           body = nil
           request_headers = DEFAULT_HEADERS.merge(headers)
-          if method == :post && params.present?
+          if method == :post && !params&.empty?
             body = params.to_json
             request_headers["Content-Type"] = "application/json; charset=utf8-"
           end
@@ -132,7 +131,7 @@ module SuperSettings
 
           if response.is_a?(Net::HTTPRedirection)
             location = resp["Location"]
-            if redirect_count < 5 && location.present?
+            if redirect_count < 5 && SuperSettings::Coerce.present?(location)
               return http_request(method: :get, uri: URI(location), headers: headers, body: body, redirect_count: redirect_count + 1)
             end
           end
@@ -142,10 +141,13 @@ module SuperSettings
 
         def api_uri(path, params)
           uri = URI("#{base_url.chomp("/")}#{path}")
-          if params.present?
-            q = params.to_param
-            q = "&#{q}" if uri.query.present?
-            uri.query = q
+          if params && !params.empty?
+            q = []
+            q << uri.query unless uri.query.to_s.empty?
+            params.each do |name, value|
+              q << "#{URI.encode_www_form_component(name.to_s)}=#{URI.encode_www_form_component(value.to_s)}"
+            end
+            uri.query = q.join("&")
           end
           uri
         end
@@ -162,7 +164,7 @@ module SuperSettings
         end
       end
 
-      def store!
+      def save!
         payload = {key: key}
         if deleted?
           payload[:deleted] = true
@@ -173,12 +175,9 @@ module SuperSettings
         end
 
         begin
-          call_api(:post, "/", settings: [payload])
+          call_api(:post, "/settings", settings: [payload])
           set_persisted!
-        rescue InvalidRecordError => e
-          Array(e.errors[key.to_s]).each do |message|
-            errors.add(:base, message)
-          end
+        rescue InvalidRecordError
           return false
         end
         true
@@ -200,45 +199,45 @@ module SuperSettings
 
       def reload
         self.class.find_by_key(key)
-        assign_attributes(self.class.find_by_key(key).attributes)
+        self.attributes = self.class.find_by_key(key).attributes
         self
       end
 
       def key=(value)
-        @key = (value.blank? ? nil : value.to_s)
+        @key = (Coerce.blank?(value) ? nil : value.to_s)
       end
 
       def raw_value=(value)
-        @raw_value = (value.blank? ? nil : value.to_s)
+        @raw_value = (Coerce.blank?(value) ? nil : value.to_s)
       end
       alias_method :value=, :raw_value=
       alias_method :value, :raw_value
 
       def value_type=(value)
-        @value_type = (value.blank? ? nil : value.to_s)
+        @value_type = (Coerce.blank?(value) ? nil : value.to_s)
       end
 
       def description=(value)
-        @description = (value.blank? ? nil : value.to_s)
+        @description = (Coerce.blank?(value) ? nil : value.to_s)
       end
 
       def deleted=(value)
-        @deleted = BooleanParser.cast(value)
+        @deleted = Coerce.boolean(value)
       end
 
       def created_at=(value)
-        @created_at = (value.is_a?(Numeric) ? Time.at(value) : value&.to_time)
+        @created_at = SuperSettings::Coerce.time(value)
       end
 
       def updated_at=(value)
-        @updated_at = (value.is_a?(Numeric) ? Time.at(value) : value&.to_time)
+        @updated_at = SuperSettings::Coerce.time(value)
       end
 
       def deleted?
         !!(defined?(@deleted) && @deleted)
       end
 
-      def stored?
+      def persisted?
         !!(defined?(@persisted) && @persisted)
       end
 
@@ -256,6 +255,10 @@ module SuperSettings
 
       def call_api(method, path, params = {})
         self.class.send(:call_api, method, path, params)
+      end
+
+      def encrypted=(value)
+        # No op; needed for API compatibility
       end
     end
   end

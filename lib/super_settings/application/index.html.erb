@@ -1,38 +1,27 @@
-<%= super_settings_style_tag %>
+<%= style_tag %>
 
 <main>
-  <%= form_tag(super_settings.update_path, method: :post, id: "settings-form", class: "form-inline", style: "display:block;") do %>
+  <form class="form-inline" style="display:block;" onsubmit="return false">
     <div class="super-settings-sticky-top">
-      <span style="display:inline-block; margin-right:1rem;">
-        <%= pluralize(@settings.size, "setting") %>
-      </span>
+      <span class="js-settings-count" style="display:inline-block; margin-right:1rem;"></span>
 
       <label for="filter" class="super-settings-sr-only">Filter</label>
-      <%= text_field_tag "filter", params[:filter], placeholder: "Filter Keys", size: 20, class: "form-control", title: "Filter Keys", id: "filter", style: "margin-right:1rem;" %>
+      <input type="text" name="filter" value="" placeholder="Filter Keys" size="20" class="form-control" title="Filter Keys" id="filter" style="margin-right:1rem;">
 
-      <button type="button" class="btn btn-default" id="add-setting"><%= super_settings_icon(:plus) %> Add Setting</button>
+      <button type="button" class="btn btn-default" id="add-setting"><%= icon_image(:plus) %> Add Setting</button>
 
       <button type="button" class="btn btn-default" id="discard-changes" disabled>
         Discard Changes
       </button>
 
-      <button type="submit" class="btn btn-primary" id="save-settings" disabled>
+      <button type="button" class="btn btn-primary" id="save-settings" disabled>
         Save <span class="count"></span> Changes
       </button>
 
-      <% if flash[:notice].present? %>
-        <strong class="text-success js-flash" style="display:inline-block; margin-left:3rem;">
-          <%= flash[:notice]%>
-        </strong>
-      <% end %>
-      <% if flash[:alert].present? %>
-        <strong class="text-danger js-flash" style="display:inline-block; margin-left:3rem;">
-          <%= flash[:alert]%>
-        </strong>
-      <% end %>
+      <strong class="js-flash" style="display:none; margin-left:3rem;"></strong>
     </div>
 
-    <table class="table table-striped" id="settings-table" data-api-url="<%=super_settings.index_path%>">
+    <table class="table table-striped" id="settings-table">
       <thead>
         <tr>
           <th scope="col" class="super-settings-key">Key</th>
@@ -45,7 +34,7 @@
       <tbody translate="no">
       </tbody>
     </table>
-  <% end %>
+  </form>
 </main>
 
 <div id="modal" class="super-settings-modal js-close-modal" aria-hidden="true" aria-role="dialog">
@@ -77,10 +66,10 @@
     </td>
 
     <td class="super-settings-controls">
-      <%= super_settings_icon_button(:info, title: "Setting Info", color: "royalblue", js_class: "js-show-history") %>
-      <%= super_settings_icon_button(:edit, title: "Edit Setting", color: "green", js_class: "js-edit-setting") %>
-      <%= super_settings_icon_button(:trash, title: "Remove Setting", color: "firebrick", js_class: "js-remove-setting") %>
-      <%= super_settings_icon_button(:slash, title: "Cancel Changes", color: "firebrick", js_class: "js-restore-setting", link_style: "display:none;") %>
+      <%= icon_button(:info, title: "Setting Info", color: "royalblue", js_class: "js-show-history") %>
+      <%= icon_button(:edit, title: "Edit Setting", color: "green", js_class: "js-edit-setting") %>
+      <%= icon_button(:trash, title: "Remove Setting", color: "firebrick", js_class: "js-remove-setting") %>
+      <%= icon_button(:slash, title: "Cancel Changes", color: "firebrick", js_class: "js-restore-setting", link_style: "display:none;") %>
     </td>
   </tr>
 </template>
@@ -90,7 +79,7 @@
     <td class="super-settings-key">
       <div>
         <label for="settings_{{id}}_key" class="super-settings-sr-only">Key</label>
-        <input type="text" id="settings_{{id}}_key" name="settings[{{id}}][key]" value="" maxlength="190" class="form-control" required>
+        <input type="text" id="settings_{{id}}_key" name="settings[{{id}}][key]" value="" maxlength="190" class="form-control js-setting-key" required>
       </div>
     </td>
 
@@ -106,7 +95,11 @@
     <td class="super-settings-value-type">
       <div>
         <label for="settings_{{id}}_value_type" class="super-settings-sr-only">Value Type</label>
-        <%= select_tag "settings[{{id}}][value_type]", options_for_select(SuperSettings::Setting::VALUE_TYPES), class: "form-control js-setting-value-type", id: "settings_{{id}}_value_type" %>
+        <select name="settings[{{id}}][value_type]" class="form-control js-setting-value-type" id="settings_{{id}}_value_type">
+          <% SuperSettings::Setting::VALUE_TYPES.each do |value_type| %>
+            <option value="<%= ERB::Util.html_escape(value_type) %>"><%= ERB::Util.html_escape(value_type) %></option>
+          <% end %>
+        </select>
       </div>
     </td>
 
@@ -118,9 +111,9 @@
     </td>
 
     <td class="super-settings-controls">
-      <%= super_settings_icon_button(:info, title: "Setting Info", color: "royalblue", js_class: "js-show-history") %>
-      <%= super_settings_icon_button(:edit, title: "Edit Setting", color: "gray", js_class: "js-no-op", disabled: true) %>
-      <%= super_settings_icon_button(:slash, title: "Cancel Changes", color: "firebrick", js_class: "js-restore-setting") %>
+      <%= icon_button(:info, title: "Setting Info", color: "royalblue", js_class: "js-show-history") %>
+      <%= icon_button(:edit, title: "Edit Setting", color: "gray", js_class: "js-no-op", disabled: true) %>
+      <%= icon_button(:slash, title: "Cancel Changes", color: "firebrick", js_class: "js-restore-setting") %>
     </td>
   </tr>
 </template>
@@ -172,11 +165,4 @@
   </table>
 </template>
 
-<script>
-  const SuperSettings = {
-    settings: <%= @settings.to_json.html_safe %>,
-    changes: <%= Array(@changed_settings).to_json.html_safe %>
-  }
-</script>
-
-<%= super_settings_javascript_tag %>
+<%= javascript_tag %>

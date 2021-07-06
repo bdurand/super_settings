@@ -2,7 +2,7 @@
 
 module SuperSettings
   class HistoryItem
-    include ActiveModel::Model
+    include Attributes
 
     attr_accessor :key, :value, :changed_by, :created_at
     attr_writer :deleted
