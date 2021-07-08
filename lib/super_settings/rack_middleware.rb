@@ -46,6 +46,9 @@ module SuperSettings
       "layout.html.erb"
     end
 
+    def add_to_head
+    end
+
     private
 
     def handle_request(env)
@@ -75,7 +78,7 @@ module SuperSettings
 
     def handle_root_request(request)
       check_authorization(request) do |user|
-        [200, {"Content-Type" => "text/html; charset=utf-8"}, [Application.new(:default).render("index.html.erb")]]
+        [200, {"Content-Type" => "text/html; charset=utf-8"}, [Application.new(:default, add_to_head).render("index.html.erb")]]
       end
     end
 

@@ -12,7 +12,8 @@ unless ENV["SUPER_SETTINGS_NO_OVERRIDES"].present?
     config.controller.superclass = ::ApplicationController
 
     config.controller.enhance do
-      protect_from_forgery
+      # Request forgery protection is enabled by default for requests with cookies; it can be disabled with:
+      # skip_before_action :verify_authenticity_token
 
       before_action do
         logger.debug("Overridden controller definition")

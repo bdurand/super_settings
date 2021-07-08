@@ -105,5 +105,9 @@ module SuperSettings
       end
       html_options.join(" ")
     end
+
+    def add_to_head
+      @add_to_head if defined?(@add_to_head)
+    end
   end
 end
