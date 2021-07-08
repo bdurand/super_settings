@@ -172,6 +172,14 @@ describe SuperSettings do
       expect(SuperSettings.hash("A3")).to eq({})
       expect(SuperSettings.hash("A3", {"foo" => "bar"})).to eq({"foo" => "bar"})
     end
+
+    it "should return a cached value" do
+      hash = SuperSettings.hash
+      expect(SuperSettings.hash.object_id).to eq hash.object_id
+      SuperSettings.refresh_settings
+      expect(SuperSettings.hash).to eq hash
+      expect(SuperSettings.hash.object_id).to_not eq hash.object_id
+    end
   end
 
   describe "set" do

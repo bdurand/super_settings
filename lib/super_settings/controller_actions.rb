@@ -14,6 +14,7 @@ module SuperSettings
     def self.included(base)
       base.layout "super_settings/settings"
       base.helper SettingsHelper
+      base.protect_from_forgery with: :exception, unless: -> { request.cookies.empty? }
     end
 
     def root

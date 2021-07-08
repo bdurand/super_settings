@@ -54,6 +54,7 @@ module SuperSettings
             @lock.synchronize do
               # For case where one thread could be iterating over the cache while it's updated causing an error
               @cache = @cache.merge(key => value).freeze
+              @hashes = {}
             end
           end
         end
@@ -61,6 +62,38 @@ module SuperSettings
 
       return nil if value == NOT_DEFINED
       value
+    end
+
+    def structured(key = nil, delimiter: ".", max_depth: nil)
+      key = key.to_s
+      cache_key = [key, delimiter, max_depth]
+      cached_value = @hashes[cache_key]
+      return cached_value if cached_value
+
+      flattened = to_h
+      root_key = ""
+      if Coerce.present?(key)
+        root_key = "#{key}#{delimiter}"
+        reduced_hash = {}
+        flattened.each do |k, v|
+          if k.start_with?(root_key)
+            reduced_hash[k[root_key.length, k.length]] = v
+          end
+        end
+        flattened = reduced_hash
+      end
+
+      structured_hash = {}
+      flattened.each do |key, value|
+        set_nested_hash_value(structured_hash, key, value, 0, delimiter: delimiter, max_depth: max_depth)
+      end
+
+      deep_freeze_hash(structured_hash)
+      @lock.synchronize do
+        @hashes[cache_key] = structured_hash
+      end
+
+      structured_hash
     end
 
     # Check if the cache includes a key. Note that this will return true if you have tried
@@ -173,6 +206,7 @@ module SuperSettings
     def reset
       @lock.synchronize do
         @cache = {}.freeze
+        @hashes = {}
         @last_refreshed = nil
         @next_check_at = Time.now + @refresh_interval
         @refreshing = false
@@ -195,6 +229,7 @@ module SuperSettings
       return if Coerce.blank?(setting.key)
       @lock.synchronize do
         @cache = @cache.merge(setting.key => setting.value)
+        @hashes = {}
       end
     end
 
@@ -241,7 +276,31 @@ module SuperSettings
         @last_refreshed = refreshed_at_time
         @refreshing = false
         @cache = block.call.freeze
+        @hashes = {}
       end
+    end
+
+    # Recusive method for creating a nested hash from delimited keys.
+    def set_nested_hash_value(hash, key, value, current_depth, delimiter:, max_depth:)
+      key, sub_key = (max_depth && current_depth < max_depth ? [key, nil] : key.split(delimiter, 2))
+      if sub_key
+        sub_hash = hash[key]
+        unless sub_hash.is_a?(Hash)
+          sub_hash = {}
+          hash[key] = sub_hash
+        end
+        set_nested_hash_value(sub_hash, sub_key, value, current_depth + 1, delimiter: delimiter, max_depth: max_depth)
+      else
+        hash[key] = value
+      end
+    end
+
+    # Recursively freeze a hash.
+    def deep_freeze_hash(hash)
+      hash.each_value do |value|
+        deep_freeze_hash(value) if value.is_a?(Hash)
+      end
+      hash.freeze
     end
   end
 end

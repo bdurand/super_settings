@@ -102,28 +102,9 @@ module SuperSettings
     # @param delimiter [String] the delimiter to use to define nested keys in the hash; defaults to "."
     # @return [Hash]
     def hash(key = nil, default = nil, delimiter: ".", max_depth: nil)
-      flattened = local_cache.to_h
-      root_key = ""
-      if Coerce.present?(key)
-        root_key = "#{key}#{delimiter}"
-        reduced_hash = {}
-        flattened.each do |k, v|
-          if k.start_with?(root_key)
-            reduced_hash[k[root_key.length, k.length]] = v
-          end
-        end
-        flattened = reduced_hash
-      end
-
-      if flattened.empty?
-        return default || {}
-      end
-
-      structured = {}
-      flattened.each do |key, value|
-        set_nested_hash_value(structured, key, value, 0, delimiter: delimiter, max_depth: max_depth)
-      end
-      structured
+      value = local_cache.structured(key, delimiter: delimiter, max_depth: max_depth)
+      return (default || {}) if value.empty?
+      value
     end
 
     # Create settings and update the local cache with the values.
@@ -208,21 +189,6 @@ module SuperSettings
 
     def local_cache
       @local_cache ||= LocalCache.new(refresh_interval: DEFAULT_REFRESH_INTERVAL)
-    end
-
-    # Recusive method for creating a nested hash from delimited keys.
-    def set_nested_hash_value(hash, key, value, current_depth, delimiter:, max_depth:)
-      key, sub_key = (max_depth && current_depth < max_depth ? [key, nil] : key.split(delimiter, 2))
-      if sub_key
-        sub_hash = hash[key]
-        unless sub_hash.is_a?(Hash)
-          sub_hash = {}
-          hash[key] = sub_hash
-        end
-        set_nested_hash_value(sub_hash, sub_key, value, current_depth + 1, delimiter: delimiter, max_depth: max_depth)
-      else
-        hash[key] = value
-      end
     end
   end
 end
