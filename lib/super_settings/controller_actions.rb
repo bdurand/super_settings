@@ -14,7 +14,7 @@ module SuperSettings
     def self.included(base)
       base.layout "super_settings/settings"
       base.helper SettingsHelper
-      base.protect_from_forgery with: :exception, unless: -> { request.cookies.empty? }
+      base.protect_from_forgery with: :exception, if: :protect_from_forgery?
     end
 
     def root
@@ -60,6 +60,12 @@ module SuperSettings
 
     def updated_since
       render json: SuperSettings::RestAPI.updated_since(params[:time])
+    end
+
+    protected
+
+    def protect_from_forgery?
+      request.cookies.present?
     end
   end
 end
