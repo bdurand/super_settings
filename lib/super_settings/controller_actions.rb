@@ -64,8 +64,11 @@ module SuperSettings
 
     protected
 
+    # Return true if CSRF protection needs to be enabled for the request.
+    # By default it is only enabled on stateful requests that include Basic authorization
+    # or cookies in the request so that stateless REST API calls are allowed.
     def protect_from_forgery?
-      request.cookies.present?
+      request.cookies.present? || request.authorization.to_s.split(" ", 2).first&.match?(/\ABasic/i)
     end
   end
 end
