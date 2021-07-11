@@ -36,7 +36,7 @@ describe SuperSettings::RackMiddleware do
 
     it "should return a forbidden response if access is denied" do
       allow(middleware).to receive(:current_user).and_return(:user)
-      allow(middleware).to receive(:allow_read?).with(:user).and_return(false)
+      allow(middleware).to receive(:allow_write?).with(:user).and_return(false)
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix")
       expect(response[0]).to eq 403
     end

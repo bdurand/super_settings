@@ -7,3 +7,4 @@ ignore:
     - Style/RedundantBegin
   - 'spec/**/*':
     - Lint/UselessAssignment
+  - 'spec/dummy/db/schema.rb'

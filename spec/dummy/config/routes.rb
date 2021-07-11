@@ -1,3 +1,3 @@
 Rails.application.routes.draw do
-  mount SuperSettings::Engine => "/super_settings"
+  mount SuperSettings::Engine => "/settings"
 end

@@ -122,7 +122,7 @@ module SuperSettings
     end
 
     def handle_root_request(request)
-      response = check_authorization(request) do |user|
+      response = check_authorization(request, write_required: true) do |user|
         [200, {"Content-Type" => "text/html; charset=utf-8"}, [Application.new(:default, add_to_head(request)).render("index.html.erb")]]
       end
 
