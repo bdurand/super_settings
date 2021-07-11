@@ -19,4 +19,7 @@ group :development, :test do
   gem "simplecov", "~> 0.21", require: false
 end
 
+group :test do
+end
+
 gemspec path: "../"

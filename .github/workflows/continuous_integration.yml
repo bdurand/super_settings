@@ -80,7 +80,6 @@ jobs:
           CC_TEST_REPORTER_ID: 9100bb64cf3ff1765ecab9ccdb7d2507c9f42829d50e65497d54f5cef0a18e40
         with:
           coverageCommand: bundle exec rake spec
-          debug: true
       - name: standardrb
         if:   matrix.job == 'standardrb'
         run:  bundle exec rake standard

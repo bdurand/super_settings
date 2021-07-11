@@ -6,6 +6,12 @@ appraise "rails_latest" do
   gem "sqlite3", "~> 1.4.0"
 end
 
+appraise "rails_6.1" do
+  gem "rails", "~> 6.1.0"
+  gem "rspec-rails", "~> 4.1"
+  gem "sqlite3", "~> 1.4.0"
+end
+
 appraise "rails_6.0" do
   gem "rails", "~> 6.0.0"
   gem "rspec-rails", "~> 4.1"
@@ -37,10 +43,7 @@ appraise "rails_4.2" do
   gem "sqlite3", "~> 1.3.0"
   gem "redis", "~> 3.0"
   gem "bundler", "~> 1.0"
-end
-
-appraise "rails_6.1" do
-  gem "rails", "~> 6.1.0"
-  gem "rspec-rails", "~> 4.1"
-  gem "sqlite3", "~> 1.4.0"
+  group :test do
+    remove_gem "standard"
+  end
 end
