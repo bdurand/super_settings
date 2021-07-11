@@ -43,7 +43,6 @@ appraise "rails_4.2" do
   gem "sqlite3", "~> 1.3.0"
   gem "redis", "~> 3.0"
   gem "bundler", "~> 1.0"
-  group :test do
-    remove_gem "standard"
-  end
+  remove_gem "standard"
+  remove_gem "simplecov"
 end

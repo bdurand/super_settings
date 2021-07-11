@@ -11,9 +11,12 @@ begin
 rescue LoadError
 end
 
-require "simplecov"
-SimpleCov.start do
-  add_filter ["/spec/", "/app/", "/config/", "/db/"]
+begin
+  require "simplecov"
+  SimpleCov.start do
+    add_filter ["/spec/", "/app/", "/config/", "/db/"]
+  end
+rescue LoadError
 end
 
 Bundler.require(:default, :test)
