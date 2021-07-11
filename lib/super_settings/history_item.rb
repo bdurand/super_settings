@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module SuperSettings
+  # Model for each item in a setting's history. When a setting is changed, the system
+  # will track the value it is changed to, who it was changed by, and when.
   class HistoryItem
     include Attributes
 

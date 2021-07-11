@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module SuperSettings
+  # Helper functions used for rendering the Super Settings HTML application. These methods
+  # are mixed in to the Application class so they are accessible from the ERB templates.
   module Helper
     ICON_SVG = Dir.glob(File.join(__dir__, "images", "*.svg")).each_with_object({}) do |file, cache|
       cache[File.basename(file, ".svg")] = File.read(file).chomp
@@ -90,14 +92,17 @@ module SuperSettings
       end
     end
 
+    # Render an HTML tag without any body content.
     def tag(tag, options)
       "<#{tag} #{html_attributes(options)}>"
     end
 
+    # Render an HTML tag with body content.
     def content_tag(tag, body, options)
       "<#{tag} #{html_attributes(options)}>#{body}</#{tag}>"
     end
 
+    # Format a hash into HTML attributes.
     def html_attributes(options)
       html_options = []
       options.each do |name, value|
@@ -106,6 +111,7 @@ module SuperSettings
       html_options.join(" ")
     end
 
+    # Add additional HTML code to the <head> element on the page.
     def add_to_head
       @add_to_head if defined?(@add_to_head)
     end

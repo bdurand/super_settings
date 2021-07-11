@@ -11,6 +11,10 @@ describe SuperSettings::RackMiddleware do
   let!(:setting_5) { SuperSettings::Setting.create!(key: "datetime", value_type: :datetime, value: Time.now) }
   let!(:setting_6) { SuperSettings::Setting.create!(key: "array", value_type: :array, value: ["foo", "bar"]) }
 
+  before do
+    allow(middleware).to receive(:authenticated?).and_return(true)
+  end
+
   describe "pass through" do
     it "should pass through to the app if the prefix doesn't match" do
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/foo/settings")
@@ -35,6 +39,15 @@ describe SuperSettings::RackMiddleware do
       allow(middleware).to receive(:allow_read?).with(:user).and_return(false)
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix")
       expect(response[0]).to eq 403
+    end
+
+    it "should return a redirect if access is denied and a login URL is defined" do
+      allow(middleware).to receive(:current_user).and_return(:user)
+      allow(middleware).to receive(:authenticated?).with(:user).and_return(false)
+      allow(middleware).to receive(:login_url).with(Rack::Request).and_return("https://example.com/login")
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix")
+      expect(response[0]).to eq 302
+      expect(response[1]["Location"]).to eq "https://example.com/login"
     end
   end
 

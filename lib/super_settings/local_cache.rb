@@ -64,6 +64,10 @@ module SuperSettings
       value
     end
 
+    # Return the setting as structured data. The keys will be split by the specified delimiter
+    # to create a nested hash (i.e. "a.b.c" = 1 becomes `{"a" => {"b" => {"c" => 1}}}`).
+    #
+    # See SuperSettings.structured for more details.
     def structured(key = nil, delimiter: ".", max_depth: nil)
       key = key.to_s
       cache_key = [key, delimiter, max_depth]

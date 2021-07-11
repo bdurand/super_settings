@@ -105,7 +105,7 @@ describe SuperSettings do
     end
   end
 
-  describe "hash" do
+  describe "structured" do
     before do
       SuperSettings::Setting.create!(key: "A1.B1.C-1", value: "foo")
       SuperSettings::Setting.create!(key: "A1.B1.C-2", value: "bar")
@@ -116,7 +116,7 @@ describe SuperSettings do
     end
 
     it "should return a nested hash from all the settings if no key is provided" do
-      expect(SuperSettings.hash).to eq({
+      expect(SuperSettings.structured).to eq({
         "A1" => {
           "B1" => {
             "C-1" => "foo",
@@ -134,7 +134,7 @@ describe SuperSettings do
     end
 
     it "should return a nested hash from settings matching the key" do
-      expect(SuperSettings.hash(:A1)).to eq({
+      expect(SuperSettings.structured(:A1)).to eq({
         "B1" => {
           "C-1" => "foo",
           "C-2" => "bar"
@@ -142,21 +142,21 @@ describe SuperSettings do
         "B2" => 2
       })
 
-      expect(SuperSettings.hash("A1.B1")).to eq({
+      expect(SuperSettings.structured("A1.B1")).to eq({
         "C-1" => "foo",
         "C-2" => "bar"
       })
     end
 
     it "should use a custom delimiter" do
-      expect(SuperSettings.hash("A1.B1.C", nil, delimiter: "-")).to eq({
+      expect(SuperSettings.structured("A1.B1.C", nil, delimiter: "-")).to eq({
         "1" => "foo",
         "2" => "bar"
       })
     end
 
     it "should allow setting a maximum depth to the hash" do
-      expect(SuperSettings.hash("A1", nil, max_depth: 1)).to eq({
+      expect(SuperSettings.structured("A1", nil, max_depth: 1)).to eq({
         "B1.C-1" => "foo",
         "B1.C-2" => "bar",
         "B2" => 2
@@ -165,20 +165,20 @@ describe SuperSettings do
 
     it "should return an empty hash value if there is not a matching setting key" do
       SuperSettings.get("A3.B1")
-      expect(SuperSettings.hash("A3")).to eq({})
+      expect(SuperSettings.structured("A3")).to eq({})
     end
 
     it "should return a default if the key is not defined" do
-      expect(SuperSettings.hash("A3")).to eq({})
-      expect(SuperSettings.hash("A3", {"foo" => "bar"})).to eq({"foo" => "bar"})
+      expect(SuperSettings.structured("A3")).to eq({})
+      expect(SuperSettings.structured("A3", {"foo" => "bar"})).to eq({"foo" => "bar"})
     end
 
     it "should return a cached value" do
-      hash = SuperSettings.hash
-      expect(SuperSettings.hash.object_id).to eq hash.object_id
+      hash = SuperSettings.structured
+      expect(SuperSettings.structured.object_id).to eq hash.object_id
       SuperSettings.refresh_settings
-      expect(SuperSettings.hash).to eq hash
-      expect(SuperSettings.hash.object_id).to_not eq hash.object_id
+      expect(SuperSettings.structured).to eq hash
+      expect(SuperSettings.structured.object_id).to_not eq hash.object_id
     end
   end
 

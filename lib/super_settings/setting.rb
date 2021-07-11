@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module SuperSettings
-  # Model for storing settings to the database.
+  # Model for interacting with settings.
   class Setting
     LAST_UPDATED_CACHE_KEY = "SuperSettings.last_updated_at"
 

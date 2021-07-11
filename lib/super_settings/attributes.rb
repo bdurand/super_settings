@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module SuperSettings
+  # Interface to expose mass setting attributes on an object. Setting attributes with a
+  # hash will simply call the attribute writers for each key in the hash.
   module Attributes
     class UnknownAttributeError < StandardError
     end

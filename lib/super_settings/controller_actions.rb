@@ -3,10 +3,10 @@
 require "erb"
 
 module SuperSettings
-  # Module used to build the SuperSettings::Settings controller. This controller is defined
-  # at runtime since it is assumed that the superclass will be one of the application's own
-  # base controller classes since the application will want to define authentication and
-  # authorization criteria.
+  # Module used to build the SuperSettings::SettingsController for Rails applications.
+  # This controller is defined at runtime since it is assumed that the superclass will
+  # be one of the application's own base controller classes since the application will
+  # want to define authentication and authorization criteria.
   #
   # The controller is built by extending the class defined by the Configuration object and
   # then mixing in this module.
@@ -17,15 +17,18 @@ module SuperSettings
       base.protect_from_forgery with: :exception, if: :protect_from_forgery?
     end
 
+    # Render the HTML application for managing settings.
     def root
       html = SuperSettings::Application.new.render("index.html.erb")
       render html: html.html_safe, layout: true
     end
 
+    # API endpoint for getting active settings. See SuperSettings::RestAPI for details.
     def index
       render json: SuperSettings::RestAPI.index
     end
 
+    # API endpoint for getting a setting. See SuperSettings::RestAPI for details.
     def show
       setting = SuperSettings::RestAPI.show(params[:key])
       if setting
@@ -35,6 +38,7 @@ module SuperSettings
       end
     end
 
+    # API endpoint for updating settings. See SuperSettings::RestAPI for details.
     def update
       changed_by = Configuration.instance.controller.changed_by(self)
       result = SuperSettings::RestAPI.update(params[:settings], changed_by)
@@ -45,6 +49,7 @@ module SuperSettings
       end
     end
 
+    # API endpoint for getting the history of a setting. See SuperSettings::RestAPI for details.
     def history
       setting_history = SuperSettings::RestAPI.history(params[:key], offset: params[:offset], limit: params[:limit])
       if setting_history
@@ -54,10 +59,12 @@ module SuperSettings
       end
     end
 
+    # API endpoint for getting the last time a setting was changed. See SuperSettings::RestAPI for details.
     def last_updated_at
       render json: SuperSettings::RestAPI.last_updated_at
     end
 
+    # API endpoint for getting settings that have changed since specified time. See SuperSettings::RestAPI for details.
     def updated_since
       render json: SuperSettings::RestAPI.updated_since(params[:time])
     end

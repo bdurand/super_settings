@@ -101,7 +101,7 @@ module SuperSettings
     # @param default [Hash] value to return if the setting value is nil
     # @param delimiter [String] the delimiter to use to define nested keys in the hash; defaults to "."
     # @return [Hash]
-    def hash(key = nil, default = nil, delimiter: ".", max_depth: nil)
+    def structured(key = nil, default = nil, delimiter: ".", max_depth: nil)
       value = local_cache.structured(key, delimiter: delimiter, max_depth: max_depth)
       return (default || {}) if value.empty?
       value

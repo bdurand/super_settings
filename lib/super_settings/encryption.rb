@@ -54,6 +54,7 @@ module SuperSettings
         raise InvalidSecretError
       end
 
+      # @return [Boolean] true if the value is encrypted in the storage engine.
       def encrypted?(value)
         SecretKeys::Encryptor.encrypted?(value)
       end

@@ -3,9 +3,24 @@
 require "rack"
 
 module SuperSettings
+  # Rack middleware for serving the REST API. See SuperSettings::RestAPI for more details on usage.
+  #
+  # The routes for the API can be mounted under a common path prefix specified in the initializer.
+  #
+  # You must specify some kind of authentication to use this class by at least overriding the
+  # `authenticated?` method in a subclass. How you do this is left up to you since you will most
+  # likely want to integrate in with how the rest of your application authenticates requests.
+  #
+  # You are also responsible for implementing any CSRF protection if your authentication method
+  # uses stateful requests (i.e. cookies or Basic auth where browser automatically include the
+  # credentials on every reqeust). There are other gems available that can be integrated into
+  # your middleware stack to provide this feature. If you need to inject meta elements into
+  # the page, you can do so with the `add_to_head` method.
   class RackMiddleware
     RESPONSE_HEADERS = {"Content-Type" => "application/json; charset=utf-8"}.freeze
 
+    # @param app [Object] Rack application or middleware for unhandled requests
+    # @param prefix [String] path prefix for the API routes.
     def initialize(app, path_prefix = "/")
       @app = app
       @path_prefix = path_prefix.to_s.chomp("/")
@@ -21,32 +36,62 @@ module SuperSettings
 
     protected
 
+    # Subclasses must implement this method.
+    # @param user [Object] the value returned by the `current_user` method.
+    # @return [Boolean] true if the user is authenticated.
     def authenticated?(user)
-      true
+      raise NotImplementedError
     end
 
+    # Subclasses can override this method to indicate if the specified user is allowed to view settings.
+    # @param user [Object] the value returned by the `current_user` method.
+    # @return [Boolean] true if the user is can view settings.
     def allow_read?(user)
       true
     end
 
+    # Subclasses can override this method to indicate if the specified user is allowed to change settings.
+    # @param user [Object] the value returned by the `current_user` method.
+    # @return [Boolean] true if the user is can change settings.
     def allow_write?(user)
       true
     end
 
-    # Subclasses can override this method to return the current user object.
+    # Subclasses can override this method to return the current user object. This object will
+    # be passed to the authenticated?, allow_read?, allow_write?, and changed_by methods.
+    # @param request [Rack::Request] current reqeust object
+    # @return [Object]
     def current_user(request)
       nil
     end
 
+    # Subclasses can override this method to return the information about the current user that will
+    # be stored in the setting history when a setting is changed.
+    # @return [String]
     def changed_by(user)
       nil
     end
 
+    # Subclasses can override this method to return the path to an ERB file to use as the layout
+    # for the HTML application. The layout can use any of the methods defined in SuperSettings::Application::Helper.
+    # @return [String]
     def layout
       "layout.html.erb"
     end
 
-    def add_to_head
+    # Subclasses can override this method to add custom HTML to the <head> element in the HTML application.
+    # This can be used to add additional script or meta tags needed for CSRF protection, etc.
+    # @param request [Rack::Request] current reqeust object
+    # @return [String]
+    def add_to_head(request)
+    end
+
+    # Subclasses can override this method to return the login URL for the application. If this is
+    # provided, then a user will be redirected to that URL if they are not authenticated when loading
+    # the HTML application.
+    # @param request [Rack::Request] current reqeust object
+    # @return [String]
+    def login_url(request)
     end
 
     private
@@ -77,9 +122,18 @@ module SuperSettings
     end
 
     def handle_root_request(request)
-      check_authorization(request) do |user|
-        [200, {"Content-Type" => "text/html; charset=utf-8"}, [Application.new(:default, add_to_head).render("index.html.erb")]]
+      response = check_authorization(request) do |user|
+        [200, {"Content-Type" => "text/html; charset=utf-8"}, [Application.new(:default, add_to_head(request)).render("index.html.erb")]]
       end
+
+      if [401, 403].include?(response.first)
+        location = login_url(request)
+        if location
+          response = [302, {"Location" => location}, []]
+        end
+      end
+
+      response
     end
 
     def handle_index_request(request)

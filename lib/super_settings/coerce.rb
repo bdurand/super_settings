@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module SuperSettings
+  # Utility functions for coercing values to other data types.
   class Coerce
     # rubocop:disable Lint/BooleanSymbol
     FALSE_VALUES = [
@@ -29,6 +30,7 @@ module SuperSettings
         end
       end
 
+      # Cast a value to a Time object.
       def time(value)
         value = nil if value.nil? || value.to_s.empty?
         return nil if value.nil?
@@ -45,15 +47,17 @@ module SuperSettings
         time
       end
 
+      # @return true if the value is nil or empty.
       def blank?(value)
         return true if value.nil?
-        if value.respond_to?(:empty)
+        if value.respond_to?(:empty?)
           value.empty?
         else
           value.to_s.empty?
         end
       end
 
+      # @return true if the value is not nil and not empty.
       def present?(value)
         !blank?(value)
       end
