@@ -13,6 +13,9 @@ end
 
 Bundler.require(:default, :test)
 
+require 'simplecov'
+SimpleCov.start
+
 require_relative "../lib/super_settings/storage/test_storage"
 
 if defined?(Rails)
