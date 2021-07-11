@@ -2,6 +2,7 @@
 
 require "json"
 
+# :nocov:
 module SuperSettings
   module Storage
     # Implementation of the SuperSettings::Storage model for running unit tests.
@@ -148,3 +149,4 @@ module SuperSettings
     end
   end
 end
+# :nocov:
