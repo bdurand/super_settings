@@ -11,6 +11,14 @@ begin
 rescue LoadError
 end
 
+begin
+  require "simplecov"
+  SimpleCov.start do
+    add_filter ["/spec/", "/app/", "/config/", "/db/"]
+  end
+rescue LoadError
+end
+
 Bundler.require(:default, :test)
 
 require_relative "../lib/super_settings/storage/test_storage"
