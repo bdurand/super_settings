@@ -43,7 +43,7 @@ jobs:
           - rails: "5.0"
             ruby: "2.5"
           - rails: "4.2"
-            ruby: "2.4"
+            ruby: "2.5"
             bundler: "1.17.3"
         job: [ rspec ]
         include:
