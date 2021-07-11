@@ -5,7 +5,7 @@ require "net/http"
 
 # SuperSettings::Storage model that reads from a remote service running the SuperSettings REST API.
 # This storage engine is read only. It is intended to allow microservices to read settings from a
-# central application.
+# central application that exposes the SuperSettings::RestAPI.
 module SuperSettings
   module Storage
     class HttpStorage

@@ -13,6 +13,14 @@ require "json"
 #
 # SuperSettings::Storage::RedisStorage.redis = lambda { RedisClient.get(:settings) }
 # ```
+#
+# You can also use the [connection_pool]() gem to provide a pool of Redis connecions for
+# a multi-threaded application. The connection_pool gem is not a dependency of this gem,
+# so you would need to add it to your application dependencies to use it.
+#
+# ```ruby
+# SuperSettings::Storage::RedisStorage.redis = ConnectionPool.new(size: 5) { Redis.new(url: ENV["REDIS_URL"]) }
+# ```
 module SuperSettings
   module Storage
     class RedisStorage

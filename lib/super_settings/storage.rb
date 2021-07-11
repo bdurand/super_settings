@@ -45,13 +45,6 @@ module SuperSettings
         raise NotImplementedError
       end
 
-      # Storage classes can override this method to indicate they are not fully set up yet
-      # (i.e. if there is a database table that neeeds to be created, etc.).
-      # @return [Boolean]
-      def ready?
-        true
-      end
-
       # Implementing classes can override this method to setup a thread safe connection within a block.
       def with_connection(&block)
         yield
@@ -111,12 +104,13 @@ module SuperSettings
       raise NotImplementedError
     end
 
-    # @return [Boolean] true if the setting is deleted
+    # @return [Boolean] true if the setting marked as deleted
     def deleted?
       raise NotImplementedError
     end
 
-    # Set the deleted flag for the setting.
+    # Set the deleted flag for the setting. Settings should not actually be deleted since
+    # the record is needed to keep the local cache up to date.
     # @param val [Boolean]
     # @return [void]
     def deleted=(val)
@@ -191,4 +185,6 @@ if defined?(ActiveSupport) && ActiveSupport.respond_to?(:on_load)
   ActiveSupport.on_load(:active_record) do
     require_relative "storage/active_record_storage"
   end
+elsif defined?(ActiveRecord::Base)
+  require_relative "storage/active_record_storage"
 end

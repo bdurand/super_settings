@@ -19,8 +19,6 @@ module SuperSettings
         has_many :history_items, class_name: "SuperSettings::Storage::ActiveRecordStorage::HistoryModel", foreign_key: :key, primary_key: :key
       end
 
-      include Storage
-
       class HistoryModel < ApplicationRecord
         self.table_name = "super_settings_histories"
 
@@ -30,6 +28,8 @@ module SuperSettings
           self.changed_by = changed_by.to_s[0, 150] if changed_by.present?
         end
       end
+
+      include Storage
 
       class << self
         def all

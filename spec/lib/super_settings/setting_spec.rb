@@ -340,6 +340,13 @@ describe SuperSettings::Setting do
     end
   end
 
+  describe "save!" do
+    it "should raise an error if the record is not valid" do
+      setting = SuperSettings::Setting.new
+      expect { setting.save! }.to raise_error(SuperSettings::Setting::InvalidRecordError)
+    end
+  end
+
   describe "histories" do
     it "should create a history record for each change in value" do
       setting = SuperSettings::Setting.create!(key: "test", value: "foobar")
