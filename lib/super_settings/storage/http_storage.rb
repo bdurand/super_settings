@@ -115,19 +115,27 @@ module SuperSettings
         end
 
         def http_request(method:, uri:, headers: {}, body: nil, redirect_count: 0)
+          response = nil
           http = Net::HTTP.new(uri.host, uri.port || uri.inferred_port)
-          http.read_timeout = (timeout || DEFAULT_TIMEOUT)
-          http.open_timeout = (timeout || DEFAULT_TIMEOUT)
-          if uri.scheme == "https"
-            http.use_ssl = true
-            http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          begin
+            http.read_timeout = (timeout || DEFAULT_TIMEOUT)
+            http.open_timeout = (timeout || DEFAULT_TIMEOUT)
+            if uri.scheme == "https"
+              http.use_ssl = true
+              http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+            end
+
+            request = (method == :post ? Net::HTTP::Post.new(uri.request_uri) : Net::HTTP::Get.new(uri.request_uri))
+            set_headers(request, headers)
+            request.body = body if body
+
+            response = http.request(request)
+          ensure
+            begin
+              http.finish if http.started?
+            rescue IOError
+            end
           end
-
-          request = (method == :post ? Net::HTTP::Post.new(uri.request_uri) : Net::HTTP::Get.new(uri.request_uri))
-          set_headers(request, headers)
-          request.body = body if body
-
-          response = http.request(request)
 
           if response.is_a?(Net::HTTPRedirection)
             location = resp["Location"]
