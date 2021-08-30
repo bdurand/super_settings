@@ -3,17 +3,19 @@
 [![Continuous Integration](https://github.com/bdurand/super_settings/actions/workflows/continuous_integration.yml/badge.svg)](https://github.com/bdurand/super_settings/actions/workflows/continuous_integration.yml)
 [![Ruby Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://github.com/testdouble/standard)
 
-This gem provides a mechanism for application settings. Settings are persisted in a database, but cached locally in memory for quick, efficient access. The setting are designed to be runtime settings that can be updated dynamically without requiring code deployment or restarting processes.
+This gem provides a framework for maintaining runtime application settings. Settings are persisted in a database and cached locally in memory for quick, efficient access. The settings are designed so they can be updated dynamically without requiring code deployment or restarting processes.
 
-The motivation behind this is that an application tends to accumulate a lot of settings over time. A lot of these may end up in environment variables or hard coded in YAML files or sprinkled through various models as additional columns. All of these methods of configuration have their place and are completely appropriate for different purposes. However, this can lead to issues if you need to change a value in production:
+As applications grow, they tend to accumulate a lot of configuration over time. Often these end up in environment variables, hard coded in YAML files, or sprinkled through various data models as additional columns. All of these methods of configuration have their place and are completely appropriate for different purposes (i.e. for storing application secrets, configuration required during application startup, etc.).
 
-* If you need to change a value in an environment variable, then you will need to restart processes to get the new value loaded. This can be disruptive and take a bit of time to properly restart the application processes without downtime. You'll also need to handle data formatting and validation in your code since environment variables can only store strings.
+However, these methods don't work as well for runtime settings that you may want to change while your application is running.
 
-* If you need to change a value hard coded in a YAML file, then you'll need to redeploy your application with an updated file.
+* Environment variables - These are great for environment specific configuration and they can be a good place to store sensitive data. However, they can be difficult to manage, all values must be stored as strings, and application processes need to be restarted for changes to take effect.
 
-* If you store application settings in your data models, you may need to provide a caching scheme around them so that you don't slam your database with thousands of queries for values that change very infrequently.
+* YAML files - These are great for more complex configurations since they support data structures and they can be shipped with your application. However, changing them usually requires a new release of the application code.
 
-This gem provides a simple interface for accessing the setting that is backed by a thread safe caching mechanism that provides in-memory performance while significantly limiting database load. You can tune how frequently the cache is refreshed and each refresh call is tuned to be highly efficient.
+* Database columns - These are great for settings tied to data models. However, they don't apply very well outside the data model, you need to build the tools for managing them into your application.
+
+SuperSettings provides a simple interface for accessing settings backed by a thread safe caching mechanism that provides in-memory performance while significantly limiting database load. You can tune how frequently the cache is refreshed and each refresh call is tuned to be highly efficient.
 
 There is also an out of the box web UI and REST API for managing settings. You can specify data types for your settings (string, integer, float, boolean, datetime, or array) and be assured that values will be valid. You can also supply documentation for each setting so that it's obvious what each one does and how it is used.
 
@@ -56,7 +58,7 @@ There is also a method to get multiple settings at once structured as a Hash.
 SuperSettings.structured("parent") # -> returns an hash
 ```
 
-The key provided to the `SuperSettings.structured` method indicates the key prefix and constructs the hash from settings that have keys beginning with that prefix. Keys are also broken down by a delimiter so you can create nested hashes. The delimiter defaults to ".", but you can specify a different one with the `delimiter` keyword argument.
+The key provided to the `SuperSettings.structured` method indicates the key prefix and constructs the hash from settings that have keys beginning with that prefix. Keys are also broken down by a delimiter so you can create nested hashes. The delimiter defaults to `"."`, but you can specify a different one with the `delimiter` keyword argument.
 
 You can also set a maximum depth to the returned hash with the `max_depth` keyword argument.
 
@@ -72,12 +74,22 @@ page_size = 20
 You would get these results:
 
 ```ruby
+SuperSettings.structured("vendors")
+# {
+#   "company_1" => {
+#     "path" => "/co1",
+#     "timeout" => 5
+#   },
+#   "company_2" => {
+#     "path" => "/co2"
+#    }
+# }
 
-SuperSettings.structured("vendors") -> {"company_1" => {"path" => "/co1", "timeout" => 5}, "company_2" => {"path" => "/co2"}}
+SuperSettings.structured("vendors.company_1")
+# {"path" => "/co1", "timeout" => 5}
 
-SuperSettings.structured("vendors.company_1") -> {"path" => "/co1", "timeout" => 5}
-
-SuperSettings.structured("vendors.company_2") -> {"path" => "/co2"}
+SuperSettings.structured("vendors.company_2")
+# {"path" => "/co2"}
 
 # Get all the settings by omitting the key
 SuperSettings.structured
@@ -97,7 +109,6 @@ SuperSettings.structured(max_depth: 1)
 #   "vendors.company_2.path" => "/co2",
 #   "page_size" => 20
 # }
-
 ```
 
 #### Defaults
@@ -106,13 +117,25 @@ When you request a setting, you can also specify a default value to use if the s
 
 ```ruby
 SuperSettings.integer("key", 4)
+# return 4 if the "key" setting has not been set
 ```
 
 #### Caching
 
-When you read a setting using these methods, you are actually reading from an in memory cache. All of the settings are read into this local cache and the cache is checked periodically so see if it needs to be refreshed (defaults to every five seconds, but this can be customized by setting `SuperSettings.refresh_interval`). When the cache does need to be refreshed, only updated records are re-read from the data store by a single background thread. Thus, you don't have to worry about overloading your database by reading settings values. The performance only has a slight overhead vs. reading values from a Hash.
+When you read a setting using these methods, you are actually reading from an in memory cache. All of the settings are read into this local cache and the cache is checked periodically to see if it needs to be refreshed (defaults to every five seconds, but can be customized with `SuperSettings.refresh_interval`). When the cache does need to be refreshed, only updated records are re-read from the data store by a single background thread. Thus, you don't have to worry about overloading your database by reading settings values.
 
-If a setting does not exist in the data store, the value will be returned as `nil`. The missing setting key will also be cached in the in memory cache, so you should avoid querying for dynamic values as a setting key since this can lead to memory bloat.
+Cache misses are also cached so that they don't add any overhead. You should avoid querying for dynamically generated values as a setting key since this can lead to memory bloat.
+
+```ruby
+# BAD: this will create an entry in the cache for every id
+SuperSettings.enabled?("enabled_users.#{id}")
+
+# GOOD: use an array if there are a limited number of values
+SuperSettings.array("enabled_users", []).include?(id)
+
+# GOOD: use a hash if you need to scale to any number of values
+SuperSettings.structured("enabled_users", {})["id"]
+```
 
 Because all settings must be read into memory, you should avoid creating thousands of settings since this could lead to performance or memory issues loading the cache.
 
