@@ -80,7 +80,7 @@ module SuperSettings
         # Only load settings asynchronously if there is an extra database connection left in the
         # connection pool or if the configuration has explicitly allowed it.
         def default_load_asynchronous?
-          connection.pool.size > Thread.list.size
+          Model.connection_pool.size > Thread.list.size
         end
       end
 
