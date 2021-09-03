@@ -268,7 +268,7 @@ module SuperSettings
         @lock.synchronize do
           return unless previous_cache_id == @cache.object_id
         end
-        load_settings(true)
+        load_settings(Setting.storage.load_asynchronous?)
       elsif Time.now >= @next_check_at
         refresh(true)
       end

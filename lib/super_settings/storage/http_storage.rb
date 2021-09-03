@@ -83,6 +83,12 @@ module SuperSettings
           @query_params ||= {}
         end
 
+        protected
+
+        def default_load_asynchronous?
+          true
+        end
+
         private
 
         def call_api(method, path, params = {})

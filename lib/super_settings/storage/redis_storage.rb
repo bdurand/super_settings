@@ -168,6 +168,12 @@ module SuperSettings
           end
         end
 
+        protected
+
+        def default_load_asynchronous?
+          true
+        end
+
         private
 
         def load_from_json(json)

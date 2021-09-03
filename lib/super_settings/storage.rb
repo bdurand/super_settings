@@ -62,6 +62,22 @@ module SuperSettings
       def transaction(&block)
         yield
       end
+
+      # @return [Boolean] true if it's safe to load setting asynchronously in a background thread.
+      def load_asynchronous?
+        !!(defined?(@load_asynchronous) && !@load_asynchronous.nil? ? @load_asynchronous : default_load_asynchronous?)
+      end
+
+      # Set to true to force loading setting asynchronously in a background thread.
+      attr_writer :load_asynchronous
+
+      protected
+
+      # Implementing classes can override this method to indicate if it is safe to load the
+      # setting in a separate thread.
+      def default_load_asynchronous?
+        false
+      end
     end
 
     # @return [String] the key for the setting
