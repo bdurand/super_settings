@@ -143,4 +143,16 @@ describe SuperSettings::Storage::HttpStorage do
       setting.send(:redact_history!)
     end
   end
+
+  describe "load_asynchronous" do
+    it "should be true by default but can be overriden" do
+      expect(SuperSettings::Storage::HttpStorage.load_asynchronous?).to eq true
+      SuperSettings::Storage::HttpStorage.load_asynchronous = false
+      expect(SuperSettings::Storage::HttpStorage.load_asynchronous?).to eq false
+      SuperSettings::Storage::HttpStorage.load_asynchronous = true
+      expect(SuperSettings::Storage::HttpStorage.load_asynchronous?).to eq true
+      SuperSettings::Storage::HttpStorage.load_asynchronous = nil
+      expect(SuperSettings::Storage::HttpStorage.load_asynchronous?).to eq true
+    end
+  end
 end

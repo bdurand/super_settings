@@ -59,6 +59,12 @@ module SuperSettings
         def last_updated_at
           settings.values.collect { |attributes| attributes[:updated_at] }.max
         end
+
+        protected
+
+        def default_load_asynchronous?
+          true
+        end
       end
 
       def history(limit: nil, offset: 0)
