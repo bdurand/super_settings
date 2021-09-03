@@ -12,6 +12,7 @@ env:
   BUNDLE_PATH: vendor/bundle
   BUNDLE_JOBS: 3
   BUNDLE_RETRY: 3
+  CC_TEST_REPORTER_ID: 9100bb64cf3ff1765ecab9ccdb7d2507c9f42829d50e65497d54f5cef0a18e40
 jobs:
   specs:
     name: ${{ matrix.job }} ruby-${{ matrix.combo.ruby || matrix.ruby }} ${{ matrix.combo.rails && format('rails-{0}', matrix.combo.rails) }}
@@ -34,6 +35,7 @@ jobs:
             ruby: "3.0"
           - rails: "6.1"
             ruby: "2.7"
+            coverage: true
           - rails: "6.0"
             ruby: "2.7"
           - rails: "5.2"
@@ -49,9 +51,6 @@ jobs:
         include:
           - job: "standardrb"
             ruby: "2.7"
-          - job: "coverage"
-            rails: "latest"
-            ruby: "3.0"
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -74,12 +73,8 @@ jobs:
         if:   matrix.job == 'rspec'
         run:  bundle exec rake spec
       - name: code coverage
-        if:   matrix.job == 'coverage'
+        if:   matrix.coverage == true
         uses: paambaati/codeclimate-action@v2.7.5
-        env:
-          CC_TEST_REPORTER_ID: 9100bb64cf3ff1765ecab9ccdb7d2507c9f42829d50e65497d54f5cef0a18e40
-        with:
-          coverageCommand: bundle exec rake spec
       - name: standardrb
         if:   matrix.job == 'standardrb'
         run:  bundle exec rake standard
