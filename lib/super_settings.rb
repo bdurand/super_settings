@@ -123,6 +123,7 @@ module SuperSettings
       end
       setting.value = value
       setting.save!
+      local_cache.load_settings unless local_cache.loaded?
       local_cache.update_setting(setting)
     end
 
