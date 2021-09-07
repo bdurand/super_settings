@@ -155,10 +155,8 @@ module SuperSettings
         begin
           values = {}
           start_time = Time.now
-          Setting.storage.with_connection do
-            Setting.active.each do |setting|
-              values[setting.key] = setting.value.freeze
-            end
+          Setting.active.each do |setting|
+            values[setting.key] = setting.value.freeze
           end
           set_cache_values(start_time) { values }
         ensure
@@ -188,11 +186,9 @@ module SuperSettings
 
       refresh_block = lambda do
         begin
-          Setting.storage.with_connection do
-            last_db_update = Setting.last_updated_at
-            if last_db_update.nil? || last_db_update >= last_refresh_time - 1
-              merge_load(last_refresh_time)
-            end
+          last_db_update = Setting.last_updated_at
+          if last_db_update.nil? || last_db_update >= last_refresh_time - 1
+            merge_load(last_refresh_time)
           end
         ensure
           @refreshing = false

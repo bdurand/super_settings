@@ -60,7 +60,9 @@ module SuperSettings
       # @return [Setting]
       def create!(attributes)
         setting = new(attributes)
-        setting.save!
+        storage.with_connection do
+          setting.save!
+        end
         setting
       end
 
@@ -68,26 +70,32 @@ module SuperSettings
       # If you just want current settings, then call #active instead.
       # @return [Array<Setting>]
       def all
-        storage.all.collect { |record| new(record) }
+        storage.with_connection do
+          storage.all.collect { |record| new(record) }
+        end
       end
 
       # Get all the current settings.
       # @return [Array<Setting>]
       def active
-        storage.active.collect { |record| new(record) }
+        storage.with_connection do
+          storage.active.collect { |record| new(record) }
+        end
       end
 
       # Get all settings that have been updated since the specified time stamp.
       # @param time [Time]
       # @return [Array<Setting>]
       def updated_since(time)
-        storage.updated_since(time).collect { |record| new(record) }
+        storage.with_connection do
+          storage.updated_since(time).collect { |record| new(record) }
+        end
       end
 
       # Get a setting by its unique key.
       # @return Setting
       def find_by_key(key)
-        record = storage.find_by_key(key)
+        record = storage.with_connection { storage.find_by_key(key) }
         if record
           new(record)
         end
@@ -98,7 +106,7 @@ module SuperSettings
       # @return [Time]
       def last_updated_at
         fetch_from_cache(LAST_UPDATED_CACHE_KEY) do
-          storage.last_updated_at
+          storage.with_connection { storage.last_updated_at }
         end
       end
 
@@ -132,9 +140,11 @@ module SuperSettings
       def bulk_update(params, changed_by = nil)
         all_valid, settings = update_settings(params, changed_by)
         if all_valid
-          storage.transaction do
-            settings.each do |setting|
-              setting.save!
+          storage.with_connection do
+            storage.transaction do
+              settings.each do |setting|
+                setting.save!
+              end
             end
           end
           clear_last_updated_cache
@@ -380,15 +390,17 @@ module SuperSettings
       self.created_at ||= timestamp
       self.updated_at = timestamp unless updated_at && changed?(:updated_at)
 
-      self.class.storage.transaction do
-        @record.save!
-      end
+      self.class.storage.with_connection do
+        self.class.storage.transaction do
+          @record.save!
+        end
 
-      begin
-        self.class.clear_last_updated_cache
-        redact_history! if history_needs_redacting?
-      ensure
-        clear_changes
+        begin
+          self.class.clear_last_updated_cache
+          redact_history! if history_needs_redacting?
+        ensure
+          clear_changes
+        end
       end
       nil
     end
