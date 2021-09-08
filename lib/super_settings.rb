@@ -107,12 +107,15 @@ module SuperSettings
       value
     end
 
-    # Create settings and update the local cache with the values.
+    # Create settings and update the local cache with the values. If a block is given, then the
+    # value will be reverted at the end of the block. This method can be used in tests when you
+    # need to inject a specific value into your settings.
     #
     # @param key [String, Symbol] the key to set
     # @param value [Object] the value to set
     # @param value_type [String, Symbol] the value type to set; if the setting does not already exist,
     #   this will be inferred from the value.
+    # @return [void]
     def set(key, value, value_type: nil)
       setting = Setting.find_by_key(key)
       if setting
@@ -121,10 +124,23 @@ module SuperSettings
         setting = Setting.new(key: key)
         setting.value_type = (value_type || Setting.value_type(value) || Setting::STRING)
       end
+      previous_value = setting.value
       setting.value = value
-      setting.save!
-      local_cache.load_settings unless local_cache.loaded?
-      local_cache.update_setting(setting)
+      begin
+        setting.save!
+        local_cache.load_settings unless local_cache.loaded?
+        local_cache.update_setting(setting)
+        if block_given?
+          yield
+        end
+      ensure
+        if block_given?
+          setting.value = previous_value
+          setting.save!
+          local_cache.load_settings unless local_cache.loaded?
+          local_cache.update_setting(setting)
+        end
+      end
     end
 
     # Load the settings from the database into the in memory cache.

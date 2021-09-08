@@ -455,4 +455,22 @@ describe SuperSettings::Setting do
       expect(SuperSettings::Setting.find_by_key("newkey")).to eq nil
     end
   end
+
+  describe "set" do
+    it "should be able to set a value" do
+      SuperSettings.set("foo", "bar")
+      expect(SuperSettings.get("foo")).to eq "bar"
+    end
+
+    it "should be able to temporarily set a value in a block" do
+      SuperSettings.set("foo", "bar") do
+        expect(SuperSettings.get("foo")).to eq "bar"
+        SuperSettings.set("foo", "boo") do
+          expect(SuperSettings.get("foo")).to eq "boo"
+        end
+        expect(SuperSettings.get("foo")).to eq "bar"
+      end
+      expect(SuperSettings.get("foo")).to eq nil
+    end
+  end
 end
