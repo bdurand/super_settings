@@ -93,6 +93,7 @@ describe SuperSettings::RackMiddleware do
       body = response[2].first
       expect(JSON.parse(body)).to eq({
         "key" => setting_1.key,
+        "encrypted" => false,
         "histories" => setting_1.history(limit: nil, offset: 0).collect do |history|
           JSON.parse({value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}.to_json)
         end

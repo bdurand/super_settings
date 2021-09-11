@@ -106,6 +106,7 @@ module SuperSettings
       # ```
       # {
       #   key: string,
+      #   encrypted: boolean,
       #   histories: [
       #     {
       #       value: object,
@@ -127,7 +128,7 @@ module SuperSettings
         fetch_limit = (limit > 0 ? limit + 1 : nil)
         histories = setting.history(limit: fetch_limit, offset: offset)
 
-        payload = {key: setting.key}
+        payload = {key: setting.key, encrypted: setting.encrypted?}
 
         if limit > 0 && !histories.empty?
           if offset > 0

@@ -49,8 +49,13 @@
   text-decoration: none !important;
 }
 
+.super-settings-history-key {
+  font-weight: normal;
+  color: royalblue;
+}
+
 .super-settings-modal {
-  z-index: 3;
+  z-index: 1000000000000;
   display: none;
   padding-top: 5rem;
   position: fixed;
