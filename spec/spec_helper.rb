@@ -69,6 +69,9 @@ end
 
 Capybara.app = TestMiddleware.new(lambda { |env| [204, {}, [""]] })
 Capybara.javascript_driver = :cuprite
+Capybara.register_driver(:cuprite) do |app|
+  Capybara::Cuprite::Driver.new(app, window_size: [1024, 800], browser_options: {"no-sandbox": nil})
+end
 WebMock.disable_net_connect!(allow_localhost: true)
 
 redis = Redis.new(url: ENV["TEST_REDIS_URL"]) if ENV["TEST_REDIS_URL"]
