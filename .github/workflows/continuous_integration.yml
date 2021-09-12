@@ -33,9 +33,11 @@ jobs:
         combo:
           - rails: "none"
             ruby: "3.0"
+          - rails: "latest"
+            ruby: "3.0"
+            coverage: true
           - rails: "6.1"
             ruby: "2.7"
-            coverage: true
           - rails: "6.0"
             ruby: "2.7"
           - rails: "5.2"
