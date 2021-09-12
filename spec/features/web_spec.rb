@@ -330,7 +330,7 @@ describe "web UI", type: :feature, js: true do
       expect(page).to have_content("77.5")
       expect(page).to_not have_content("newsecret")
 
-      expect(SuperSettings::Setting.find_by_key("key.string").deleted?).to eq true
+      expect(SuperSettings::Setting.all.detect { |setting| setting.key == "key.string" }.deleted?).to eq true
       expect(SuperSettings::Setting.find_by_key("key.integer").value).to eq 6688
       expect(SuperSettings::Setting.find_by_key("key.float").value).to eq 77.5
       expect(SuperSettings::Setting.find_by_key("key.boolean").value).to eq false
