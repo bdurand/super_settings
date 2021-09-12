@@ -272,7 +272,8 @@ module SuperSettings
     # Set the value of the setting.
     # @param val [Object]
     def value=(val)
-      val = (val.is_a?(Array) ? val.join("\n") : serialize(val))
+      val = serialize(val) unless val.is_a?(Array)
+      val = val.join("\n") if val.is_a?(Array)
       self.raw_value = val
     end
 
