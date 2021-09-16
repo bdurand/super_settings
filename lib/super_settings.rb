@@ -82,7 +82,9 @@ module SuperSettings
     # @return [Array]
     def array(key, default = nil)
       val = local_cache[key]
-      Array(val.nil? ? default : val).map { |v| v&.to_s }
+      val = default if val.nil?
+      return nil if val.nil?
+      Array(val).collect { |v| v&.to_s }
     end
 
     # Get setting values cast to a hash. This method can be used to cast the flat setting key/value

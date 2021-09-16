@@ -219,7 +219,7 @@ module SuperSettings
 
       def fetch_from_cache(key, &block)
         if cache
-          cache.fetch(key, &block)
+          cache.fetch(key, expires_in: 60, &block)
         else
           block.call
         end

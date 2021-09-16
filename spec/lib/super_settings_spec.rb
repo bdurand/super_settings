@@ -100,8 +100,15 @@ describe SuperSettings do
     end
 
     it "should return a default if the key is not defined" do
-      expect(SuperSettings.array("key")).to eq []
-      expect(SuperSettings.array("key", ["bar", "baz"])).to eq ["bar", "baz"]
+      expect(SuperSettings.array("key")).to eq nil
+      expect(SuperSettings.array("key", [:bar, :baz])).to eq ["bar", "baz"]
+    end
+
+    it "should return nil if the key is defined but has a blank value" do
+      SuperSettings::Setting.create!(key: "key", value: "", value_type: :string)
+      SuperSettings.load_settings
+      expect(SuperSettings.array("key")).to eq nil
+      expect(SuperSettings.array("key", 1)).to eq ["1"]
     end
   end
 
