@@ -9,7 +9,7 @@ unless ENV["SUPER_SETTINGS_NO_OVERRIDES"].present?
     config.refresh_interval = 2
     config.secret = "foobar"
 
-    config.controller.superclass = ::ApplicationController
+    config.controller.superclass = "::ApplicationController"
 
     config.controller.enhance do
       # Request forgery protection is enabled by default for requests with cookies; it can be disabled with:

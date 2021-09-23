@@ -14,13 +14,33 @@ module SuperSettings
 
       SuperSettings.refresh_interval = configuration.refresh_interval unless configuration.refresh_interval.nil?
 
-      # Setup the controller.
-      ActiveSupport.on_load(:action_controller) do
+      reloader = if defined?(Rails.application.reloader.to_prepare)
+        Rails.application.reloader
+      elsif defined?(ActiveSupport::Reloader.to_prepare)
+        ActiveSupport::Reloader
+      elsif defined?(ActionDispatch::Reloader.to_prepare)
+        ActionDispatch::Reloader
+      else
+        nil
+      end
+
+      create_controller = lambda do
         klass = Class.new(configuration.controller.superclass || ::ApplicationController)
+        if defined?(SuperSettings::SettingsController)
+          SuperSettings.send(:remove_const, :SettingsController)
+        end
         SuperSettings.const_set(:SettingsController, klass)
         klass.include(ControllerActions)
         if configuration.controller.enhancement
           klass.class_eval(&configuration.controller.enhancement)
+        end
+      end
+
+      # Setup the controller.
+      ActiveSupport.on_load(:action_controller) do
+        create_controller.call
+        if reloader && !Rails.configuration.cache_classes
+          reloader.to_prepare(&create_controller)
         end
       end
 

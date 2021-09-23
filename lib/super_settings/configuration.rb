@@ -18,7 +18,17 @@ module SuperSettings
       # Superclass for the controller. This should normally be set to one of your existing
       # base controller classes since these probably have authentication methods, etc. defined
       # on them. If this is not defined, the superclass will be `SuperSettings::ApplicationController`.
-      attr_accessor :superclass
+      # It can be set to either a class or a class name. Setting to a class name is preferrable
+      # since it will be compatible with class reloading in a development environment.
+      attr_writer :superclass
+
+      def superclass
+        if @superclass.is_a?(String)
+          @superclass.constantize
+        else
+          @superclass
+        end
+      end
 
       # Optinal name of the application displayed in the view.
       attr_accessor :application_name
