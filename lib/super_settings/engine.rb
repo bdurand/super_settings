@@ -20,8 +20,6 @@ module SuperSettings
         ActiveSupport::Reloader
       elsif defined?(ActionDispatch::Reloader.to_prepare)
         ActionDispatch::Reloader
-      else
-        nil
       end
 
       create_controller = lambda do
