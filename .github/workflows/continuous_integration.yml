@@ -31,48 +31,50 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - rails: "none"
-            ruby: "ruby"
-          - rails: "latest"
-            ruby: "ruby"
+          - ruby: "ruby"
+          - ruby: "ruby"
+            appraisal: "latest"
             coverage: true
             standardrb: true
-          - rails: "6.1"
-            ruby: "3.0"
-          - rails: "6.0"
-            ruby: "2.7"
-          - rails: "5.2"
-            ruby: "2.6"
-          - rails: "5.1"
-            ruby: "2.6"
-          - rails: "5.0"
-            ruby: "2.5"
-          - rails: "4.2"
-            ruby: "2.5"
+          - ruby: "3.0"
+            appraisal: "rails_6.1"
+          - ruby: "2.7"
+            appraisal: "rails_6.0"
+          - ruby: "2.6"
+            appraisal: "rails_5.2"
+          - ruby: "2.6"
+            appraisal: "rails_5.1"
+          - ruby: "2.5"
+            appraisal: "rails_5.0"
+          - ruby: "2.5"
+            appraisal: "rails_4.2"
             bundler: "1.17.3"
     steps:
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v2
-      - name: set up Ruby ${{ matrix.ruby || matrix.ruby }}
+      - name: Set up Ruby ${{ matrix.ruby }}
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ matrix.ruby || matrix.ruby }}
-      - name: setup bundler
+          ruby-version: ${{ matrix.ruby }}
+      - name: Setup bundler
+        if: matrix.bundler != ''
         run: |
-          if [ "${{ matrix.bundler }}" != "" ]; then
-            gem uninstall bundler --all
-            gem install bundler --no-document --version ${{ matrix.bundler }}
+          gem uninstall bundler --all
+          gem install bundler --no-document --version ${{ matrix.bundler }}
+      - name: Set Appraisal bundle
+        if: matrix.appraisal != ""
+        run: |
+          echo "using gemfile gemfiles/${{ matrix.appraisal }}.gemfile"
+          bundle config set gemfile "gemfiles/${{ matrix.appraisal }}.gemfile"
           fi
-          if [ "${{ matrix.rails }}" != "none" ] && [ "${{ matrix.rails }}" != "" ]; then
-            echo "using gemfile gemfiles/rails_${{ matrix.rails }}.gemfile"
-            bundle config set gemfile "gemfiles/rails_${{ matrix.rails }}.gemfile"
-          fi
+      - name: Install bundle
+        run: |
           bundle update
-      - name: specs
+      - name: Run specs
         run:  bundle exec rake spec
-      - name: code coverage
+      - name: Code coverage
         if:   matrix.coverage == true
         uses: paambaati/codeclimate-action@v2.7.5
-      - name: standardrb
+      - name: Run standardrb
         if:   matrix.standardrb == true
         run:  bundle exec rake standard
