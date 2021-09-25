@@ -15,7 +15,7 @@ env:
   CC_TEST_REPORTER_ID: 9100bb64cf3ff1765ecab9ccdb7d2507c9f42829d50e65497d54f5cef0a18e40
 jobs:
   specs:
-    name: ${{ matrix.job }} ruby-${{ matrix.ruby || matrix.ruby }} ${{ matrix.rails && format('rails-{0}', matrix.rails) }}
+    name: ruby-${{ matrix.ruby }} ${{ matrix.appraisal }}
     runs-on: ubuntu-latest
     services:
       redis:
@@ -34,7 +34,7 @@ jobs:
           - ruby: "ruby"
             standardrb: true
           - ruby: "ruby"
-            appraisal: "latest"
+            appraisal: "rails_latest"
             coverage: true
           - ruby: "3.0"
             appraisal: "rails_6.1"
@@ -66,7 +66,6 @@ jobs:
         run: |
           echo "using gemfile gemfiles/${{ matrix.appraisal }}.gemfile"
           bundle config set gemfile "gemfiles/${{ matrix.appraisal }}.gemfile"
-          fi
       - name: Install bundle
         run: |
           bundle update
