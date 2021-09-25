@@ -32,10 +32,12 @@ jobs:
       matrix:
         combo:
           - rails: "none"
-            ruby: "3.0"
+            ruby: "3"
           - rails: "latest"
-            ruby: "3.0"
+            ruby: "3"
             coverage: true
+          - rails: "6.2"
+            ruby: "3.0"
           - rails: "6.1"
             ruby: "2.7"
           - rails: "6.0"
