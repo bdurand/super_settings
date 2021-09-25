@@ -62,7 +62,7 @@ jobs:
           gem uninstall bundler --all
           gem install bundler --no-document --version ${{ matrix.bundler }}
       - name: Set Appraisal bundle
-        if: matrix.appraisal != ""
+        if: matrix.appraisal != ''
         run: |
           echo "using gemfile gemfiles/${{ matrix.appraisal }}.gemfile"
           bundle config set gemfile "gemfiles/${{ matrix.appraisal }}.gemfile"
