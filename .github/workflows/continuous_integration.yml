@@ -32,10 +32,10 @@ jobs:
       matrix:
         include:
           - ruby: "ruby"
+            standardrb: true
           - ruby: "ruby"
             appraisal: "latest"
             coverage: true
-            standardrb: true
           - ruby: "3.0"
             appraisal: "rails_6.1"
           - ruby: "2.7"
