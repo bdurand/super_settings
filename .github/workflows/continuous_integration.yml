@@ -15,7 +15,7 @@ env:
   CC_TEST_REPORTER_ID: 9100bb64cf3ff1765ecab9ccdb7d2507c9f42829d50e65497d54f5cef0a18e40
 jobs:
   specs:
-    name: ${{ matrix.job }} ruby-${{ matrix.combo.ruby || matrix.ruby }} ${{ matrix.combo.rails && format('rails-{0}', matrix.combo.rails) }}
+    name: ${{ matrix.job }} ruby-${{ matrix.ruby || matrix.ruby }} ${{ matrix.rails && format('rails-{0}', matrix.rails) }}
     runs-on: ubuntu-latest
     services:
       redis:
@@ -30,16 +30,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        combo:
+        include:
           - rails: "none"
-            ruby: "3"
+            ruby: "ruby"
           - rails: "latest"
-            ruby: "3"
+            ruby: "ruby"
             coverage: true
-          - rails: "6.2"
-            ruby: "3.0"
+            standardrb: true
           - rails: "6.1"
-            ruby: "2.7"
+            ruby: "3.0"
           - rails: "6.0"
             ruby: "2.7"
           - rails: "5.2"
@@ -51,34 +50,29 @@ jobs:
           - rails: "4.2"
             ruby: "2.5"
             bundler: "1.17.3"
-        job: [ rspec ]
-        include:
-          - job: "standardrb"
-            ruby: "2.7"
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: set up Ruby ${{ matrix.combo.ruby || matrix.ruby }}
+      - name: set up Ruby ${{ matrix.ruby || matrix.ruby }}
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ matrix.combo.ruby || matrix.ruby }}
+          ruby-version: ${{ matrix.ruby || matrix.ruby }}
       - name: setup bundler
         run: |
-          if [ "${{ matrix.combo.bundler }}" != "" ]; then
+          if [ "${{ matrix.bundler }}" != "" ]; then
             gem uninstall bundler --all
-            gem install bundler --no-document --version ${{ matrix.combo.bundler }}
+            gem install bundler --no-document --version ${{ matrix.bundler }}
           fi
-          if [ "${{ matrix.combo.rails }}" != "none" ] && [ "${{ matrix.combo.rails }}" != "" ]; then
-            echo "using gemfile gemfiles/rails_${{ matrix.combo.rails }}.gemfile"
-            bundle config set gemfile "gemfiles/rails_${{ matrix.combo.rails }}.gemfile"
+          if [ "${{ matrix.rails }}" != "none" ] && [ "${{ matrix.rails }}" != "" ]; then
+            echo "using gemfile gemfiles/rails_${{ matrix.rails }}.gemfile"
+            bundle config set gemfile "gemfiles/rails_${{ matrix.rails }}.gemfile"
           fi
           bundle update
       - name: specs
-        if:   matrix.job == 'rspec'
         run:  bundle exec rake spec
       - name: code coverage
         if:   matrix.coverage == true
         uses: paambaati/codeclimate-action@v2.7.5
       - name: standardrb
-        if:   matrix.job == 'standardrb'
+        if:   matrix.standardrb == true
         run:  bundle exec rake standard
