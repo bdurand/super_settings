@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../../spec_helper"
+
 describe SuperSettings::RackApplication do
   let(:app) { lambda { |env| [200, {}, ["OK"]] } }
   let(:middleware) { SuperSettings::RackApplication.new(app, "/prefix") }
