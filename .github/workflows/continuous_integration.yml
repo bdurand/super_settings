@@ -36,6 +36,8 @@ jobs:
           - ruby: "ruby"
             appraisal: "rails_latest"
             coverage: true
+          - ruby: "3.1"
+            appraisal: "rails_7.0"
           - ruby: "3.0"
             appraisal: "rails_6.1"
           - ruby: "2.7"
