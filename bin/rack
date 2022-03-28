@@ -7,8 +7,7 @@ require "dotenv/load"
 
 require_relative "../lib/super_settings"
 
-default_app = lambda { |env| [404, {"Content-Type" => "text/plain"}, ["Not found"]] }
-app = SuperSettings::RackMiddleware.new(default_app)
+app = SuperSettings::Rack::Router.new
 options = Rack::Server::Options.new.parse!(ARGV)
 
 storage = (ARGV[0] || "redis")

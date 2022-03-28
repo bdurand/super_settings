@@ -16,12 +16,12 @@ module SuperSettings
   # credentials on every reqeust). There are other gems available that can be integrated into
   # your middleware stack to provide this feature. If you need to inject meta elements into
   # the page, you can do so with the `add_to_head` method.
-  class RackMiddleware
+  class RackApplication
     RESPONSE_HEADERS = {"Content-Type" => "application/json; charset=utf-8"}.freeze
 
     # @param app [Object] Rack application or middleware for unhandled requests
     # @param prefix [String] path prefix for the API routes.
-    def initialize(app, path_prefix = "/")
+    def initialize(app = nil, path_prefix = "/", &block)
       @app = app
       @path_prefix = path_prefix.to_s.chomp("/")
     end
@@ -86,14 +86,6 @@ module SuperSettings
     def add_to_head(request)
     end
 
-    # Subclasses can override this method to return the login URL for the application. If this is
-    # provided, then a user will be redirected to that URL if they are not authenticated when loading
-    # the HTML application.
-    # @param request [Rack::Request] current reqeust object
-    # @return [String]
-    def login_url(request)
-    end
-
     private
 
     def handle_request(env)
@@ -118,7 +110,12 @@ module SuperSettings
           return handle_update_request(request)
         end
       end
-      @app.call(env)
+
+      if @app
+        @app.call(env)
+      else
+        [404, {"Content-Type" => "text/plain"}, ["Not found"]]
+      end
     end
 
     def handle_root_request(request)
@@ -127,9 +124,8 @@ module SuperSettings
       end
 
       if [401, 403].include?(response.first)
-        location = login_url(request)
-        if location
-          response = [302, {"Location" => location}, []]
+        if SuperSettings.authentication_url
+          response = [302, {"Location" => SuperSettings.authentication_url}, []]
         end
       end
 

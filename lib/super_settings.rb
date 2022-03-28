@@ -8,7 +8,7 @@ require_relative "super_settings/configuration"
 require_relative "super_settings/local_cache"
 require_relative "super_settings/encryption"
 require_relative "super_settings/rest_api"
-require_relative "super_settings/rack_middleware"
+require_relative "super_settings/rack_application"
 require_relative "super_settings/controller_actions"
 require_relative "super_settings/attributes"
 require_relative "super_settings/setting"
@@ -203,6 +203,14 @@ module SuperSettings
       Encryption.secret = value
       load_settings if loaded?
     end
+
+    # URL for authenticating access to the application. This would normally be some kind of
+    # login page. Browsers will be redirected here if they are denied access to the web UI.
+    attr_accessor :authentication_url
+
+    # Javascript to inject into the settings application HTML page. This can be used, for example,
+    # to set authorization credentials stored client side to access the settings API.
+    attr_accessor :web_ui_javascript
 
     private
 

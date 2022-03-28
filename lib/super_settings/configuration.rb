@@ -39,9 +39,16 @@ module SuperSettings
       # Optional URL for a link back to the rest of the application.
       attr_accessor :application_link
 
+      # Optional URL for a link to the login page for the application.
+      def authentication_url=(value)
+        SuperSettings.authentication_url = value
+      end
+
       # Javascript to inject into the settings application HTML page. This can be used, for example,
       # to set authorization credentials stored client side to access the settings API.
-      attr_accessor :javascript
+      def web_ui_javascript=(script)
+        SuperSettings.web_ui_javascript = script
+      end
 
       # Enhance the controller. You can define methods or call controller class methods like
       # `before_action`, etc. in the block. These will be applied to the engine controller.

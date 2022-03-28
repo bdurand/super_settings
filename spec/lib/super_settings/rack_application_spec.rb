@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-describe SuperSettings::RackMiddleware do
+describe SuperSettings::RackApplication do
   let(:app) { lambda { |env| [200, {}, ["OK"]] } }
-  let(:middleware) { SuperSettings::RackMiddleware.new(app, "/prefix") }
+  let(:middleware) { SuperSettings::RackApplication.new(app, "/prefix") }
 
   let!(:setting_1) { SuperSettings::Setting.create!(key: "string", value_type: :string, value: "foobar") }
   let!(:setting_2) { SuperSettings::Setting.create!(key: "integer", value_type: :integer, value: 4) }
@@ -44,7 +44,7 @@ describe SuperSettings::RackMiddleware do
     it "should return a redirect if access is denied and a login URL is defined" do
       allow(middleware).to receive(:current_user).and_return(:user)
       allow(middleware).to receive(:authenticated?).with(:user).and_return(false)
-      allow(middleware).to receive(:login_url).with(Rack::Request).and_return("https://example.com/login")
+      allow(SuperSettings).to receive(:authentication_url).and_return("https://example.com/login")
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix")
       expect(response[0]).to eq 302
       expect(response[1]["Location"]).to eq "https://example.com/login"

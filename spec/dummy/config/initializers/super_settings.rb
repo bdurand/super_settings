@@ -28,7 +28,9 @@ unless ENV["SUPER_SETTINGS_NO_OVERRIDES"].present?
       current_user
     end
 
-    config.controller.javascript = "SuperSettingsAPI.headers['Authorization'] = 'User'"
+    config.controller.web_ui_javascript = "SuperSettingsAPI.headers['X-Authorization'] = 'User'"
+
+    config.controller.authentication_url = "/login"
 
     config.model.cache = Rails.cache
     config.model.storage = ENV["SUPER_SETTINGS_STORAGE"]

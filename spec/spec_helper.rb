@@ -51,7 +51,7 @@ require "webmock/rspec"
 require "capybara/rspec"
 require "capybara/cuprite"
 
-class TestMiddleware < SuperSettings::RackMiddleware
+class TestMiddleware < SuperSettings::RackApplication
   protected
 
   def authenticated?(user)

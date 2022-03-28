@@ -31,7 +31,8 @@ module SuperSettings
         <script>
           #{File.read(File.join(__dir__, "scripts.js"))}
           #{File.read(File.join(__dir__, "api.js"))}
-          #{Configuration.instance.controller.javascript}
+          #{"SuperSettingsAPI.authenticationUrl = '#{SuperSettings.authentication_url.gsub("'", "\\'")}';" if SuperSettings.authentication_url}
+          #{SuperSettings.web_ui_javascript}
         </script>
       HTML
     end

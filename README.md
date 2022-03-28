@@ -205,6 +205,31 @@ If you are running a Rails application, you can mount the API as a controller vi
 
 In either case, you are responsible for implementing authentication and authorization for the HTTP requests. This allows you to seamlessly integrate with existing authentication and authorization in your application.
 
+
+#### Authentication
+
+You are responsible for implementing authentication on the Web UI and REST API endpoints. In a Rack application, you would do this by putting the Supersetting application behind Rack middleware the performs you authentication checks. In a Rails application, you can add a `before_action` filter to hook into your authentication checks.
+
+If you are using access token authentication from a single page application (as opposed to cookie based authentication), you will need to pass the access token from the browser to the backend. There are a couple of built in ways to do this.
+
+You can pass the access token in either the `access_token` query parameter to the Web UI or as the URL hash. Both of these are equivalent:
+
+```
+https://myapp.example.com/settings?access_token=secrettokenstring
+
+https://myapp.example.com/settings#access_token=secrettokenstring
+```
+
+If you use this method, you would construct these URL's from a part of your application that already has access to the access token. The access token will be removed from the URL in the browser history and stored in the window's session storage so that it can be sent with each API request.
+
+Alternatively, you can specify a piece Javascript in `SuperSettings.web_ui_javascript` that will be injected into the Web UI. You can use this to set whatever authentication header you need to on the API requests in the `SuperSettingsAPI.headers` Javascript object.
+
+```ruby
+SuperSettings.web_ui_javascript = "SuperSettingsAPI.headers['Authorization'] = window.localStorage.getItem('access_token')"
+```
+
+You can also specify the URL for a login page with `SuperSettings.authentication_url`. Browsers will be redirected to this URL if a request is received that requires authentication.
+
 ### Rails Engine
 
 The gem ships with a Rails engine that provides easy integration with a Rails application.
