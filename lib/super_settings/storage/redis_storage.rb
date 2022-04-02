@@ -122,7 +122,8 @@ module SuperSettings
         def find_by_key(key)
           json = with_redis { |redis| redis.hget(SETTINGS_KEY, key) }
           return nil unless json
-          load_from_json(json)
+          record = load_from_json(json)
+          record unless record.deleted?
         end
 
         def last_updated_at

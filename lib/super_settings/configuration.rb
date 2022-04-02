@@ -23,7 +23,7 @@ module SuperSettings
       attr_writer :superclass
 
       def superclass
-        if @superclass.is_a?(String)
+        if defined?(@superclass) && @superclass.is_a?(String)
           @superclass.constantize
         else
           @superclass
@@ -48,6 +48,16 @@ module SuperSettings
       # to set authorization credentials stored client side to access the settings API.
       def web_ui_javascript=(script)
         SuperSettings.web_ui_javascript = script
+      end
+
+      # Enable or disable the web UI (the REST API will always be enabled).
+      attr_writer :web_ui_enabled
+
+      def web_ui_enabled?
+        unless defined?(@web_ui_enabled)
+          @web_ui_enabled = true
+        end
+        !!@web_ui_enabled
       end
 
       # Enhance the controller. You can define methods or call controller class methods like

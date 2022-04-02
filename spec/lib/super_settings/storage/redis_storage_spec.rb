@@ -59,6 +59,24 @@ if ENV["TEST_REDIS_URL"]
       end
     end
 
+    describe "persistence" do
+      it "inserts, updates, and deletes records" do
+        setting = SuperSettings::Storage::RedisStorage.new(key: "setting", raw_value: "1", updated_at: Time.now - 100)
+        setting.save!
+        expect(SuperSettings::Storage::RedisStorage.find_by_key("setting").raw_value).to eq "1"
+        setting.raw_value = "2"
+        setting.save!
+        expect(SuperSettings::Storage::RedisStorage.find_by_key("setting").raw_value).to eq "2"
+        setting.deleted = true
+        setting.save!
+        expect(SuperSettings::Storage::RedisStorage.find_by_key("setting")).to eq nil
+        new_setting = SuperSettings::Storage::RedisStorage.new(key: "setting", raw_value: "3", updated_at: Time.now - 100)
+        new_setting.save!
+        expect(SuperSettings::Storage::RedisStorage.find_by_key("setting").raw_value).to eq "3"
+        expect(SuperSettings::Storage::RedisStorage.find_by_key("setting").deleted?).to eq false
+      end
+    end
+
     describe "last_updated_at" do
       it "should return the last time a setting was updated" do
         setting_1 = SuperSettings::Storage::RedisStorage.new(key: "setting_1", raw_value: "1", updated_at: Time.now - 100)

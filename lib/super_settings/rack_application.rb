@@ -86,13 +86,19 @@ module SuperSettings
     def add_to_head(request)
     end
 
+    # Subclasses can override this method to disable the web UI component of the application on only
+    # expose the REST API.
+    def web_ui_enabled?
+      true
+    end
+
     private
 
     def handle_request(env)
       request = Rack::Request.new(env)
       path = request.path[@path_prefix.length, request.path.length]
       if request.get?
-        if path == "/" || path == ""
+        if (path == "/" || path == "") && web_ui_enabled?
           return handle_root_request(request)
         elsif path == "/settings"
           return handle_index_request(request)

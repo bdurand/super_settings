@@ -85,7 +85,7 @@ module SuperSettings
       end
 
       delegate :key, :key=, :raw_value, :raw_value=, :value_type, :value_type=, :description, :description=,
-        :deleted?, :deleted=, :updated_at, :updated_at=, :created_at, :created_at=, :persisted?, :save!,
+        :deleted?, :deleted=, :updated_at, :updated_at=, :created_at, :created_at=, :persisted?,
         to: :@model
 
       def initialize(attributes = {})
@@ -93,6 +93,28 @@ module SuperSettings
           attributes
         else
           Model.new(attributes)
+        end
+      end
+
+      def save!
+        begin
+          @model.save!
+        rescue ActiveRecord::RecordNotUnique => e
+          # Gracefully handle duplicate key constraint on the database; in this case the existing
+          # record should be updated.
+          duplicate = @model.class.find_by(key: @model.key)
+          raise e if duplicate == @model
+          duplicate.raw_value = @model.raw_value
+          duplicate.value_type = @model.value_type
+          duplicate.description = @model.description
+          duplicate.deleted = false
+          @model.transaction do
+            if @model.persisted?
+              @model.reload.update!(deleted: true)
+            end
+            duplicate.save!
+          end
+          @model = duplicate
         end
       end
 

@@ -3,7 +3,9 @@
 [![Continuous Integration](https://github.com/bdurand/super_settings/actions/workflows/continuous_integration.yml/badge.svg)](https://github.com/bdurand/super_settings/actions/workflows/continuous_integration.yml)
 [![Ruby Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://github.com/testdouble/standard)
 
-This gem provides a framework for maintaining runtime application settings. Settings are persisted in a database and cached locally in memory for quick, efficient access. The settings are designed so they can be updated dynamically without requiring code deployment or restarting processes.
+This gem provides a framework for maintaining runtime application settings. Settings are persisted in a database and but cached in memory for quick, efficient access. The settings are designed so they can be updated dynamically without requiring code deployment or restarting processes.
+
+# TODO cleanup to be more concise
 
 As applications grow, they tend to accumulate a lot of configuration over time. Often these end up in environment variables, hard coded in YAML files, or sprinkled through various data models as additional columns. All of these methods of configuration have their place and are completely appropriate for different purposes (i.e. for storing application secrets, configuration required during application startup, etc.).
 
@@ -122,9 +124,9 @@ SuperSettings.integer("key", 4)
 
 #### Caching
 
-When you read a setting using these methods, you are actually reading from an in memory cache. All of the settings are read into this local cache and the cache is checked periodically to see if it needs to be refreshed (defaults to every five seconds, but can be customized with `SuperSettings.refresh_interval`). When the cache does need to be refreshed, only updated records are re-read from the data store by a single background thread. Thus, you don't have to worry about overloading your database by reading settings values.
+When you read a setting using these methods, you are actually reading from an in memory cache. All of the settings are read into this local cache and the cache is checked periodically to see if it needs to be refreshed (defaults to every five seconds, but can be customized with `SuperSettings.refresh_interval`). When the cache does need to be refreshed, only the delta of updated records are re-read from the data store by a single background thread to minimize any load on the server.
 
-Cache misses are also cached so that they don't add any overhead. You should avoid querying for dynamically generated values as a setting key since this can lead to memory bloat.
+Cache misses are also cached so that they don't add any overhead. Because of this, you should avoid using dynamically generated values as setting keys since this can lead to memory bloat.
 
 ```ruby
 # BAD: this will create an entry in the cache for every id
@@ -137,17 +139,17 @@ SuperSettings.array("enabled_users", []).include?(id)
 SuperSettings.structured("enabled_users", {})["id"]
 ```
 
-Because all settings must be read into memory, you should avoid creating thousands of settings since this could lead to performance or memory issues loading the cache.
+The cache scales fine to handle hundreds of settings, but you avoid creating thousands of settings. Because all settings are read into memory, too many settings records could lead to performance or memory issues when loading the cache.
 
 ### Data Model
 
 Each setting has a unique key, a value, a value type, and an optional description. The value type can be one of "string", "integer", "float", "boolean", "datetime", "array", or "secret". The array value type will always return an array of strings. The secret value type also returns a string and is used to indicate that the value contains sensitive data that should not be exposed. Secret values can be encrypted in the database as well (see below).
 
-The value type on a setting does not limit how it can be cast when request using one of the accessor methods on `SuperSettings`, though. For instance, you can call `SuperSettings.get("integer_key")` on an integer setting and it will return a string. The value type does ensure that the value is validated to be sure it can be cast to the specified type so you can avoid inputing invalid data.
+You can request a setting using one of the accessor methods on `SuperSettings` regardless of its defined value type. For instance, you can call `SuperSettings.get("integer_key")` on an integer setting and it will return a string. The value type is used to validate the setting value on input so you can be sure that can cast to the specified type at runtime.
 
 It is not possible to store an empty string in a setting; empty strings will be always cast to `nil`.
 
-A history of all settings changes is kept every time the value is changed in the `histories` association. You can use this information to see what values were in effect at what time. You can optionally alse record who made the changes.
+A history of all settings changes is updated every time the value is changed in the `histories` association. You can use this information to see what values were in effect at what time. You can optionally alse record who made the changes.
 
 #### Storage Engines
 
@@ -157,9 +159,9 @@ This gem abstracts out the storage engine and can support multiple storage mecha
 * `SuperSettings::Storage::RedisStorage` - Stores the settings in a Redis database using the [redis](https://github.com/redis/redis-rb) gem.
 * `SuperSettings::Storage::HttpStorage` - Uses the SuperSettings REST API running on another server. This is useful in a micro services architecture so you can have a central settings server used by all the services.
 
-Additional storage engines can be built by creating a class that includes `SuperSettings::Storage` and implementing the unimplemented methods in that module.
+Additional storage engines can be built by creating a class that includes `SuperSettings::Storage` and implements the unimplemented methods in that module.
 
-The storage engine is defined by setting `SuperSettings::Setting.storage` to the storage class to use. Note that each storage class may also require additional configuration. For instance the Redis storage class requires you to provide a connection to a Redis database. If you are running a Rails application, then the storage engine will be set to ActiveRecord by default. Otherwise, you will need to define it somewhere in your application's initialization.
+The storage engine is defined by setting `SuperSettings::Setting.storage` to the storage class to use. Note that each storage class may also require additional configuration. For instance the Redis storage class requires you to provide a connection to a Redis database. If you are running a Rails application, then the storage engine will be set to ActiveRecord by default. Otherwise, you will need to define the storage class somewhere in your application's initialization.
 
 #### Encrypted Secrets
 
@@ -183,7 +185,7 @@ The Web UI provides all the functionality to add, update, and delete settings.
 
 You can save multiple settings at once. If you have settings that need to be changed together, you can be assured they will all be saved in a single transaction.
 
-The Web UI is fully self contained and has no external dependencies. There are configuration settings for tweaking the layout. See the `SuperSettings::Configuration` class for
+The Web UI is fully self contained and has no external dependencies. There are configuration settings for tweaking the layout. See the `SuperSettings::Configuration` class for details if you are using Rails or `SuperSettings::RackApplication` if you are not.
 
 You can see the Web UI in action if you clone this repository and then run:
 
@@ -199,14 +201,15 @@ It is not required to use the bundled web UI. You can implement your own UI if y
 
 #### REST API
 
-You can mount a REST API for the exposing and managing the settings. This API is required for the web UI. The REST interface is documented in the `SuperSettings::RestAPI` class.
+You can mount a REST API for exposing and managing the settings. This API is required for the web UI and is mounted along with the web UI. The REST interface is documented in the `SuperSettings::RestAPI` class.
 
-If you are running a Rails application, you can mount the API as a controller via the bundled Rails engine. If you are not using Rails, then you can add a class that extends `SuperSettings::RackMiddleware` to your Rack middleware stack.
+If you are running a Rails application, you can mount the API as a controller via the bundled Rails engine. If you are not using Rails, then you can add a class that extends `SuperSettings::RackApplication` to your Rack middleware stack. The web UI can be disabled and only the REST API exposed. See `SuperSettings::Configuration` if you are using Rails or `SuperSettings::RackApplication` if you are not.
 
 In either case, you are responsible for implementing authentication and authorization for the HTTP requests. This allows you to seamlessly integrate with existing authentication and authorization in your application.
 
-
 #### Authentication
+
+# TODO cleanup; also provide method for supplying blocks to RackApplication
 
 You are responsible for implementing authentication on the Web UI and REST API endpoints. In a Rack application, you would do this by putting the Supersetting application behind Rack middleware the performs you authentication checks. In a Rails application, you can add a `before_action` filter to hook into your authentication checks.
 
