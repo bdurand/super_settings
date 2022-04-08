@@ -36,7 +36,7 @@ describe "web UI", type: :feature, js: true do
       expect(page).to have_content("key.boolean")
       expect(page).to have_content("true")
       expect(page).to have_content("key.datetime")
-      expect(page).to have_content(datetime_setting.value.httpdate.sub("GMT", "UTC"))
+      expect(page).to have_content("Sep 11, 2021, 12:47")
       expect(page).to have_content("key.array")
       expect(page).to have_content("one\ntwo\nthree")
       expect(page).to have_content("key.secret")
@@ -337,7 +337,7 @@ describe "web UI", type: :feature, js: true do
       expect(SuperSettings::Setting.find_by_key("key.float").value).to eq 77.5
       expect(SuperSettings::Setting.find_by_key("key.boolean").value).to eq false
       expect(SuperSettings::Setting.find_by_key("key.array").value).to eq ["car", "boat", "plane"]
-      expect(SuperSettings::Setting.find_by_key("key.datetime").value).to eq Time.utc(2020, 9, 12, 15, 33)
+      expect(SuperSettings::Setting.find_by_key("key.datetime").value).to eq Time.new(2020, 9, 12, 15, 33)
       expect(SuperSettings::Setting.find_by_key("key.secret").value).to eq "newsecret"
     end
   end
