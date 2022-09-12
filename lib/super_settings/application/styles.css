@@ -45,6 +45,11 @@
   min-width: 20rem;
 }
 
+.super-settings-max-height-text {
+  max-height: 15rem;
+  overflow-y: scroll;
+}
+
 .super-settings-controls {
   width: 6rem;
   white-space: nowrap;
