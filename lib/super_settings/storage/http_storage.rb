@@ -99,7 +99,7 @@ module SuperSettings
           request_headers = DEFAULT_HEADERS.merge(headers)
           if method == :post && !params&.empty?
             body = params.to_json
-            request_headers["Content-Type"] = "application/json; charset=utf8-"
+            request_headers["content-type"] = "application/json; charset=utf8-"
           end
 
           response = http_request(method: method, uri: uri, headers: request_headers, body: body)
@@ -144,7 +144,7 @@ module SuperSettings
           end
 
           if response.is_a?(Net::HTTPRedirection)
-            location = resp["Location"]
+            location = resp["location"]
             if redirect_count < 5 && SuperSettings::Coerce.present?(location)
               return http_request(method: :get, uri: URI(location), headers: headers, body: body, redirect_count: redirect_count + 1)
             end

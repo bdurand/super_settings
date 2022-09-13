@@ -17,7 +17,7 @@ module SuperSettings
   # your middleware stack to provide this feature. If you need to inject meta elements into
   # the page, you can do so with the `add_to_head` method.
   class RackApplication
-    RESPONSE_HEADERS = {"Content-Type" => "application/json; charset=utf-8"}.freeze
+    RESPONSE_HEADERS = {"content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache"}.freeze
 
     # @param app [Object] Rack application or middleware for unhandled requests
     # @param prefix [String] path prefix for the API routes.
@@ -120,18 +120,18 @@ module SuperSettings
       if @app
         @app.call(env)
       else
-        [404, {"Content-Type" => "text/plain"}, ["Not found"]]
+        [404, {"content-type" => "text/plain"}, ["Not found"]]
       end
     end
 
     def handle_root_request(request)
       response = check_authorization(request, write_required: true) do |user|
-        [200, {"Content-Type" => "text/html; charset=utf-8"}, [Application.new(:default, add_to_head(request)).render("index.html.erb")]]
+        [200, {"content-type" => "text/html; charset=utf-8", "cache-control" => "no-cache"}, [Application.new(:default, add_to_head(request)).render("index.html.erb")]]
       end
 
       if [401, 403].include?(response.first)
         if SuperSettings.authentication_url
-          response = [302, {"Location" => SuperSettings.authentication_url}, []]
+          response = [302, {"location" => SuperSettings.authentication_url}, []]
         end
       end
 
@@ -198,7 +198,7 @@ module SuperSettings
     end
 
     def json_response(status, payload)
-      [status, RESPONSE_HEADERS, [payload.to_json]]
+      [status, RESPONSE_HEADERS.dup, [payload.to_json]]
     end
 
     def post_params(request)

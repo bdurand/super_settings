@@ -33,7 +33,7 @@ describe SuperSettings::RackApplication do
     it "should return the application HTML page" do
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix")
       expect(response[0]).to eq 200
-      expect(response[1]).to match("Content-Type" => "text/html; charset=utf-8")
+      expect(response[1]).to match("content-type" => "text/html; charset=utf-8", "cache-control" => "no-cache")
     end
 
     it "should return a forbidden response if access is denied" do
@@ -50,7 +50,7 @@ describe SuperSettings::RackApplication do
       allow(SuperSettings).to receive(:authentication_url).and_return("https://example.com/login")
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix")
       expect(response[0]).to eq 302
-      expect(response[1]["Location"]).to eq "https://example.com/login"
+      expect(response[1]["location"]).to eq "https://example.com/login"
     end
   end
 
@@ -58,7 +58,7 @@ describe SuperSettings::RackApplication do
     it "should have a REST endoint" do
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/settings")
       expect(response[0]).to eq 200
-      expect(response[1]).to match("Content-Type" => "application/json; charset=utf-8")
+      expect(response[1]).to match("content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache")
       body = response[2].first
       expect(JSON.parse(body)["settings"]).to eq [setting_6, setting_4, setting_5, setting_3, setting_2, setting_1].collect { |s| JSON.parse(s.to_json) }
     end
@@ -75,7 +75,7 @@ describe SuperSettings::RackApplication do
     it "should have a REST endoint" do
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/setting", "QUERY_STRING" => "key=string", "rack.input" => StringIO.new)
       expect(response[0]).to eq 200
-      expect(response[1]).to match("Content-Type" => "application/json; charset=utf-8")
+      expect(response[1]).to match("content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache")
       body = response[2].first
       expect(JSON.parse(body)).to eq JSON.parse(setting_1.to_json)
     end
@@ -92,7 +92,7 @@ describe SuperSettings::RackApplication do
     it "should have a REST endoint" do
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/setting/history", "QUERY_STRING" => "key=string", "rack.input" => StringIO.new)
       expect(response[0]).to eq 200
-      expect(response[1]).to match("Content-Type" => "application/json; charset=utf-8")
+      expect(response[1]).to match("content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache")
       body = response[2].first
       expect(JSON.parse(body)).to eq({
         "key" => setting_1.key,
@@ -118,7 +118,7 @@ describe SuperSettings::RackApplication do
       setting_1.save!
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/last_updated_at")
       expect(response[0]).to eq 200
-      expect(response[1]).to match("Content-Type" => "application/json; charset=utf-8")
+      expect(response[1]).to match("content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache")
       body = response[2].first
       expect(JSON.parse(body)).to eq({"last_updated_at" => time.utc.iso8601})
     end
@@ -139,7 +139,7 @@ describe SuperSettings::RackApplication do
       setting_2.save!
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/updated_since", "QUERY_STRING" => "time=#{(Time.now + 10).iso8601}", "rack.input" => StringIO.new)
       expect(response[0]).to eq 200
-      expect(response[1]).to match("Content-Type" => "application/json; charset=utf-8")
+      expect(response[1]).to match("content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache")
       body = response[2].first
       expect(JSON.parse(body)["settings"]).to match_array([JSON.parse(setting_1.to_json), JSON.parse(setting_2.to_json)])
     end
@@ -174,7 +174,7 @@ describe SuperSettings::RackApplication do
       }.to_json
       response = middleware.call("REQUEST_METHOD" => "POST", "SCRIPT_NAME" => "/prefix/settings", "CONTENT_TYPE" => "application/json", "rack.input" => StringIO.new(request_body))
       expect(response[0]).to eq 200
-      expect(response[1]).to match("Content-Type" => "application/json; charset=utf-8")
+      expect(response[1]).to match("content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache")
       body = response[2].first
       expect(JSON.parse(body)).to eq({"success" => true})
       expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "new value"
@@ -203,7 +203,7 @@ describe SuperSettings::RackApplication do
       }.to_json
       response = middleware.call("REQUEST_METHOD" => "POST", "SCRIPT_NAME" => "/prefix/settings", "CONTENT_TYPE" => "application/json", "rack.input" => StringIO.new(request_body))
       expect(response[0]).to eq 422
-      expect(response[1]).to match("Content-Type" => "application/json; charset=utf-8")
+      expect(response[1]).to match("content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache")
       body = response[2].first
       expect(JSON.parse(body)).to eq({"success" => false, "errors" => {"integer" => ["value type must be one of string, integer, float, boolean, datetime, array, secret"]}})
       expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "foobar"

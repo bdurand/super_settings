@@ -82,7 +82,7 @@ if defined?(SuperSettings::SettingsController)
     describe "update" do
       it "should update settings as a REST endpoint" do
         request.headers["Accept"] = "application/json"
-        request.headers["Content-Type"] = "application/json"
+        request.headers["content-type"] = "application/json"
         post :update, body: {
           settings: [
             {
@@ -110,7 +110,7 @@ if defined?(SuperSettings::SettingsController)
 
       it "should not update any settings on the REST endpoint if there is an error" do
         request.headers["Accept"] = "application/json"
-        request.headers["Content-Type"] = "application/json"
+        request.headers["content-type"] = "application/json"
         post :update, body: {
           settings: [
             {
