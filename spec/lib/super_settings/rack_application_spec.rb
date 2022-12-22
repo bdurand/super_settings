@@ -96,7 +96,6 @@ describe SuperSettings::RackApplication do
       body = response[2].first
       expect(JSON.parse(body)).to eq({
         "key" => setting_1.key,
-        "encrypted" => false,
         "histories" => setting_1.history(limit: nil, offset: 0).collect do |history|
           JSON.parse({value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}.to_json)
         end
@@ -205,7 +204,7 @@ describe SuperSettings::RackApplication do
       expect(response[0]).to eq 422
       expect(response[1]).to match("content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache")
       body = response[2].first
-      expect(JSON.parse(body)).to eq({"success" => false, "errors" => {"integer" => ["value type must be one of string, integer, float, boolean, datetime, array, secret"]}})
+      expect(JSON.parse(body)).to eq({"success" => false, "errors" => {"integer" => ["value type must be one of string, integer, float, boolean, datetime, array"]}})
       expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "foobar"
       expect(SuperSettings::Setting.find_by_key("newkey")).to eq nil
     end

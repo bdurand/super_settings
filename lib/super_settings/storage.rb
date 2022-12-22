@@ -120,7 +120,7 @@ module SuperSettings
     end
 
     # Set the value type for the setting.
-    # @param val [String] one of string, integer, float, boolean, datetime, array, or secret
+    # @param val [String] one of string, integer, float, boolean, datetime, or array
     # @return [void]
     def value_type=(val)
       # :nocov:
@@ -226,17 +226,6 @@ module SuperSettings
 
     def ==(other)
       other.is_a?(self.class) && other.key == key
-    end
-
-    protected
-
-    # Remove the value stored on history records if the setting is changed to a secret since
-    # these are not stored encrypted in the database. Implementing classes must redefine this
-    # method.
-    def redact_history!
-      # :nocov:
-      raise NotImplementedError
-      # :nocov:
     end
   end
 end

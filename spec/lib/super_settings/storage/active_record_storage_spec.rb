@@ -120,18 +120,5 @@ if defined?(SuperSettings::Storage::ActiveRecordStorage)
         expect(setting.history(limit: 1, offset: 2).collect(&:value)).to eq ["1"]
       end
     end
-
-    describe "redact_history" do
-      it "should remove all values from the history" do
-        setting = SuperSettings::Storage::ActiveRecordStorage.new(key: "key", raw_value: "1")
-        setting.save!
-        setting.create_history(value: "1", changed_by: "me", created_at: Time.now - 20)
-        setting.create_history(value: "2", changed_by: "you", created_at: Time.now - 10)
-        setting.send(:redact_history!)
-        histories = setting.history
-        expect(histories.collect(&:value)).to eq [nil, nil]
-        expect(histories.collect(&:changed_by)).to eq ["you", "me"]
-      end
-    end
   end
 end

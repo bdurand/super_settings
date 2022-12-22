@@ -1,12 +1,9 @@
 # frozen_string_literal: true
 
-require "secret_keys"
-
 require_relative "super_settings/application"
 require_relative "super_settings/coerce"
 require_relative "super_settings/configuration"
 require_relative "super_settings/local_cache"
-require_relative "super_settings/encryption"
 require_relative "super_settings/rest_api"
 require_relative "super_settings/rack_application"
 require_relative "super_settings/controller_actions"
@@ -190,18 +187,6 @@ module SuperSettings
     # seconds in the refresh interval to be updated in the cache.
     def refresh_interval=(value)
       local_cache.refresh_interval = value
-    end
-
-    # Set the secret used to encrypt secret settings in the database.
-    #
-    # If you need to roll your secret, you can pass in an array of values. The first one
-    # specified will be used to encrypt values, but all of the keys will be tried when
-    # decrypting a value already stored in the database.
-    #
-    # @param value [String, Array]
-    def secret=(value)
-      Encryption.secret = value
-      load_settings if loaded?
     end
 
     # URL for authenticating access to the application. This would normally be some kind of

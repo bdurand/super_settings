@@ -49,7 +49,6 @@ if defined?(SuperSettings::SettingsController)
         expect(response.content_type).to include "application/json"
         expect(JSON.parse(response.body)).to eq({
           "key" => setting_1.key,
-          "encrypted" => false,
           "histories" => setting_1.history(limit: nil, offset: 0).collect do |history|
             JSON.parse({value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}.to_json)
           end
@@ -69,7 +68,6 @@ if defined?(SuperSettings::SettingsController)
         expect(response.content_type).to include "application/json"
         expect(JSON.parse(response.body)).to eq({
           "key" => setting_1.key,
-          "encrypted" => false,
           "histories" => setting_1.history(limit: 2, offset: 1).collect do |history|
             JSON.parse({value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}.to_json)
           end,
@@ -130,7 +128,7 @@ if defined?(SuperSettings::SettingsController)
           ]
         }.to_json
         expect(response.status).to eq 422
-        expect(JSON.parse(response.body)).to eq({"success" => false, "errors" => {"integer" => ["value type must be one of string, integer, float, boolean, datetime, array, secret"]}})
+        expect(JSON.parse(response.body)).to eq({"success" => false, "errors" => {"integer" => ["value type must be one of string, integer, float, boolean, datetime, array"]}})
         expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "foobar"
         expect(SuperSettings::Setting.find_by_key("newkey")).to eq nil
       end

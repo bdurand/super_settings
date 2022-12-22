@@ -250,19 +250,6 @@ module SuperSettings
         !!(defined?(@persisted) && @persisted)
       end
 
-      protected
-
-      def redact_history!
-        after_commit do
-          histories = HistoryStorage.find_all_by_key(key: key)
-          histories.each { |item| item.value = nil }
-          self.class.transaction do
-            HistoryStorage.destroy_all_by_key(key)
-            histories.reverse.each(&:save!)
-          end
-        end
-      end
-
       private
 
       def after_commit(&block)

@@ -9,7 +9,6 @@ describe "web UI", type: :feature, js: true do
   let!(:boolean_setting) { SuperSettings::Setting.create!(key: "key.boolean", value: true, value_type: "boolean") }
   let!(:datetime_setting) { SuperSettings::Setting.create!(key: "key.datetime", value: Time.new(2021, 9, 11, 12, 47), value_type: "datetime") }
   let!(:array_setting) { SuperSettings::Setting.create!(key: "key.array", value: ["one", "two", "three"], value_type: "array") }
-  let!(:secret_setting) { SuperSettings::Setting.create!(key: "key.secret", value: "secretvalue", value_type: "secret") }
 
   def find_setting_id(key)
     find("tr[data-key=\"#{key}\"]")["data-id"]
@@ -39,9 +38,6 @@ describe "web UI", type: :feature, js: true do
       expect(page).to have_content("Sep 11, 2021, 12:47")
       expect(page).to have_content("key.array")
       expect(page).to have_content("one\ntwo\nthree")
-      expect(page).to have_content("key.secret")
-      expect(page).to have_content("•••")
-      expect(page).to_not have_content("secretvalue")
     end
 
     it "should filter settings" do
@@ -52,7 +48,6 @@ describe "web UI", type: :feature, js: true do
       expect(page).to_not have_content("key.boolean")
       expect(page).to_not have_content("key.datetime")
       expect(page).to_not have_content("key.array")
-      expect(page).to_not have_content("key.secret")
 
       fill_in("filter", with: "G")
       expect(page).to have_content("key.string")
@@ -61,7 +56,6 @@ describe "web UI", type: :feature, js: true do
       expect(page).to_not have_content("key.boolean")
       expect(page).to_not have_content("key.datetime")
       expect(page).to_not have_content("key.array")
-      expect(page).to_not have_content("key.secret")
 
       fill_in("filter", with: " ")
       expect(page).to have_content("key.string")
@@ -70,7 +64,6 @@ describe "web UI", type: :feature, js: true do
       expect(page).to have_content("key.boolean")
       expect(page).to have_content("key.datetime")
       expect(page).to have_content("key.array")
-      expect(page).to have_content("key.secret")
     end
   end
 
@@ -144,13 +137,6 @@ describe "web UI", type: :feature, js: true do
       end
     end
 
-    it "should edit secrets" do
-      test_edit_setting(secret_setting) do |value_field|
-        expect(value_field.tag_name).to eq "textarea"
-        expect(value_field.value).to eq secret_setting.value.to_s
-      end
-    end
-
     it "should be able to change the value type" do
       visit "/"
       id = find_setting_id("key.float")
@@ -183,10 +169,6 @@ describe "web UI", type: :feature, js: true do
         value_field = find("[name=\"settings[#{id}][value]\"]")
         expect(value_field.tag_name).to eq "input"
         expect(value_field[:type]).to eq "checkbox"
-
-        find(value_type_descriptor).select("secret")
-        value_field = find("[name=\"settings[#{id}][value]\"]")
-        expect(value_field[:type]).to eq "textarea"
       end
     end
 
@@ -315,12 +297,6 @@ describe "web UI", type: :feature, js: true do
         find_setting_field(array_id, :value).fill_in(with: "car\nboat\nplane")
       end
 
-      secret_id = find_setting_id("key.secret")
-      within_setting_row(secret_id) do
-        find("a.js-edit-setting").click
-        find_setting_field(secret_id, :value).fill_in(with: "newsecret")
-      end
-
       find("#save-settings").click
 
       expect(page).to_not have_content("key.string")
@@ -330,7 +306,6 @@ describe "web UI", type: :feature, js: true do
       expect(page).to have_content("new description")
       expect(page).to have_content("6688")
       expect(page).to have_content("77.5")
-      expect(page).to_not have_content("newsecret")
 
       expect(SuperSettings::Setting.all.detect { |setting| setting.key == "key.string" }.deleted?).to eq true
       expect(SuperSettings::Setting.find_by_key("key.integer").value).to eq 6688
@@ -338,7 +313,6 @@ describe "web UI", type: :feature, js: true do
       expect(SuperSettings::Setting.find_by_key("key.boolean").value).to eq false
       expect(SuperSettings::Setting.find_by_key("key.array").value).to eq ["car", "boat", "plane"]
       expect(SuperSettings::Setting.find_by_key("key.datetime").value).to eq Time.new(2020, 9, 12, 15, 33)
-      expect(SuperSettings::Setting.find_by_key("key.secret").value).to eq "newsecret"
     end
   end
 

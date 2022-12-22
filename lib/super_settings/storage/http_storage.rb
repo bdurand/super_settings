@@ -255,12 +255,6 @@ module SuperSettings
         !!(defined?(@persisted) && @persisted)
       end
 
-      protected
-
-      def redact_history!
-        # No-op since history is maintained by the source system.
-      end
-
       private
 
       def set_persisted!
@@ -269,10 +263,6 @@ module SuperSettings
 
       def call_api(method, path, params = {})
         self.class.send(:call_api, method, path, params)
-      end
-
-      def encrypted=(value)
-        # No op; needed for API compatibility
       end
     end
   end

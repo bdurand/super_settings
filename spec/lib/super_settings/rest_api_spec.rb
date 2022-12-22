@@ -37,7 +37,6 @@ describe SuperSettings::RestAPI do
       response = SuperSettings::RestAPI.history(setting_1.key)
       expect(response).to eq({
         key: setting_1.key,
-        encrypted: setting_1.encrypted?,
         histories: setting_1.history(limit: nil, offset: 0).collect do |history|
           {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}
         end
@@ -54,7 +53,6 @@ describe SuperSettings::RestAPI do
       response = SuperSettings::RestAPI.history(setting_1.key, limit: 2, offset: 1)
       expect(response).to eq({
         key: setting_1.key,
-        encrypted: setting_1.encrypted?,
         histories: setting_1.history(limit: 2, offset: 1).collect do |history|
           {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}
         end,
@@ -106,7 +104,7 @@ describe SuperSettings::RestAPI do
         }
       ])
       expect(response[:success]).to eq false
-      expect(response[:errors]).to eq({"integer" => ["value type must be one of string, integer, float, boolean, datetime, array, secret"]})
+      expect(response[:errors]).to eq({"integer" => ["value type must be one of string, integer, float, boolean, datetime, array"]})
       expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "foobar"
       expect(SuperSettings::Setting.find_by_key("newkey")).to eq nil
     end
