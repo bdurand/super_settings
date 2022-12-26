@@ -134,12 +134,6 @@ module SuperSettings
           @model.history_items.build(history_attributes)
         end
       end
-
-      protected
-
-      def redact_history!
-        @model.history_items.update_all(value: nil)
-      end
     end
   end
 end

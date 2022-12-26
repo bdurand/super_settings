@@ -92,7 +92,7 @@ module SuperSettings
         private
 
         def call_api(method, path, params = {})
-          url_params = (method == :get ? query_params.merge(params) : query_params)
+          url_params = ((method == :get) ? query_params.merge(params) : query_params)
           uri = api_uri(path, url_params)
 
           body = nil
@@ -131,7 +131,7 @@ module SuperSettings
               http.verify_mode = OpenSSL::SSL::VERIFY_NONE
             end
 
-            request = (method == :post ? Net::HTTP::Post.new(uri.request_uri) : Net::HTTP::Get.new(uri.request_uri))
+            request = ((method == :post) ? Net::HTTP::Post.new(uri.request_uri) : Net::HTTP::Get.new(uri.request_uri))
             set_headers(request, headers)
             request.body = body if body
 
@@ -255,12 +255,6 @@ module SuperSettings
         !!(defined?(@persisted) && @persisted)
       end
 
-      protected
-
-      def redact_history!
-        # No-op since history is maintained by the source system.
-      end
-
       private
 
       def set_persisted!
@@ -269,10 +263,6 @@ module SuperSettings
 
       def call_api(method, path, params = {})
         self.class.send(:call_api, method, path, params)
-      end
-
-      def encrypted=(value)
-        # No op; needed for API compatibility
       end
     end
   end

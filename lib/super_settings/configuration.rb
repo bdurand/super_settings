@@ -127,11 +127,6 @@ module SuperSettings
     # Return the controller specific configuration object.
     attr_reader :controller
 
-    # Set the secret used for encrypting secret settings. Defaults to the value of the
-    # SUPER_SETTINGS_SECRET environment variable. An array can be provided if you need to
-    # roll the secret with the first value being the current one.
-    attr_accessor :secret
-
     # Set the number of seconds that settings will be cached locally before the database
     # is checked for updates. Defaults to 5 seconds.
     attr_accessor :refresh_interval

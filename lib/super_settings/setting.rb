@@ -17,9 +17,8 @@ module SuperSettings
     BOOLEAN = "boolean"
     DATETIME = "datetime"
     ARRAY = "array"
-    SECRET = "secret"
 
-    VALUE_TYPES = [STRING, INTEGER, FLOAT, BOOLEAN, DATETIME, ARRAY, SECRET].freeze
+    VALUE_TYPES = [STRING, INTEGER, FLOAT, BOOLEAN, DATETIME, ARRAY].freeze
 
     ARRAY_DELIMITER = /[\n\r]+/.freeze
 
@@ -282,7 +281,7 @@ module SuperSettings
     end
 
     # Set the value type of the setting.
-    # @param val [String] one of string, integer, float, boolean, datetime, array, or secret.
+    # @param val [String] one of string, integer, float, boolean, datetime, or array.
     def value_type=(val)
       val = val&.to_s
       will_change!(:value_type, val) unless value_type == val
@@ -368,20 +367,10 @@ module SuperSettings
       value_type == ARRAY
     end
 
-    # @return [true] if the setting has a secret value type.
-    def secret?
-      value_type == SECRET
-    end
-
-    # @return [true] if the setting is a secret setting and the value is encrypted in the database.
-    def encrypted?
-      secret? && Encryption.encrypted?(raw_value)
-    end
-
     # Save the setting to the data storage engine.
     # @return [void]
     def save!
-      set_raw_value
+      record_value_change
 
       unless valid?
         raise InvalidRecordError.new(errors.values.join("; "))
@@ -398,7 +387,6 @@ module SuperSettings
 
         begin
           self.class.clear_last_updated_cache
-          redact_history! if history_needs_redacting?
         ensure
           clear_changes
         end
@@ -452,7 +440,6 @@ module SuperSettings
         created_at: created_at,
         updated_at: updated_at
       }
-      attributes[:encrypted] = encrypted? if secret?
       attributes[:deleted] = true if deleted?
       attributes
     end
@@ -486,12 +473,6 @@ module SuperSettings
         else
           Array(value).reject { |v| v.respond_to?(:empty?) ? v.empty? : v.to_s.empty? }.collect { |v| v.to_s.freeze }.freeze
         end
-      when Setting::SECRET
-        begin
-          Encryption.decrypt(value).freeze
-        rescue Encryption::InvalidSecretError
-          nil
-        end
       else
         value.freeze
       end
@@ -510,18 +491,10 @@ module SuperSettings
       end
     end
 
-    # Set the raw string value that will be persisted to the data store.
-    def set_raw_value
-      if value_type == Setting::SECRET && !raw_value.to_s.empty? && (changed?(:raw_value) || !Encryption.encrypted?(raw_value))
-        self.raw_value = Encryption.encrypt(raw_value)
-      end
-      record_value_change
-    end
-
     # Update the histories association whenever the value or key is changed.
     def record_value_change
       return unless changed?(:raw_value) || changed?(:deleted) || changed?(:key)
-      recorded_value = (deleted? || value_type == Setting::SECRET ? nil : raw_value)
+      recorded_value = (deleted? ? nil : raw_value)
       @record.create_history(value: recorded_value, deleted: deleted?, changed_by: changed_by, created_at: Time.now)
     end
 
@@ -542,14 +515,6 @@ module SuperSettings
 
     def changed?(attribute)
       @changes.include?(attribute.to_s)
-    end
-
-    def history_needs_redacting?
-      value_type == Setting::SECRET && changed?(:value_type)
-    end
-
-    def redact_history!
-      @record.send(:redact_history!)
     end
 
     def raw_value=(val)

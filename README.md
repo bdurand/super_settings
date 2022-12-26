@@ -29,7 +29,6 @@ There is also an out of the box web UI and REST API for managing settings. You c
   * [Caching](#caching)
 * [Data Model](#data_model)
   * [Storage Engines](#storage_engines)
-  * [Encrypted Secrets](#encrypted_secrets)
 * [Web UI](#web_ui)
   * [REST API](#rest_api)
 * [Rails Engine](#rails_engine)
@@ -143,7 +142,7 @@ The cache scales fine to handle hundreds of settings, but you avoid creating tho
 
 ### Data Model
 
-Each setting has a unique key, a value, a value type, and an optional description. The value type can be one of "string", "integer", "float", "boolean", "datetime", "array", or "secret". The array value type will always return an array of strings. The secret value type also returns a string and is used to indicate that the value contains sensitive data that should not be exposed. Secret values can be encrypted in the database as well (see below).
+Each setting has a unique key, a value, a value type, and an optional description. The value type can be one of "string", "integer", "float", "boolean", "datetime", or "array". The array value type will always return an array of strings.
 
 You can request a setting using one of the accessor methods on `SuperSettings` regardless of its defined value type. For instance, you can call `SuperSettings.get("integer_key")` on an integer setting and it will return a string. The value type is used to validate the setting value on input so you can be sure that can cast to the specified type at runtime.
 
@@ -162,20 +161,6 @@ This gem abstracts out the storage engine and can support multiple storage mecha
 Additional storage engines can be built by creating a class that includes `SuperSettings::Storage` and implements the unimplemented methods in that module.
 
 The storage engine is defined by setting `SuperSettings::Setting.storage` to the storage class to use. Note that each storage class may also require additional configuration. For instance the Redis storage class requires you to provide a connection to a Redis database. If you are running a Rails application, then the storage engine will be set to ActiveRecord by default. Otherwise, you will need to define the storage class somewhere in your application's initialization.
-
-#### Encrypted Secrets
-
-You can specify that a setting is a secret by setting the value type to "secret". This will obscure the value in the UI (thoough it can still be seen when editing) as well as avoid recording the values in the setting history.
-
-You can also specify an encryption secret that is used to encrypt these settings in the database. It is highly recommended that if you store secrets in your settings that you enable this feature. The enryption secret can either be set by setting `SuperSettings.secret` or by setting the `SUPER_SETTINGS_SECRET` environment variable.
-
-If you need to roll your secret key, you can set the `SuperSettings.secret` value as an array (or as a space delmited list in the environment variable). The first secret will be the one used to encrypt values. However, all the secrets will be tried when decrypting values. This allows you to change the secret without raising decryption errors. If you do change your secret, you can run this rake task to re-encrypt all values using the new secret:
-
-```bash
-rake super_settings:encrypt_secrets
-```
-
-Encryption only changes how values are stored in the data store. Encrypted secrets are protected from someone gaining direct access to your database or a database backup and should be used if you are storing sensitive values. However, the values are not encrypted in the REST API or web UI. You must take appropriate measures to secure these if you choose to use them.
 
 ### Web UI
 
@@ -266,9 +251,6 @@ SuperSettings.configure do |config|
 
   # Set a custom refresh interval for the cache (default is 5 seconds)
   config.refresh_interval = 2
-
-  # Set a secret used for encrypting settings with the "secret" value type.
-  config.secret = "ad962cc27e02657795a61b8d48a31ce4"
 
   # Set the superclass to use for the controll. Defaults to using `ApplicationController`.
   config.controller.superclass = Admin::BaseController

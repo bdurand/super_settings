@@ -282,7 +282,7 @@ module SuperSettings
 
     # Recusive method for creating a nested hash from delimited keys.
     def set_nested_hash_value(hash, key, value, current_depth, delimiter:, max_depth:)
-      key, sub_key = (max_depth && current_depth < max_depth ? [key, nil] : key.split(delimiter, 2))
+      key, sub_key = ((max_depth && current_depth < max_depth) ? [key, nil] : key.split(delimiter, 2))
       if sub_key
         sub_hash = hash[key]
         unless sub_hash.is_a?(Hash)

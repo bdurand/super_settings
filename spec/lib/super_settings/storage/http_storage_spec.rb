@@ -137,13 +137,6 @@ describe SuperSettings::Storage::HttpStorage do
     end
   end
 
-  describe "redact_history" do
-    it "should not do anything since history is maintained on the source system" do
-      setting = SuperSettings::Storage::HttpStorage.new(key: "key", raw_value: "1")
-      setting.send(:redact_history!)
-    end
-  end
-
   describe "load_asynchronous" do
     it "should be true by default but can be overriden" do
       expect(SuperSettings::Storage::HttpStorage.load_asynchronous?).to eq true

@@ -127,14 +127,6 @@ module SuperSettings
         !!(defined?(@persisted) && @persisted)
       end
 
-      protected
-
-      def redact_history!
-        self.class.history(key).each do |item|
-          item[:value] = nil
-        end
-      end
-
       private
 
       def set_persisted!

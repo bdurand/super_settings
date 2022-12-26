@@ -46,11 +46,6 @@ module SuperSettings
         Setting.cache = (configuration.model.cache || Rails.cache)
         Setting.storage = configuration.model.storage_class
 
-        if configuration.secret.present?
-          SuperSettings.secret = configuration.secret
-          configuration.secret = nil
-        end
-
         if !SuperSettings.loaded?
           begin
             SuperSettings.load_settings
