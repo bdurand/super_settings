@@ -48,9 +48,9 @@ jobs:
             appraisal: "rails_5.1"
           - ruby: "2.5"
             appraisal: "rails_5.0"
-          - ruby: "2.5"
-            appraisal: "rails_4.2"
-            bundler: "1.17.3"
+          # - ruby: "2.5"
+          #   appraisal: "rails_4.2"
+          #   bundler: "1.17.3"
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -71,7 +71,7 @@ jobs:
           cat gemfiles/${{ matrix.appraisal }}.gemfile
       - name: Install bundle
         run: |
-          BUNDLE_GEMFILE=gemfiles/${{ matrix.appraisal }}.gemfile bundle update
+          bundle update
       - name: Run specs
         run:  bundle exec rake spec
       - name: Code coverage
