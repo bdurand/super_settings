@@ -48,9 +48,12 @@ jobs:
             appraisal: "rails_5.1"
           - ruby: "2.5"
             appraisal: "rails_5.0"
-          # - ruby: "2.5"
-          #   appraisal: "rails_4.2"
-          #   bundler: "1.17.3"
+          - ruby: "2.5"
+            appraisal: "rails_4.2"
+            bundler: "1.17.3"
+            gemfile: gemfiles/rails_4.2.gemfile
+    env:
+      BUNDLE_GEMFILE: ${{ matrix.gemfile }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -64,7 +67,7 @@ jobs:
           gem uninstall bundler --all
           gem install bundler --no-document --version ${{ matrix.bundler }}
       - name: Set Appraisal bundle
-        if: matrix.appraisal != ''
+        if: matrix.appraisal != '' && matrix.gemfile == ''
         run: |
           echo "using gemfile gemfiles/${{ matrix.appraisal }}.gemfile"
           bundle config set gemfile "gemfiles/${{ matrix.appraisal }}.gemfile"
