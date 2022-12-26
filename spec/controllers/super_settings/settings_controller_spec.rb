@@ -81,7 +81,7 @@ if defined?(SuperSettings::SettingsController)
       it "should update settings as a REST endpoint" do
         request.headers["Accept"] = "application/json"
         request.headers["content-type"] = "application/json"
-        post :update, body: {
+        post :update, post_params({
           settings: [
             {
               key: "string",
@@ -98,7 +98,7 @@ if defined?(SuperSettings::SettingsController)
               value_type: "integer"
             }
           ]
-        }.to_json
+        }).to_json
         expect(response.status).to eq 200
         expect(JSON.parse(response.body)).to eq({"success" => true})
         expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "new value"
@@ -109,7 +109,7 @@ if defined?(SuperSettings::SettingsController)
       it "should not update any settings on the REST endpoint if there is an error" do
         request.headers["Accept"] = "application/json"
         request.headers["content-type"] = "application/json"
-        post :update, body: {
+        post :update, post_params({
           settings: [
             {
               key: "string",
@@ -126,7 +126,7 @@ if defined?(SuperSettings::SettingsController)
               value_type: "invalid"
             }
           ]
-        }.to_json
+        }).to_json
         expect(response.status).to eq 422
         expect(JSON.parse(response.body)).to eq({"success" => false, "errors" => {"integer" => ["value type must be one of string, integer, float, boolean, datetime, array"]}})
         expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "foobar"

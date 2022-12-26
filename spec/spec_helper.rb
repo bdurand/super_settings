@@ -117,3 +117,11 @@ def request_params(params)
     {params: params}
   end
 end
+
+def post_params(params)
+  if defined?(Rails) && Rails.version.to_f < 5.0
+    params
+  else
+    {body: params}
+  end
+end
