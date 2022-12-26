@@ -124,7 +124,7 @@ module SuperSettings
 
         offset = [offset.to_i, 0].max
         limit = limit.to_i
-        fetch_limit = (limit > 0 ? limit + 1 : nil)
+        fetch_limit = ((limit > 0) ? limit + 1 : nil)
         histories = setting.history(limit: fetch_limit, offset: offset)
 
         payload = {key: setting.key}
