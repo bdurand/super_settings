@@ -118,10 +118,10 @@ def request_params(params)
   end
 end
 
-def post_params(params)
+def post_json(action, params)
   if defined?(Rails) && Rails.version.to_f < 5.0
-    params
+    post action, params, format: :json
   else
-    {body: params}
+    post action, body: params.to_json, format: :json
   end
 end
