@@ -71,7 +71,7 @@ jobs:
           cat gemfiles/${{ matrix.appraisal }}.gemfile
       - name: Install bundle
         run: |
-          bundle update
+          BUNDLE_GEMFILE=gemfiles/${{ matrix.appraisal }}.gemfile bundle update
       - name: Run specs
         run:  bundle exec rake spec
       - name: Code coverage
