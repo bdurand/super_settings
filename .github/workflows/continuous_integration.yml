@@ -68,6 +68,7 @@ jobs:
         run: |
           echo "using gemfile gemfiles/${{ matrix.appraisal }}.gemfile"
           bundle config set gemfile "gemfiles/${{ matrix.appraisal }}.gemfile"
+          bundle config
       - name: Install bundle
         run: |
           bundle update
