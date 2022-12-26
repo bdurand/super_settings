@@ -119,6 +119,7 @@ def request_params(params)
 end
 
 def post_json(action, params)
+  request.headers["content-type"] = "application/json"
   if defined?(Rails) && Rails.version.to_f < 5.0
     post action, params, format: :json
   else

@@ -23,7 +23,7 @@ if defined?(SuperSettings::SettingsController)
 
     describe "index" do
       it "should have a REST endoint" do
-        request.headers["Accept"] = "application/json"
+        request.headers["accept"] = "application/json"
         get :index
         expect(response.status).to eq 200
         expect(response.content_type).to include "application/json"
@@ -33,7 +33,7 @@ if defined?(SuperSettings::SettingsController)
 
     describe "show" do
       it "should have a REST endpoint" do
-        request.headers["Accept"] = "application/json"
+        request.headers["accept"] = "application/json"
         get :show, **request_params(key: setting_1.key)
         expect(response.status).to eq 200
         expect(response.content_type).to include "application/json"
@@ -43,7 +43,7 @@ if defined?(SuperSettings::SettingsController)
 
     describe "history" do
       it "should have a REST endpoint" do
-        request.headers["Accept"] = "application/json"
+        request.headers["accept"] = "application/json"
         get :history, **request_params(key: setting_1.key)
         expect(response.status).to eq 200
         expect(response.content_type).to include "application/json"
@@ -62,7 +62,7 @@ if defined?(SuperSettings::SettingsController)
         setting_1.save!
         setting_1.value = "4"
         setting_1.save!
-        request.headers["Accept"] = "application/json"
+        request.headers["accept"] = "application/json"
         get :history, **request_params(key: setting_1.key, limit: 2, offset: 1)
         expect(response.status).to eq 200
         expect(response.content_type).to include "application/json"
@@ -79,7 +79,7 @@ if defined?(SuperSettings::SettingsController)
 
     describe "update" do
       it "should update settings as a REST endpoint" do
-        request.headers["Accept"] = "application/json"
+        request.headers["accept"] = "application/json"
         post_json :update, {
           settings: [
             {
@@ -106,7 +106,7 @@ if defined?(SuperSettings::SettingsController)
       end
 
       it "should not update any settings on the REST endpoint if there is an error" do
-        request.headers["Accept"] = "application/json"
+        request.headers["accept"] = "application/json"
         post_json :update, {
           settings: [
             {
@@ -134,7 +134,7 @@ if defined?(SuperSettings::SettingsController)
 
     describe "last_updated_at" do
       it "should return the timestamp of the last updated setting" do
-        request.headers["Accept"] = "application/json"
+        request.headers["accept"] = "application/json"
         time = Time.at(Time.now + 10.to_i)
         setting_1.updated_at = time
         setting_1.save!
@@ -147,7 +147,7 @@ if defined?(SuperSettings::SettingsController)
 
     describe "updated_since" do
       it "should return settings updated since a given time" do
-        request.headers["Accept"] = "application/json"
+        request.headers["accept"] = "application/json"
         setting_1.updated_at = Time.now + 20
         setting_1.save!
         setting_2.updated_at = Time.now + 20
