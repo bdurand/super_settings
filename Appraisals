@@ -4,6 +4,7 @@ appraise "rails_latest" do
   gem "rails"
   gem "rspec-rails", "~> 6.0"
   gem "sqlite3", "~> 1.4.0"
+  gem "rackup"
 end
 
 appraise "rails_7.0" do
