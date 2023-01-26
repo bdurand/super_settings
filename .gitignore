@@ -7,6 +7,7 @@
 Gemfile.lock
 coverage/
 gemfiles/*.gemfile.lock
+doc/
 log/*.log
 pkg/
 spec/dummy/db/*.sqlite3
