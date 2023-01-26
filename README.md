@@ -165,7 +165,7 @@ The storage engine is defined by setting `SuperSettings::Setting.storage` to the
 
 The Web UI provides all the functionality to add, update, and delete settings.
 
-![Web UI](web_ui.png)
+![Web UI](assets/web_ui.png)
 
 You can save multiple settings at once. If you have settings that need to be changed together, you can be assured they will all be saved in a single transaction.
 

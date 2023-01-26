@@ -16,10 +16,10 @@ Gem::Specification.new do |spec|
     Gemfile
     Gemfile.lock
     Rakefile
+    assets/
     bin/
     gemfiles/
     spec/
-    web_ui.png
   ]
   spec.files = Dir.chdir(File.expand_path("..", __FILE__)) do
     `git ls-files -z`.split("\x0").reject { |f| ignore_files.any? { |path| f.start_with?(path) } }
