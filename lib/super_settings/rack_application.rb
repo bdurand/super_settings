@@ -21,9 +21,27 @@ module SuperSettings
 
     # @param app [Object] Rack application or middleware for unhandled requests
     # @param prefix [String] path prefix for the API routes.
+    # @block Block to be evaluated on the instance to extend it's behavior. You can use
+    #   this to define the access control methods rather than having to extend the class.
+    #
+    # @example
+    #
+    #   app = SuperSettings::RackApplication.new do
+    #     def current_user(request)
+    #       auth = request["HTTP_AUTHORIZATION"]
+    #       token_match = auth&.match(/\ABearer:\s*(.*)/)
+    #       token = token_match[1] if token_match
+    #       User.identified_by(token)
+    #     end
+    #
+    #     def allow_write?(user)
+    #       user.admin?
+    #     end
+    #   end
     def initialize(app = nil, path_prefix = "/", &block)
       @app = app
       @path_prefix = path_prefix.to_s.chomp("/")
+      instance_eval(&block) if block
     end
 
     def call(env)
@@ -34,14 +52,22 @@ module SuperSettings
       end
     end
 
-    protected
+    # Subclasses must override this method to return the current user object. This object will
+    # be passed to the authenticated?, allow_read?, allow_write?, and changed_by methods.
+    #
+    # @param request [Rack::Request] current request object
+    # @return [Object]
+    def current_user(request)
+      raise NotImplementedError
+    end
 
-    # Subclasses must implement this method.
+    # Subclasses can override this method to indicate if a user is authenticated. By default
+    # a request will be considered authenticated if the `current_user` method returns a value.
     #
     # @param user [Object] the value returned by the `current_user` method.
     # @return [Boolean] true if the user is authenticated.
     def authenticated?(user)
-      raise NotImplementedError
+      !!user
     end
 
     # Subclasses can override this method to indicate if the specified user is allowed to view settings.
@@ -62,17 +88,8 @@ module SuperSettings
       allow_read?(user)
     end
 
-    # Subclasses can override this method to return the current user object. This object will
-    # be passed to the authenticated?, allow_read?, allow_write?, and changed_by methods.
-    #
-    # @param request [Rack::Request] current reqeust object
-    # @return [Object]
-    def current_user(request)
-      nil
-    end
-
-    # Subclasses can override this method to return the information about the current user that will
-    # be stored in the setting history when a setting is changed.
+    # Subclasses can override this method to return the information to record about the current user
+    # that will be stored in the setting history when a setting is changed.
     #
     # @return [String]
     def changed_by(user)

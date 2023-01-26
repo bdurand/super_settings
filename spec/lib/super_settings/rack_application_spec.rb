@@ -4,7 +4,13 @@ require_relative "../../spec_helper"
 
 describe SuperSettings::RackApplication do
   let(:app) { lambda { |env| [200, {}, ["OK"]] } }
-  let(:middleware) { SuperSettings::RackApplication.new(app, "/prefix") }
+  let(:middleware) do
+    SuperSettings::RackApplication.new(app, "/prefix") do
+      def current_user(request)
+        "user@example.com"
+      end
+    end
+  end
 
   let!(:setting_1) { SuperSettings::Setting.create!(key: "string", value_type: :string, value: "foobar") }
   let!(:setting_2) { SuperSettings::Setting.create!(key: "integer", value_type: :integer, value: 4) }
@@ -13,8 +19,10 @@ describe SuperSettings::RackApplication do
   let!(:setting_5) { SuperSettings::Setting.create!(key: "datetime", value_type: :datetime, value: Time.now) }
   let!(:setting_6) { SuperSettings::Setting.create!(key: "array", value_type: :array, value: ["foo", "bar"]) }
 
-  before do
-    allow(middleware).to receive(:authenticated?).and_return(true)
+  describe "method definition" do
+    it "should allow overriding methods in the initialize block" do
+      expect(middleware.current_user(Rack::Request.new({}))).to eq "user@example.com"
+    end
   end
 
   describe "pass through" do

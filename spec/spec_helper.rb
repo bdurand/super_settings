@@ -67,7 +67,16 @@ class TestMiddleware < SuperSettings::RackApplication
   end
 end
 
-Capybara.app = TestMiddleware.new(lambda { |env| [204, {}, [""]] })
+Capybara.app = SuperSettings::RackApplication.new(lambda { |env| [204, {}, [""]] }) do
+  def current_user(request)
+    "John Doe"
+  end
+
+  def changed_by(user)
+    user
+  end
+end
+
 Capybara.javascript_driver = :cuprite
 Capybara.register_driver(:cuprite) do |app|
   Capybara::Cuprite::Driver.new(app, window_size: [1024, 800], browser_options: {"no-sandbox": nil}, timeout: 15)
