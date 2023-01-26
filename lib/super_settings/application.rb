@@ -8,7 +8,7 @@ module SuperSettings
     include Helper
 
     # @param layout [String, Symbol] path to an ERB template to use as the layout around the application UI. You can
-    #                                pass the symbol `:default` to use the default layout that ships with the gem.
+    #                                pass the symbol +:default+ to use the default layout that ships with the gem.
     # @param add_to_head [String] HTML code to add to the <head> element on the page.
     def initialize(layout = nil, add_to_head = nil)
       if layout

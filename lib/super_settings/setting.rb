@@ -5,7 +5,7 @@ module SuperSettings
   # updating settings.
   #
   # This class does not deal with actually persisting settings to and fetching them from a data store.
-  # You need to specify the storage engine you want to use with the `storage` class method. This gem
+  # You need to specify the storage engine you want to use with the +storage+ class method. This gem
   # ships with storage engines for ActiveRecord, Redis, and HTTP (microservice). See the SuperSettings::Storage
   # class for more details.
   class Setting
@@ -35,8 +35,8 @@ module SuperSettings
 
     class << self
       # Set a cache to use for caching values. This feature is optional. The cache must respond
-      # to `delete(key)` and `fetch(key, &block)`. If you are running in a Rails environment,
-      # you can use `Rails.cache` or any ActiveSupport::Cache::Store object.
+      # to +delete(key)+ and +fetch(key, &block)+. If you are running in a Rails environment,
+      # you can use +Rails.cache+ or any ActiveSupport::Cache::Store object.
       attr_accessor :cache
 
       # Set the storage class to use for persisting data.
@@ -139,7 +139,7 @@ module SuperSettings
       #   the hash, it will be updated. If a setting with the given key does not exist, it will be created.
       #   A setting may also be deleted by providing the attribute "deleted: true".
       # @return [Array] Boolean indicating if update succeeded, Array of settings affected by the update;
-      #   if the settings were not updated, the `errors` on the settings that failed validation will be filled.
+      #   if the settings were not updated, the +errors+ on the settings that failed validation will be filled.
       def bulk_update(params, changed_by = nil)
         all_valid, settings = update_settings(params, changed_by)
         if all_valid
@@ -186,8 +186,8 @@ module SuperSettings
 
       # Updates settings in memory from an array of parameters.
       #
-      # @param params [Array<Hash>] Each hash must contain a `key` element and may contain elements
-      #     for `value`, `value_type`, `description`, and `deleted`.
+      # @param params [Array<Hash>] Each hash must contain a "key" element and may contain elements
+      #     for "value", "value_type", "description", and "deleted".
       # @param changed_by [String] Value to be stored in the history for each setting
       # @return [Array] The first value is a boolean indicating if all the settings are valid,
       #     the second is an array of settings with their attributes updated in memory and ready to be saved.
@@ -455,7 +455,7 @@ module SuperSettings
       @errors.empty?
     end
 
-    # Return hash of errors generated from the last call to `valid?`
+    # Return hash of errors generated from the last call to +valid?+
     #
     # @return [Hash<String, Array<String>>]
     attr_reader :errors

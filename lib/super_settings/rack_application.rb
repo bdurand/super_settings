@@ -8,20 +8,20 @@ module SuperSettings
   # The routes for the API can be mounted under a common path prefix specified in the initializer.
   #
   # You must specify some kind of authentication to use this class by at least overriding the
-  # `authenticated?` method in a subclass. How you do this is left up to you since you will most
+  # +authenticated?+ method in a subclass. How you do this is left up to you since you will most
   # likely want to integrate in with how the rest of your application authenticates requests.
   #
   # You are also responsible for implementing any CSRF protection if your authentication method
   # uses stateful requests (i.e. cookies or Basic auth where browser automatically include the
   # credentials on every reqeust). There are other gems available that can be integrated into
   # your middleware stack to provide this feature. If you need to inject meta elements into
-  # the page, you can do so with the `add_to_head` method.
+  # the page, you can do so with the +add_to_head+ method.
   class RackApplication
     RESPONSE_HEADERS = {"content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache"}.freeze
 
     # @param app [Object] Rack application or middleware for unhandled requests
-    # @param prefix [String] path prefix for the API routes.
-    # @block Block to be evaluated on the instance to extend it's behavior. You can use
+    # @param path_prefix [String] path prefix for the API routes.
+    # @yield Block to be evaluated on the instance to extend it's behavior. You can use
     #   this to define the access control methods rather than having to extend the class.
     #
     # @example
@@ -62,9 +62,9 @@ module SuperSettings
     end
 
     # Subclasses can override this method to indicate if a user is authenticated. By default
-    # a request will be considered authenticated if the `current_user` method returns a value.
+    # a request will be considered authenticated if the +current_user+ method returns a value.
     #
-    # @param user [Object] the value returned by the `current_user` method.
+    # @param user [Object] the value returned by the +current_user+ method.
     # @return [Boolean] true if the user is authenticated.
     def authenticated?(user)
       !!user
@@ -73,7 +73,7 @@ module SuperSettings
     # Subclasses can override this method to indicate if the specified user is allowed to view settings.
     # By default if a user is authenticated they will be able to read settings.
     #
-    # @param user [Object] the value returned by the `current_user` method.
+    # @param user [Object] the value returned by the +current_user+ method.
     # @return [Boolean] true if the user is can view settings.
     def allow_read?(user)
       true
@@ -82,7 +82,7 @@ module SuperSettings
     # Subclasses can override this method to indicate if the specified user is allowed to change settings.
     # By default if a user can read settings, then they will be able to write them as well.
     #
-    # @param user [Object] the value returned by the `current_user` method.
+    # @param user [Object] the value returned by the +current_user+ method.
     # @return [Boolean] true if the user is can change settings.
     def allow_write?(user)
       allow_read?(user)

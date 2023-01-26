@@ -2,27 +2,26 @@
 
 require "json"
 
-# Redis implementation of the SuperSettings::Storage model.
-#
-# You must define the redis connection to use by setting the redis attribute on the class.
-# This can either be a `Redis` object or a block that yields a `Redis` object. You can use the
-# block form if you need to get the `Redis` object at runtime instead of having a static object.
-#
-# ```ruby
-# SuperSettings::Storage::RedisStorage.redis = Redis.new(url: ENV["REDIS_URL"])
-#
-# SuperSettings::Storage::RedisStorage.redis = lambda { RedisClient.get(:settings) }
-# ```
-#
-# You can also use the [connection_pool]() gem to provide a pool of Redis connecions for
-# a multi-threaded application. The connection_pool gem is not a dependency of this gem,
-# so you would need to add it to your application dependencies to use it.
-#
-# ```ruby
-# SuperSettings::Storage::RedisStorage.redis = ConnectionPool.new(size: 5) { Redis.new(url: ENV["REDIS_URL"]) }
-# ```
 module SuperSettings
   module Storage
+    # Redis implementation of the SuperSettings::Storage model.
+    #
+    # You must define the redis connection to use by setting the redis attribute on the class.
+    # This can either be a +Redis+ object or a block that yields a +Redis+ object. You can use the
+    # block form if you need to get the Redis object at runtime instead of having a static object.
+    #
+    # You can also use the [connection_pool]() gem to provide a pool of Redis connecions for
+    # a multi-threaded application. The connection_pool gem is not a dependency of this gem,
+    # so you would need to add it to your application dependencies to use it.
+    #
+    # @example
+    #   SuperSettings::Storage::RedisStorage.redis = Redis.new(url: ENV["REDIS_URL"])
+    #
+    # @example
+    #   SuperSettings::Storage::RedisStorage.redis = lambda { RedisClient.get(:settings) }
+    #
+    # @example
+    #   SuperSettings::Storage::RedisStorage.redis = ConnectionPool.new(size: 5) { Redis.new(url: ENV["REDIS_URL"]) }
     class RedisStorage
       include Storage
 

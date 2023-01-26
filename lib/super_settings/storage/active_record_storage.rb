@@ -4,9 +4,11 @@ module SuperSettings
   module Storage
     # ActiveRecord implementation of the SuperSettings::Storage model.
     #
-    # To use this model, you must run the migration included with the gem. The migration
-    # can be installed with `rake app:super_settings:install:migrations` if the gem is mounted
-    # as an engine in a Rails application.
+    # To use this model, you must run the migration included with the gem. If the gem
+    # is mounted as an engine in a Rails applicationThe migration can be installed with
+    #
+    # @example
+    #   rake app:super_settings:install:migrations
     class ActiveRecordStorage
       # Base class that the models extend from.
       class ApplicationRecord < ActiveRecord::Base

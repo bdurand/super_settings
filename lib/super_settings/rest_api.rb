@@ -7,22 +7,21 @@ module SuperSettings
     class << self
       # Get all settings sorted by key. This endpoint may be called with a REST GET request.
       #
-      # `GET /`
+      # @example
+      #   GET /
       #
-      # The response payload is:
-      # ```
-      # [
-      #   {
-      #     key: string,
-      #     value: object,
-      #     value_type: string,
-      #     description string,
-      #     created_at: iso8601 string,
-      #     updated_at: iso8601 string
-      #   },
-      #   ...
-      # ]
-      # ```
+      #   The response payload is:
+      #   [
+      #     {
+      #       key: string,
+      #       value: object,
+      #       value_type: string,
+      #       description string,
+      #       created_at: iso8601 string,
+      #       updated_at: iso8601 string
+      #     },
+      #     ...
+      #   ]
       def index
         settings = Setting.active.sort_by(&:key)
         {settings: settings.collect(&:as_json)}
@@ -30,53 +29,57 @@ module SuperSettings
 
       # Get a setting by id.
       #
-      # `GET /setting`
+      # @example
+      #   GET /setting
       #
-      # Query parameters
+      #   Query parameters
       #
-      # * key - setting key
+      #   * key - setting key
       #
-      # The response payload is:
-      # ```
-      # {
-      #   key: string,
-      #   value: object,
-      #   value_type: string,
-      #   description string,
-      #   created_at: iso8601 string,
-      #   updated_at: iso8601 string
-      # }
-      # ```
+      #   The response payload is:
+      #   {
+      #     key: string,
+      #     value: object,
+      #     value_type: string,
+      #     description string,
+      #     created_at: iso8601 string,
+      #     updated_at: iso8601 string
+      #   }
       def show(key)
         Setting.find_by_key(key)&.as_json
       end
 
       # The update operation uses a transaction to atomically update all settings.
       #
-      # `POST /settings`
+      # @example
+      #   POST /settings
       #
-      # The format of the parameters is an array of hashes with each setting identified by the key.
-      # The settings should include either `value` and `value_type` (and optionally `description`) to
-      # insert or update a setting, or `deleted` to delete the setting.
+      #   The format of the parameters is an array of hashes with each setting identified by the key.
+      #   The settings should include either "value" and "value_type" (and optionally "description") to
+      #   insert or update a setting, or "deleted" to delete the setting.
       #
-      # ```
-      # { settings: [
-      #     {
-      #       key: string,
-      #       value: object,
-      #       value_type: string,
-      #       description: string,
-      #     },
-      #     {
-      #       key: string,
-      #       deleted: boolean,
-      #     },
-      #     ...
-      #   ]
-      # }
-      # ```
+      #   { settings: [
+      #       {
+      #         key: string,
+      #         value: object,
+      #         value_type: string,
+      #         description: string,
+      #       },
+      #       {
+      #         key: string,
+      #         deleted: boolean,
+      #       },
+      #       ...
+      #     ]
+      #   }
       #
-      # The response will be either `{success: true}` or `{success: false, errors: {key => [string], ...}}`
+      #   The response will be either
+      #
+      #   {success: true}
+      #
+      #   or
+      #
+      #   {success: false, errors: {key => [string], ...}}
       def update(settings_params, changed_by = nil)
         all_valid, settings = Setting.bulk_update(Array(settings_params), changed_by)
         if all_valid
@@ -94,30 +97,29 @@ module SuperSettings
 
       # Return the history of the setting.
       #
-      # `GET /setting/history`
+      # @example
+      #   GET /setting/history
       #
-      # Query parameters
+      #   Query parameters
       #
-      # * key - setting key
-      # * limit - number of history items to return
-      # * offset - index to start fetching items from (most recent items are first)
+      #   * key - setting key
+      #   * limit - number of history items to return
+      #   * offset - index to start fetching items from (most recent items are first)
       #
-      # The response format is:
-      # ```
-      # {
-      #   key: string,
-      #   histories: [
-      #     {
-      #       value: object,
-      #       changed_by: string,
-      #       created_at: iso8601 string
-      #     },
-      #     ...
-      #   ],
-      #   previous_page_params: hash,
-      #   next_page_params: hash
-      # }
-      # ```
+      #   The response format is:
+      #   {
+      #     key: string,
+      #     histories: [
+      #       {
+      #         value: object,
+      #         changed_by: string,
+      #         created_at: iso8601 string
+      #       },
+      #       ...
+      #     ],
+      #     previous_page_params: hash,
+      #     next_page_params: hash
+      #   }
       def history(key, limit: nil, offset: 0)
         setting = Setting.find_by_key(key)
         return nil unless setting
@@ -152,38 +154,38 @@ module SuperSettings
 
       # Return the timestamp of the most recently updated setting.
       #
-      # `GET /last_updated_at`
-      #    #
-      # The response payload is:
-      # {
-      #   last_updated_at: iso8601 string
-      # }
+      # @example
+      #   GET /last_updated_at
+      #      #
+      #   The response payload is:
+      #   {
+      #     last_updated_at: iso8601 string
+      #   }
       def last_updated_at
         {last_updated_at: Setting.last_updated_at.utc.iso8601}
       end
 
       # Return settings that have been updated since a specified timestamp.
       #
-      # `GET /updated_since`
+      # @example
+      #   GET /updated_since
       #
-      # Query parameters
+      #   Query parameters
       #
-      # * time - iso8601 string
+      #   * time - iso8601 string
       #
-      # The response payload is:
-      # ```
-      # [
-      #   {
-      #     key: string,
-      #     value: object,
-      #     value_type: string,
-      #     description string,
-      #     created_at: iso8601 string,
-      #     updated_at: iso8601 string
-      #   },
-      #   ...
-      # ]
-      # ```
+      #   The response payload is:
+      #   [
+      #     {
+      #       key: string,
+      #       value: object,
+      #       value_type: string,
+      #       description string,
+      #       created_at: iso8601 string,
+      #       updated_at: iso8601 string
+      #     },
+      #     ...
+      #   ]
       def updated_since(time)
         time = Coerce.time(time)
         settings = Setting.updated_since(time)

@@ -21,16 +21,17 @@ There is also an out of the box web UI and REST API for managing settings. You c
 
 ## Usage
 
-* [Getting Value](#getting_values)
-  * [Hashes](#hashes)
-  * [Defaults](#defaults)
-  * [Caching](#caching)
-* [Data Model](#data_model)
-  * [Storage Engines](#storage_engines)
-* [Web UI](#web_ui)
-  * [REST API](#rest_api)
-* [Rails Engine](#rails_engine)
-  * [Configuration](#configuration)
+* [Getting Value](#getting-values)
+  - [Hashes](#hashes)
+  - [Defaults](#defaults)
+  - [Caching](#caching)
+* [Data Model](#data-model)
+  - [Storage Engines](#storage-engines)
+* [Web UI](#web-ui)
+  - [REST API](#rest-api)
+  - [Authentication](#authentication)
+* [Rails Engine](#rails-engine)
+  - [Configuration](#configuration)
 
 ### Getting Values
 

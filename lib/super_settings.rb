@@ -88,13 +88,15 @@ module SuperSettings
     # store into a structured data store. It uses a delimiter to define how keys are nested which
     # defaults to a dot.
     #
-    # If, for example, you have three keys in you settings "A.B1.C1 = 1", "A.B1.C2 = 2", and "A.B2.C3 = 3", the
+    # If, for example, you have three keys in you settings +A.B1.C1 = 1+, +A.B1.C2 = 2+, and +A.B2.C3 = 3+, the
     # nested structure will be:
     #
-    # `{"A" => {"B1" => {"C1" => 1, "C2" => 2}, "B2" => {"C3" => 3}}}`
+    # +{"A" => {"B1" => {"C1" => 1, "C2" => 2}, "B2" => {"C3" => 3}}}+
     #
-    # This whole hash would be returned if you called `hash` without any key. If you called it with the
-    # key "A.B1", it would return `{"C1" => 1, "C2" => 2}`.
+    # This whole hash would be returned if you called +hash+ without any key. If you called it with the
+    # key "A.B1", it would return
+    #
+    # +{"C1" => 1, "C2" => 2}+
     #
     # @param key [String, Symbol] the prefix patter to fetch keys for; default to returning all settings
     # @param default [Hash] value to return if the setting value is nil

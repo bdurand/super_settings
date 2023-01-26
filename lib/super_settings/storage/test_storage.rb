@@ -2,11 +2,12 @@
 
 require "json"
 
-# :nocov:
 module SuperSettings
   module Storage
     # Implementation of the SuperSettings::Storage model for running unit tests.
     class TestStorage
+      # :nocov:
+
       include Storage
 
       attr_reader :key, :raw_value, :description, :value_type, :updated_at, :created_at
@@ -145,6 +146,6 @@ module SuperSettings
         }
       end
     end
+    # :nocov:
   end
 end
-# :nocov:

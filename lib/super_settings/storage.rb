@@ -2,7 +2,7 @@
 
 module SuperSettings
   # Abstraction over how a setting is stored and retrieved from the storage engine. Models
-  # must implement the methods module in this module that raise `NotImplementedError`.
+  # must implement the methods module in this module that raise NotImplementedError.
   module Storage
     class RecordInvalid < StandardError
     end

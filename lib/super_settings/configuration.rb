@@ -17,7 +17,7 @@ module SuperSettings
 
       # Superclass for the controller. This should normally be set to one of your existing
       # base controller classes since these probably have authentication methods, etc. defined
-      # on them. If this is not defined, the superclass will be `SuperSettings::ApplicationController`.
+      # on them. If this is not defined, the superclass will be SuperSettings::ApplicationController.
       # It can be set to either a class or a class name. Setting to a class name is preferrable
       # since it will be compatible with class reloading in a development environment.
       attr_writer :superclass
@@ -61,26 +61,29 @@ module SuperSettings
       end
 
       # Enhance the controller. You can define methods or call controller class methods like
-      # `before_action`, etc. in the block. These will be applied to the engine controller.
+      # +before_action+, etc. in the block. These will be applied to the engine controller.
       # This is essentially the same a monkeypatching the controller class.
       #
-      # @block Block of code to inject into the controller class.
+      # @yield Block of code to inject into the controller class.
       def enhance(&block)
         @enhancement = block
       end
 
-      # Define how the `changed_by` attibute on the setting history will be filled from the controller.
+      # Define how the +changed_by+ attibute on the setting history will be filled from the controller.
       # The block will be evaluated in the context of the controller when the settings are changed.
       # The value returned by the block will be stored in the changed_by attribute. For example, if
-      # your base controller class defines a method `current_user` and you'd like the name to be stored
-      # in the history, you could call `define_changed_by { current_user.name }`
+      # your base controller class defines a method +current_user+ and you'd like the name to be stored
+      # in the history, you could call
       #
-      # @block Block of code to call on the controller at request time
+      # @example
+      #   define_changed_by { current_user.name }
+      #
+      # @yield Block of code to call on the controller at request time
       def define_changed_by(&block)
         @changed_by_block = block
       end
 
-      # Return the value of `define_changed_by` block.
+      # Return the value of +define_changed_by+ block.
       #
       # @api private
       def changed_by(controller)
@@ -93,14 +96,14 @@ module SuperSettings
     # Configuration for the models.
     class Model
       # Specify the cache implementation to use for caching the last updated timestamp for reloading
-      # changed records. Defaults to `Rails.cache`
+      # changed records. Defaults to Rails.cache
       attr_accessor :cache
 
       attr_writer :storage
 
       # Specify the storage engine to use for persisting settings. The value can either be specified
       # as a full class name or an underscored class name for a storage classed defined in the
-      # `SuperSettings::Storage` namespace. The default storage engine is `SuperSettings::Storage::ActiveRecord`.
+      # SuperSettings::Storage namespace. The default storage engine is +SuperSettings::Storage::ActiveRecord+.
       def storage
         if defined?(@storage) && @storage
           @storage

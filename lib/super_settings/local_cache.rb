@@ -20,7 +20,7 @@ module SuperSettings
     # checked for changed settings at most this often.
     attr_reader :refresh_interval
 
-    # @parem refresh_interval [Numeric] number of seconds to wait between checking for setting updates
+    # @param refresh_interval [Numeric] number of seconds to wait between checking for setting updates
     def initialize(refresh_interval:)
       @refresh_interval = refresh_interval
       @lock = Mutex.new
@@ -65,7 +65,18 @@ module SuperSettings
     end
 
     # Return the setting as structured data. The keys will be split by the specified delimiter
-    # to create a nested hash (i.e. "a.b.c" = 1 becomes `{"a" => {"b" => {"c" => 1}}}`).
+    # to create a nested hash.
+    #
+    # @example
+    #   Setting with key "a.b.c" and value 1 becomes
+    #
+    #   {
+    #     "a" => {
+    #       "b" => {
+    #         "c" => 1
+    #       }
+    #     }
+    #   }
     #
     # See SuperSettings.structured for more details.
     def structured(key = nil, delimiter: ".", max_depth: nil)
