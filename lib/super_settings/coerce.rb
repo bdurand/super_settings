@@ -18,6 +18,7 @@ module SuperSettings
 
     class << self
       # Cast variations of booleans (i.e. "true", "false", 1, 0, etc.) to actual boolean objects.
+      #
       # @param value [Object]
       # @return [Boolean]
       def boolean(value)
@@ -31,6 +32,9 @@ module SuperSettings
       end
 
       # Cast a value to a Time object.
+      #
+      # @param value [Object]
+      # @return [Time]
       def time(value)
         value = nil if value.nil? || value.to_s.empty?
         return nil if value.nil?
@@ -47,7 +51,7 @@ module SuperSettings
         time
       end
 
-      # @return true if the value is nil or empty.
+      # @return [Boolean] true if the value is nil or empty.
       def blank?(value)
         return true if value.nil?
         if value.respond_to?(:empty?)
@@ -57,7 +61,7 @@ module SuperSettings
         end
       end
 
-      # @return true if the value is not nil and not empty.
+      # @return [Boolean] true if the value is not nil and not empty.
       def present?(value)
         !blank?(value)
       end

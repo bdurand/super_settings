@@ -143,6 +143,8 @@ module SuperSettings
     end
 
     # Load the settings from the database into the in memory cache.
+    #
+    # @return [void]
     def load_settings
       local_cache.load_settings
       local_cache.wait_for_load
@@ -150,6 +152,8 @@ module SuperSettings
     end
 
     # Force refresh the settings in the in memory cache to be in sync with the database.
+    #
+    # @return [void]
     def refresh_settings
       local_cache.refresh
       nil
@@ -157,6 +161,8 @@ module SuperSettings
 
     # Reset the in memory cache. The cache will be automatically reloaded the next time
     # you access a setting.
+    #
+    # @return [void]
     def clear_cache
       local_cache.reset
       nil
@@ -173,7 +179,8 @@ module SuperSettings
     # object. You should use this method to configure the gem from an Rails initializer since
     # it will handle ensuring all the appropriate frameworks are loaded first.
     #
-    # yieldparam config [SuperSettings::Configuration]
+    # @yieldparam config [SuperSettings::Configuration]
+    # @return [void]
     def configure(&block)
       Configuration.instance.defer(&block)
       unless defined?(Rails::Engine)
@@ -185,6 +192,8 @@ module SuperSettings
     # This setting aids in performance since it throttles the number of times the database is queried
     # for changes. However, changes made to the settings in the databae will take up to the number of
     # seconds in the refresh interval to be updated in the cache.
+    #
+    # @return [void]
     def refresh_interval=(value)
       local_cache.refresh_interval = value
     end

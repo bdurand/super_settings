@@ -55,6 +55,7 @@ module SuperSettings
       end
 
       # Create a new setting with the specified attributes.
+      #
       # @param attributes [Hash] hash of attribute names and values
       # @return [Setting]
       def create!(attributes)
@@ -67,6 +68,7 @@ module SuperSettings
 
       # Get all the settings. This will even return settings that have been marked as deleted.
       # If you just want current settings, then call #active instead.
+      #
       # @return [Array<Setting>]
       def all
         storage.with_connection do
@@ -75,6 +77,7 @@ module SuperSettings
       end
 
       # Get all the current settings.
+      #
       # @return [Array<Setting>]
       def active
         storage.with_connection do
@@ -83,6 +86,7 @@ module SuperSettings
       end
 
       # Get all settings that have been updated since the specified time stamp.
+      #
       # @param time [Time]
       # @return [Array<Setting>]
       def updated_since(time)
@@ -92,6 +96,7 @@ module SuperSettings
       end
 
       # Get a setting by its unique key.
+      #
       # @return Setting
       def find_by_key(key)
         record = storage.with_connection { storage.find_by_key(key) }
@@ -102,6 +107,7 @@ module SuperSettings
 
       # Return the maximum updated at value from all the rows. This is used in the caching
       # scheme to determine if data needs to be reloaded from the database.
+      #
       # @return [Time]
       def last_updated_at
         fetch_from_cache(LAST_UPDATED_CACHE_KEY) do
@@ -112,22 +118,20 @@ module SuperSettings
       # Bulk update settings in a single database transaction. No changes will be saved
       # if there are any invalid records.
       #
-      # Example:
+      # @example
       #
-      # ```
-      # SuperSettings.bulk_update([
-      #   {
-      #     key: "setting-key",
-      #     value: "foobar",
-      #     value_type: "string",
-      #     description: "A sample setting"
-      #   },
-      #   {
-      #     key: "setting-to-delete",
-      #     deleted: true
-      #   }
-      # ])
-      # ```
+      #   SuperSettings.bulk_update([
+      #     {
+      #       key: "setting-key",
+      #       value: "foobar",
+      #       value_type: "string",
+      #       description: "A sample setting"
+      #     },
+      #     {
+      #       key: "setting-to-delete",
+      #       deleted: true
+      #     }
+      #   ])
       #
       # @param params [Array] Array of hashes with setting attributes. Each hash must include
       #   a "key" element to identify the setting. To update a key, it must also include at least
@@ -152,6 +156,8 @@ module SuperSettings
       end
 
       # Determine the value type from a value.
+      #
+      # @return [String]
       def value_type(value)
         case value
         when Integer
@@ -170,6 +176,7 @@ module SuperSettings
       end
 
       # Clear the last updated timestamp from the cache.
+      #
       # @api private
       def clear_last_updated_cache
         cache&.delete(Setting::LAST_UPDATED_CACHE_KEY)
@@ -178,6 +185,7 @@ module SuperSettings
       private
 
       # Updates settings in memory from an array of parameters.
+      #
       # @param params [Array<Hash>] Each hash must contain a `key` element and may contain elements
       #     for `value`, `value_type`, `description`, and `deleted`.
       # @param changed_by [String] Value to be stored in the history for each setting
@@ -246,20 +254,25 @@ module SuperSettings
       end
     end
 
-    # @return [String] the unique key for the setting.
+    # Get the unique key for the setting.
+    #
+    # @return [String]
     def key
       @record.key
     end
 
-    # Set the value of the setting.
-    # @param val [String]
+    # Set the value of the setting. The value will be coerced to a string for storage.
+    #
+    # @param val [Object]
     def key=(val)
       val = val&.to_s
       will_change!(:key, val) unless key == val
       @record.key = val
     end
 
-    # @return [Object] the value of a setting coerced to the appropriate class depending on its value type.
+    # The value of a setting coerced to the appropriate class depending on its value type.
+    #
+    # @return [Object]
     def value
       if deleted?
         nil
@@ -269,6 +282,7 @@ module SuperSettings
     end
 
     # Set the value of the setting.
+    #
     # @param val [Object]
     def value=(val)
       val = serialize(val) unless val.is_a?(Array)
@@ -276,11 +290,15 @@ module SuperSettings
       self.raw_value = val
     end
 
+    # Get the type of value being stored in the setting.
+    #
+    # @return [String] one of string, integer, float, boolean, datetime, or array.
     def value_type
       @record.value_type
     end
 
     # Set the value type of the setting.
+    #
     # @param val [String] one of string, integer, float, boolean, datetime, or array.
     def value_type=(val)
       val = val&.to_s
@@ -288,10 +306,15 @@ module SuperSettings
       @record.value_type = val
     end
 
+    # Get the description for the setting.
+    #
+    # @return [String]
     def description
       @record.description
     end
 
+    # Set the description of the setting.
+    #
     # @param val [String]
     def description=(val)
       val = val&.to_s
@@ -300,6 +323,9 @@ module SuperSettings
       @record.description = val
     end
 
+    # Return true if the setting has been marked as deleted.
+    #
+    # @return [Boolean]
     def deleted?
       @record.deleted?
     end
@@ -308,6 +334,7 @@ module SuperSettings
 
     # Set the deleted flag on the setting. Deleted settings are not visible but are not actually
     # removed from the data store.
+    #
     # @param val [Boolean]
     def deleted=(val)
       val = Coerce.boolean(val)
@@ -315,10 +342,15 @@ module SuperSettings
       @record.deleted = val
     end
 
+    # Get the time the setting was first created.
+    #
+    # @return [Time]
     def created_at
       @record.created_at
     end
 
+    # Set the time when the setting was created.
+    #
     # @param val [Time, DateTime]
     def created_at=(val)
       val = Coerce.time(val)
@@ -326,10 +358,15 @@ module SuperSettings
       @record.created_at = val
     end
 
+    # Get the time the setting was last updated.
+    #
+    # @return [Time]
     def updated_at
       @record.updated_at
     end
 
+    # Set the time when the setting was last updated.
+    #
     # @param val [Time, DateTime]
     def updated_at=(val)
       val = Coerce.time(val)
@@ -337,37 +374,46 @@ module SuperSettings
       @record.updated_at = val
     end
 
-    # @return [true] if the setting has a string value type.
+    # Return true if the setting has a string value type.
+    #
+    # @return [Boolean]
     def string?
       value_type == STRING
     end
 
-    # @return [true] if the setting has an integer value type.
+    # Return true if the setting has an integer value type.
+    #
+    # @return [Boolean]
     def integer?
       value_type == INTEGER
     end
 
-    # @return [true] if the setting has a float value type.
+    # Return true if the setting has a float value type.
+    # @return [Boolean]
     def float?
       value_type == FLOAT
     end
 
-    # @return [true] if the setting has a boolean value type.
+    # Return true if the setting has a boolean value type.
+    # @return [Boolean]
     def boolean?
       value_type == BOOLEAN
     end
 
-    # @return [true] if the setting has a datetime value type.
+    # Return true if the setting has a datetime value type.
+    # @return [Boolean]
     def datetime?
       value_type == DATETIME
     end
 
-    # @return [true] if the setting has an array value type.
+    # Return true if the setting has an array value type.
+    # @return [Boolean]
     def array?
       value_type == ARRAY
     end
 
     # Save the setting to the data storage engine.
+    #
     # @return [void]
     def save!
       record_value_change
@@ -394,27 +440,36 @@ module SuperSettings
       nil
     end
 
-    # @return [Boolean] true if the record has been stored in the data storage engine.
+    # Return true if the record has been stored in the data storage engine.
+    #
+    # @return [Boolean]
     def persisted?
       @record.persisted?
     end
 
-    # @return [Boolean] true if the record has valid data.
+    # Return true if the record has valid data.
+    #
+    # @return [Boolean]
     def valid?
       validate!
       @errors.empty?
     end
 
-    # @return [Hash<String, Array<String>>] hash of errors generated from the last call to `valid?`
+    # Return hash of errors generated from the last call to `valid?`
+    #
+    # @return [Hash<String, Array<String>>]
     attr_reader :errors
 
     # Mark the record as deleted. The record will not actually be deleted since it's still needed
     # for caching purposes, but it will no longer be returned by queries.
+    #
+    # @return [void]
     def delete!
       update!(deleted: true)
     end
 
     # Update the setting attributes and save it.
+    #
     # @param attributes [Hash]
     # @return [void]
     def update!(attributes)
@@ -424,12 +479,14 @@ module SuperSettings
 
     # Return array of history items reflecting changes made to the setting over time. Items
     # should be returned in reverse chronological order so that the most recent changes are first.
+    #
     # @return [Array<SuperSettings::History>]
     def history(limit: nil, offset: 0)
       @record.history(limit: limit, offset: offset)
     end
 
     # Serialize to a hash that is used for rendering JSON responses.
+    #
     # @return [Hash]
     def as_json(options = nil)
       attributes = {
@@ -445,6 +502,7 @@ module SuperSettings
     end
 
     # Serialize to a JSON string.
+    #
     # @return [String]
     def to_json(options = nil)
       as_json.to_json(options)

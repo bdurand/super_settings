@@ -7,7 +7,7 @@ gem "connection_pool"
 gem "rack"
 
 gem "rspec", "~> 3.12"
-gem "capybara", "~> 3.35"
+gem "capybara"
 gem "cuprite"
 gem "puma"
 gem "rackup"

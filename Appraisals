@@ -62,7 +62,8 @@ appraise "rails_4.2" do
   gem "rspec-rails", "~> 4.1"
   gem "sqlite3", "~> 1.3.0"
   gem "redis", "~> 3.0"
-  gem "puma", "~> 5.6"
+  gem "capybara", "~> 3.35"
+  gem "puma", "~> 5.0"
   gem "bundler", "~> 1.0"
   remove_gem "rackup"
 end

@@ -19,6 +19,8 @@ module SuperSettings
     end
 
     # Render the specified ERB file in the lib/application directory distributed with the gem.
+    #
+    # @return [void]
     def render(erb_file)
       template = ERB.new(File.read(File.expand_path(File.join("application", erb_file), __dir__)))
       html = template.result(binding)

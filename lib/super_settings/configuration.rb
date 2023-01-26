@@ -63,6 +63,8 @@ module SuperSettings
       # Enhance the controller. You can define methods or call controller class methods like
       # `before_action`, etc. in the block. These will be applied to the engine controller.
       # This is essentially the same a monkeypatching the controller class.
+      #
+      # @block Block of code to inject into the controller class.
       def enhance(&block)
         @enhancement = block
       end
@@ -72,6 +74,8 @@ module SuperSettings
       # The value returned by the block will be stored in the changed_by attribute. For example, if
       # your base controller class defines a method `current_user` and you'd like the name to be stored
       # in the history, you could call `define_changed_by { current_user.name }`
+      #
+      # @block Block of code to call on the controller at request time
       def define_changed_by(&block)
         @changed_by_block = block
       end

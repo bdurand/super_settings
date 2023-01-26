@@ -3,19 +3,17 @@
 [![Continuous Integration](https://github.com/bdurand/super_settings/actions/workflows/continuous_integration.yml/badge.svg)](https://github.com/bdurand/super_settings/actions/workflows/continuous_integration.yml)
 [![Ruby Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://github.com/testdouble/standard)
 
-This gem provides a framework for maintaining runtime application settings. Settings are persisted in a database and but cached in memory for quick, efficient access. The settings are designed so they can be updated dynamically without requiring code deployment or restarting processes.
+This gem provides a framework for maintaining runtime application settings. Settings are persisted in a database but cached in memory for quick, efficient access. The settings are designed so they can be updated dynamically without requiring code deployment or restarting processes.
 
-# TODO cleanup to be more concise
-
-As applications grow, they tend to accumulate a lot of configuration over time. Often these end up in environment variables, hard coded in YAML files, or sprinkled through various data models as additional columns. All of these methods of configuration have their place and are completely appropriate for different purposes (i.e. for storing application secrets, configuration required during application startup, etc.).
+As applications grow, they tend to accumulate a lot of configuration options. Often these end up in environment variables, hard coded in YAML files, or sprinkled through various data models as additional columns. All of these methods of configuration have their place and are completely appropriate for different purposes (i.e. for storing application secrets, configuration required during application startup, etc.).
 
 However, these methods don't work as well for runtime settings that you may want to change while your application is running.
 
-* Environment variables - These are great for environment specific configuration and they can be a good place to store sensitive data. However, they can be difficult to manage, all values must be stored as strings, and application processes need to be restarted for changes to take effect.
+* Environment variables - These are great for environment specific configuration and they can be a good place to store sensitive data. However, they can be difficult to manage. All values must be stored as strings, and application processes need to be restarted for changes to take effect.
 
-* YAML files - These are great for more complex configurations since they support data structures and they can be shipped with your application. However, changing them usually requires a new release of the application code.
+* YAML files - These are great for more complex configurations since they support data structures and they can be shipped with your application code. However, changing them usually requires a new release of the application.
 
-* Database columns - These are great for settings tied to data models. However, they don't apply very well outside the data model, you need to build the tools for managing them into your application.
+* Database columns - These are great for settings tied to data models. However, they don't apply very well outside the data model and you need to build the tools for managing them into your application.
 
 SuperSettings provides a simple interface for accessing settings backed by a thread safe caching mechanism that provides in-memory performance while significantly limiting database load. You can tune how frequently the cache is refreshed and each refresh call is tuned to be highly efficient.
 
@@ -102,7 +100,7 @@ SuperSettings.structured
 #   "page_size" => 20
 # }
 
-# Limit the depth of the returned has to one level
+# Limit the nesting depth of the returned hash to one level
 SuperSettings.structured(max_depth: 1)
 # {
 #   "vendors.company_1.path => "/co1",
@@ -123,9 +121,9 @@ SuperSettings.integer("key", 4)
 
 #### Caching
 
-When you read a setting using these methods, you are actually reading from an in memory cache. All of the settings are read into this local cache and the cache is checked periodically to see if it needs to be refreshed (defaults to every five seconds, but can be customized with `SuperSettings.refresh_interval`). When the cache does need to be refreshed, only the delta of updated records are re-read from the data store by a single background thread to minimize any load on the server.
+When you read a setting using these methods, you are actually reading from an in memory cache. All of the settings are read into this local cache and the cache is checked periodically to see if it needs to be refreshed (defaults to every five seconds, but can be customized with `SuperSettings.refresh_interval`). When the cache needs to be refreshed, only the delta of updated records are re-read from the data store by a single background thread to minimize any load on the server.
 
-Cache misses are also cached so that they don't add any overhead. Because of this, you should avoid using dynamically generated values as setting keys since this can lead to memory bloat.
+Cache misses are also cached so that they don't add any overhead. Because of this, you should avoid using dynamically generated values as keys since this can lead to memory bloat.
 
 ```ruby
 # BAD: this will create an entry in the cache for every id
@@ -138,17 +136,17 @@ SuperSettings.array("enabled_users", []).include?(id)
 SuperSettings.structured("enabled_users", {})["id"]
 ```
 
-The cache scales fine to handle hundreds of settings, but you avoid creating thousands of settings. Because all settings are read into memory, too many settings records could lead to performance or memory issues when loading the cache.
+The cache will scale without issue to handle hundreds of settings. You should avoid creating thousands of settings, though. Because all settings are read into memory, having too many settings records could lead to performance or memory issues.
 
 ### Data Model
 
 Each setting has a unique key, a value, a value type, and an optional description. The value type can be one of "string", "integer", "float", "boolean", "datetime", or "array". The array value type will always return an array of strings.
 
-You can request a setting using one of the accessor methods on `SuperSettings` regardless of its defined value type. For instance, you can call `SuperSettings.get("integer_key")` on an integer setting and it will return a string. The value type is used to validate the setting value on input so you can be sure that can cast to the specified type at runtime.
+You can request a setting using one of the accessor methods on `SuperSettings` regardless of its defined value type. For instance, you can call `SuperSettings.get("integer_key")` on an integer setting and it will return the value as a string. The value type is only used to validate the setting value on input so that you can be sure that the value can be cast to the specified type at runtime.
 
-It is not possible to store an empty string in a setting; empty strings will be always cast to `nil`.
+It is not possible to store an empty string in a setting; empty strings will be always be returned as `nil`.
 
-A history of all settings changes is updated every time the value is changed in the `histories` association. You can use this information to see what values were in effect at what time. You can optionally alse record who made the changes.
+A history of all settings changes is updated every time the value is changed in the `histories` association. You can also record who made the changes.
 
 #### Storage Engines
 
@@ -182,7 +180,7 @@ Then go to http://localhost:3000/settings in your browser.
 
 You can change the layout used by the web UI. However, if you do this, you will be responsible for providing the CSS styles for the buttons, table rows and the form controls. The CSS class names used by the default layout are compatible with the class names defined in the [Bootstrap library](https://getbootstrap.com/).
 
-It is not required to use the bundled web UI. You can implement your own UI if you need to using the `SuperSettings::Setting` model.
+It is not required to use the bundled web UI. You can implement your own UI using the `SuperSettings::Setting` model.
 
 #### REST API
 
@@ -190,13 +188,9 @@ You can mount a REST API for exposing and managing the settings. This API is req
 
 If you are running a Rails application, you can mount the API as a controller via the bundled Rails engine. If you are not using Rails, then you can add a class that extends `SuperSettings::RackApplication` to your Rack middleware stack. The web UI can be disabled and only the REST API exposed. See `SuperSettings::Configuration` if you are using Rails or `SuperSettings::RackApplication` if you are not.
 
-In either case, you are responsible for implementing authentication and authorization for the HTTP requests. This allows you to seamlessly integrate with existing authentication and authorization in your application.
-
 #### Authentication
 
-# TODO cleanup; also provide method for supplying blocks to RackApplication
-
-You are responsible for implementing authentication on the Web UI and REST API endpoints. In a Rack application, you would do this by putting the Supersetting application behind Rack middleware the performs you authentication checks. In a Rails application, you can add a `before_action` filter to hook into your authentication checks.
+You are responsible for implementing authentication on the Web UI and REST API endpoints. In a Rack application, you would do this by putting the Supersetting application behind Rack middleware the performs your authentication checks. In a Rails application, you can add a `before_action` filter to hook into your authentication checks.
 
 If you are using access token authentication from a single page application (as opposed to cookie based authentication), you will need to pass the access token from the browser to the backend. There are a couple of built in ways to do this.
 
@@ -250,9 +244,9 @@ SuperSettings.configure do |config|
   config.controller.application_logo = "/images/app_logo.png"
 
   # Set a custom refresh interval for the cache (default is 5 seconds)
-  config.refresh_interval = 2
+  config.refresh_interval = 10
 
-  # Set the superclass to use for the controll. Defaults to using `ApplicationController`.
+  # Set the superclass to use for the controller. Defaults to using `ApplicationController`.
   config.controller.superclass = Admin::BaseController
 
   # Add additional code to the controller. In this case we are adding code to ensure only
@@ -269,7 +263,7 @@ SuperSettings.configure do |config|
     def require_admin
       if current_user.nil?
         redirect_to login_url, status: 401
-      else
+      elsif !current_user.admin?
         redirect_to access_denied_url, status: 403
       end
     end
@@ -291,8 +285,6 @@ SuperSettings.configure do |config|
   # config.model.cache = Rails.cache
 end
 ```
-
-One configuration you will probably want to set is the superclass for the controller. By default, the base `ApplicationController` defined for your application will be used. However, if you want to provide Your application probably already has a
 
 ## Installation
 

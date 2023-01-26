@@ -37,6 +37,7 @@ module SuperSettings
     protected
 
     # Subclasses must implement this method.
+    #
     # @param user [Object] the value returned by the `current_user` method.
     # @return [Boolean] true if the user is authenticated.
     def authenticated?(user)
@@ -44,6 +45,8 @@ module SuperSettings
     end
 
     # Subclasses can override this method to indicate if the specified user is allowed to view settings.
+    # By default if a user is authenticated they will be able to read settings.
+    #
     # @param user [Object] the value returned by the `current_user` method.
     # @return [Boolean] true if the user is can view settings.
     def allow_read?(user)
@@ -51,14 +54,17 @@ module SuperSettings
     end
 
     # Subclasses can override this method to indicate if the specified user is allowed to change settings.
+    # By default if a user can read settings, then they will be able to write them as well.
+    #
     # @param user [Object] the value returned by the `current_user` method.
     # @return [Boolean] true if the user is can change settings.
     def allow_write?(user)
-      true
+      allow_read?(user)
     end
 
     # Subclasses can override this method to return the current user object. This object will
     # be passed to the authenticated?, allow_read?, allow_write?, and changed_by methods.
+    #
     # @param request [Rack::Request] current reqeust object
     # @return [Object]
     def current_user(request)
@@ -67,6 +73,7 @@ module SuperSettings
 
     # Subclasses can override this method to return the information about the current user that will
     # be stored in the setting history when a setting is changed.
+    #
     # @return [String]
     def changed_by(user)
       nil
@@ -74,6 +81,7 @@ module SuperSettings
 
     # Subclasses can override this method to return the path to an ERB file to use as the layout
     # for the HTML application. The layout can use any of the methods defined in SuperSettings::Application::Helper.
+    #
     # @return [String]
     def layout
       "layout.html.erb"
@@ -81,6 +89,7 @@ module SuperSettings
 
     # Subclasses can override this method to add custom HTML to the <head> element in the HTML application.
     # This can be used to add additional script or meta tags needed for CSRF protection, etc.
+    #
     # @param request [Rack::Request] current reqeust object
     # @return [String]
     def add_to_head(request)
@@ -88,6 +97,8 @@ module SuperSettings
 
     # Subclasses can override this method to disable the web UI component of the application on only
     # expose the REST API.
+    #
+    # @return [Boolean]
     def web_ui_enabled?
       true
     end
