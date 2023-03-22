@@ -63,18 +63,25 @@ describe SuperSettings do
     end
   end
 
-  describe "enabled?" do
+  describe "enabled? and disabled?" do
     it "should get a boolean value" do
       SuperSettings::Setting.create!(key: "key.on", value: "on", value_type: :string)
       SuperSettings::Setting.create!(key: "key.off", value: "off", value_type: :boolean)
       SuperSettings.load_settings
+
       expect(SuperSettings.enabled?("key.on")).to eq true
+      expect(SuperSettings.disabled?("key.on")).to eq false
+
       expect(SuperSettings.enabled?("key.off")).to eq false
+      expect(SuperSettings.disabled?("key.off")).to eq true
     end
 
     it "should return a default if the key is not defined" do
       expect(SuperSettings.enabled?("key")).to eq false
+      expect(SuperSettings.disabled?("key")).to eq true
+
       expect(SuperSettings.enabled?("key", true)).to eq true
+      expect(SuperSettings.disabled?("key", true)).to eq false
     end
   end
 

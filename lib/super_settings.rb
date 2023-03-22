@@ -62,6 +62,15 @@ module SuperSettings
       Coerce.boolean(val.nil? ? default : val)
     end
 
+    # Return true if a setting cast as a boolean evaluates to false.
+    #
+    # @param key [String, Symbol]
+    # @param default [Boolean] value to return if the setting value is nil
+    # @return [Boolean]
+    def disabled?(key, default = false)
+      !enabled?(key, default)
+    end
+
     # Get a setting value cast to a Time.
     #
     # @param key [String, Symbol]
