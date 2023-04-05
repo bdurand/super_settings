@@ -81,7 +81,10 @@ describe SuperSettings do
       expect(SuperSettings.disabled?("key")).to eq true
 
       expect(SuperSettings.enabled?("key", true)).to eq true
-      expect(SuperSettings.disabled?("key", true)).to eq false
+      expect(SuperSettings.enabled?("key", false)).to eq false
+
+      expect(SuperSettings.disabled?("key", true)).to eq true
+      expect(SuperSettings.disabled?("key", false)).to eq false
     end
   end
 

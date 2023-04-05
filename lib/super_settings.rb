@@ -67,8 +67,8 @@ module SuperSettings
     # @param key [String, Symbol]
     # @param default [Boolean] value to return if the setting value is nil
     # @return [Boolean]
-    def disabled?(key, default = false)
-      !enabled?(key, default)
+    def disabled?(key, default = true)
+      !enabled?(key, !default)
     end
 
     # Get a setting value cast to a Time.
