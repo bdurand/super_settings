@@ -32,6 +32,14 @@ module SuperSettings
       val.nil? ? default : val.to_s
     end
 
+    # Alias for {#get} to allow using the [] operator to get a setting value.
+    #
+    # @param key [String, Symbol]
+    # @return [String]
+    def [](key)
+      get(key)
+    end
+
     # Get a setting value cast to an integer.
     #
     # @param key [String, Symbol]

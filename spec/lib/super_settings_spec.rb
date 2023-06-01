@@ -35,6 +35,12 @@ describe SuperSettings do
       expect(SuperSettings.get("key")).to eq nil
       expect(SuperSettings.get("key", "bar")).to eq "bar"
     end
+
+    it "can use hash sytax" do
+      SuperSettings::Setting.create!(key: "key", value: "foo", value_type: :string)
+      SuperSettings.load_settings
+      expect(SuperSettings["key"]).to eq "foo"
+    end
   end
 
   describe "integer" do
