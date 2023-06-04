@@ -67,3 +67,11 @@ appraise "rails_4.2" do
   gem "bundler", "~> 1.0"
   remove_gem "rackup"
 end
+
+appraise "no_rails" do
+  gem "redis", "~> 3.0"
+  gem "capybara", "~> 3.35"
+  gem "puma", "~> 5.0"
+  gem "bundler", "~> 1.0"
+  remove_gem "rails"
+end

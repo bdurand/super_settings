@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
+require "set"
+
 module SuperSettings
   # Utility functions for coercing values to other data types.
   class Coerce
     # rubocop:disable Lint/BooleanSymbol
-    FALSE_VALUES = [
+    FALSE_VALUES = Set.new([
       false, 0,
       "0", :"0",
       "f", :f,
@@ -13,7 +15,7 @@ module SuperSettings
       "FALSE", :FALSE,
       "off", :off,
       "OFF", :OFF
-    ].to_set.freeze
+    ]).freeze
     # rubocop:enable Lint/BooleanSymbol
 
     class << self
