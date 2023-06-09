@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "rack"
-
 module SuperSettings
   # Rack middleware for serving the REST API. See SuperSettings::RestAPI for more details on usage.
   #
@@ -39,6 +37,13 @@ module SuperSettings
     #     end
     #   end
     def initialize(app = nil, path_prefix = "/", &block)
+      # Requiring rack here so that the gem does not have a hard dependency on it.
+      begin
+        require "rack"
+      rescue LoadError
+        raise LoadError, "SuperSettings::RackApplication requires the rack gem"
+      end
+
       @app = app
       @path_prefix = path_prefix.to_s.chomp("/")
       instance_eval(&block) if block
