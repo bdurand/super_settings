@@ -4,7 +4,6 @@ gemspec
 
 gem "redis"
 gem "connection_pool"
-gem "rack"
 
 gem "rspec", "~> 3.12"
 gem "capybara"
