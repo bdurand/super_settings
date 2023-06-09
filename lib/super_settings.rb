@@ -101,30 +101,6 @@ module SuperSettings
       Array(val).collect { |v| v&.to_s }
     end
 
-    # Get setting values cast to a hash. This method can be used to cast the flat setting key/value
-    # store into a structured data store. It uses a delimiter to define how keys are nested which
-    # defaults to a dot.
-    #
-    # If, for example, you have three keys in you settings +A.B1.C1 = 1+, +A.B1.C2 = 2+, and +A.B2.C3 = 3+, the
-    # nested structure will be:
-    #
-    # +{"A" => {"B1" => {"C1" => 1, "C2" => 2}, "B2" => {"C3" => 3}}}+
-    #
-    # This whole hash would be returned if you called +hash+ without any key. If you called it with the
-    # key "A.B1", it would return
-    #
-    # +{"C1" => 1, "C2" => 2}+
-    #
-    # @param key [String, Symbol] the prefix patter to fetch keys for; default to returning all settings
-    # @param default [Hash] value to return if the setting value is nil
-    # @param delimiter [String] the delimiter to use to define nested keys in the hash; defaults to "."
-    # @return [Hash]
-    def structured(key = nil, default = nil, delimiter: ".", max_depth: nil)
-      value = local_cache.structured(key, delimiter: delimiter, max_depth: max_depth)
-      return (default || {}) if value.empty?
-      value
-    end
-
     # Create settings and update the local cache with the values. If a block is given, then the
     # value will be reverted at the end of the block. This method can be used in tests when you
     # need to inject a specific value into your settings.
