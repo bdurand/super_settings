@@ -7,6 +7,26 @@ module SuperSettings
   class Engine < Rails::Engine
     isolate_namespace ::SuperSettings
 
+    initializer("SuperSettings") do
+      Rails.configuration.middleware.unshift(SuperSettings::Context::RackMiddleware)
+
+      if defined?(ActiveJob::Base.around_perform)
+        ActiveJob::Base.around_perform do |job, block|
+          SuperSettings.context(&block)
+        end
+      end
+
+      if defined?(Sidekiq.server?) && Sidekiq.server?
+        require_relative "context/sidekiq_middleware"
+
+        Sidekiq.configure_server do |sidekiq_config|
+          sidekiq_config.server_middleware do |chain|
+            chain.prepend(SuperSettings::Context::SidekiqMiddleware)
+          end
+        end
+      end
+    end
+
     config.after_initialize do
       # Call the deferred initialization block.
       configuration = Configuration.instance

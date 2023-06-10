@@ -51,65 +51,6 @@ SuperSettings.datetime("key") # -> returns a `Time` object
 SuperSettings.array("key") # -> returns an array of strings
 ```
 
-#### Hashes
-There is also a method to get multiple settings at once structured as a hash.
-
-```ruby
-SuperSettings.structured("parent") # -> returns an hash
-```
-
-The key provided to the `SuperSettings.structured` method indicates the key prefix and constructs the hash from settings that have keys beginning with that prefix. Keys are also broken down by a delimiter so you can create nested hashes. The delimiter defaults to `"."`, but you can specify a different one with the `delimiter` keyword argument.
-
-You can also set a maximum depth to the returned hash with the `max_depth` keyword argument.
-
-So, if you have the following settings:
-
-```
-vendors.company_1.path = "/co1"
-vendors.company_1.timeout = 5
-vendors.company_2.path = "/co2"
-page_size = 20
-```
-
-You would get these results:
-
-```ruby
-SuperSettings.structured("vendors")
-# {
-#   "company_1" => {
-#     "path" => "/co1",
-#     "timeout" => 5
-#   },
-#   "company_2" => {
-#     "path" => "/co2"
-#    }
-# }
-
-SuperSettings.structured("vendors.company_1")
-# {"path" => "/co1", "timeout" => 5}
-
-SuperSettings.structured("vendors.company_2")
-# {"path" => "/co2"}
-
-# Get all the settings by omitting the key
-SuperSettings.structured
-# {
-#   "vendors" => {
-#     "company_1" => {"path" => "/co1", "timeout" => 5},
-#     "company_2" => {"path" => "/co2"}
-#   },
-#   "page_size" => 20
-# }
-
-# Limit the nesting depth of the returned hash to one level
-SuperSettings.structured(max_depth: 1)
-# {
-#   "vendors.company_1.path => "/co1",
-#   "vendors.company_1.timeout" => 5,
-#   "vendors.company_2.path" => "/co2",
-#   "page_size" => 20
-# }
-```
 
 #### Defaults
 
@@ -132,12 +73,37 @@ SuperSettings.enabled?("enabled_users.#{id}")
 
 # GOOD: use an array if there are a limited number of values
 SuperSettings.array("enabled_users", []).include?(id)
-
-# GOOD: use a hash if you need to scale to any number of values
-SuperSettings.structured("enabled_users", {})["id"]
 ```
 
 The cache will scale without issue to handle hundreds of settings. However, you should avoid creating thousands of settings. Because all settings are read into memory, having too many settings records can lead to performance or memory issues.
+
+#### Request Context
+
+You can ensure that settings won't change in a block of code by surrounding it with a `SuperSettings.context` block. Inside a `context` block, a setting will always return the same value. This can prevent race conditions where you code may branch based on a setting value.
+
+```ruby
+# This code could be unsafe since the value of the "threshold" setting could
+# change after the if statement is checked.
+if SuperSettings.integer("threshold") > 0
+  do_something(SuperSettings.integer("threshold"))
+end
+
+# With a context block, the value for the "threshold setting will always
+# return the same value
+SuperSettings.context do
+  if SuperSettings.integer("threshold") > 0
+    do_something(SuperSettings.integer("threshold"))
+  end
+end
+```
+
+It's a good idea to add a `context` block around your main unit of work:
+
+- Rack application: add `SuperSettings::Context::RackMiddleware` to your middleware stack
+- Sidekiq: add `SuperSettings::Context::SidekiqMiddleware` to your server middleware
+- ActiveJob: add an `around_perform` callback that calls `SuperSettings.context`
+
+In a Rails application all of these will be done automatically.
 
 ### Data Model
 

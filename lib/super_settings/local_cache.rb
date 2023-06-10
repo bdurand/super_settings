@@ -54,7 +54,6 @@ module SuperSettings
             @lock.synchronize do
               # For case where one thread could be iterating over the cache while it's updated causing an error
               @cache = @cache.merge(key => value).freeze
-              @hashes = {}
             end
           end
         end
@@ -62,53 +61,6 @@ module SuperSettings
 
       return nil if value == NOT_DEFINED
       value
-    end
-
-    # Return the setting as structured data. The keys will be split by the specified delimiter
-    # to create a nested hash.
-    #
-    # @example
-    #   Setting with key "a.b.c" and value 1 becomes
-    #
-    #   {
-    #     "a" => {
-    #       "b" => {
-    #         "c" => 1
-    #       }
-    #     }
-    #   }
-    #
-    # See SuperSettings.structured for more details.
-    def structured(key = nil, delimiter: ".", max_depth: nil)
-      key = key.to_s
-      cache_key = [key, delimiter, max_depth]
-      cached_value = @hashes[cache_key]
-      return cached_value if cached_value
-
-      flattened = to_h
-      root_key = ""
-      if Coerce.present?(key)
-        root_key = "#{key}#{delimiter}"
-        reduced_hash = {}
-        flattened.each do |k, v|
-          if k.start_with?(root_key)
-            reduced_hash[k[root_key.length, k.length]] = v
-          end
-        end
-        flattened = reduced_hash
-      end
-
-      structured_hash = {}
-      flattened.each do |key, value|
-        set_nested_hash_value(structured_hash, key, value, 0, delimiter: delimiter, max_depth: max_depth)
-      end
-
-      deep_freeze_hash(structured_hash)
-      @lock.synchronize do
-        @hashes[cache_key] = structured_hash
-      end
-
-      structured_hash
     end
 
     # Check if the cache includes a key. Note that this will return true if you have tried
@@ -217,7 +169,6 @@ module SuperSettings
     def reset
       @lock.synchronize do
         @cache = {}.freeze
-        @hashes = {}
         @last_refreshed = nil
         @next_check_at = Time.now + @refresh_interval
         @refreshing = false
@@ -240,7 +191,6 @@ module SuperSettings
       return if Coerce.blank?(setting.key)
       @lock.synchronize do
         @cache = @cache.merge(setting.key => setting.value)
-        @hashes = {}
       end
     end
 
@@ -277,7 +227,7 @@ module SuperSettings
         end
         load_settings(Setting.storage.load_asynchronous?)
       elsif Time.now >= @next_check_at
-        refresh
+        refresh(Setting.storage.load_asynchronous?)
       end
     end
 
@@ -287,7 +237,6 @@ module SuperSettings
         @last_refreshed = refreshed_at_time
         @refreshing = false
         @cache = block.call.freeze
-        @hashes = {}
       end
     end
 

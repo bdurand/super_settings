@@ -19,7 +19,7 @@ module SuperSettings
     def super_settings_application_header
       config = Configuration.instance.controller
       content = "#{super_settings_application_name} Settings"
-      if config.application_logo.present?
+      if Coerce.present?(config.application_logo)
         content = image_tag(config.application_logo, alt: "").concat(content)
       end
       if config.application_link

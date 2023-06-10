@@ -3,6 +3,8 @@
 require_relative "super_settings/application"
 require_relative "super_settings/coerce"
 require_relative "super_settings/configuration"
+require_relative "super_settings/context"
+require_relative "super_settings/context/rack_middleware"
 require_relative "super_settings/local_cache"
 require_relative "super_settings/rest_api"
 require_relative "super_settings/rack_application"
@@ -28,7 +30,7 @@ module SuperSettings
     # @param default [String] value to return if the setting value is nil
     # @return [String]
     def get(key, default = nil)
-      val = local_cache[key]
+      val = context_setting(key)
       val.nil? ? default : val.to_s
     end
 
@@ -46,7 +48,7 @@ module SuperSettings
     # @param default [Integer] value to return if the setting value is nil
     # @return [Integer]
     def integer(key, default = nil)
-      val = local_cache[key]
+      val = context_setting(key)
       (val.nil? ? default : val)&.to_i
     end
 
@@ -56,7 +58,7 @@ module SuperSettings
     # @param default [Numeric] value to return if the setting value is nil
     # @return [Float]
     def float(key, default = nil)
-      val = local_cache[key]
+      val = context_setting(key)
       (val.nil? ? default : val)&.to_f
     end
 
@@ -66,7 +68,7 @@ module SuperSettings
     # @param default [Boolean] value to return if the setting value is nil
     # @return [Boolean]
     def enabled?(key, default = false)
-      val = local_cache[key]
+      val = context_setting(key)
       Coerce.boolean(val.nil? ? default : val)
     end
 
@@ -85,7 +87,7 @@ module SuperSettings
     # @param default [Time] value to return if the setting value is nil
     # @return [Time]
     def datetime(key, default = nil)
-      val = local_cache[key]
+      val = context_setting(key)
       Coerce.time(val.nil? ? default : val)
     end
 
@@ -95,34 +97,10 @@ module SuperSettings
     # @param default [Array] value to return if the setting value is nil
     # @return [Array]
     def array(key, default = nil)
-      val = local_cache[key]
+      val = context_setting(key)
       val = default if val.nil?
       return nil if val.nil?
       Array(val).collect { |v| v&.to_s }
-    end
-
-    # Get setting values cast to a hash. This method can be used to cast the flat setting key/value
-    # store into a structured data store. It uses a delimiter to define how keys are nested which
-    # defaults to a dot.
-    #
-    # If, for example, you have three keys in you settings +A.B1.C1 = 1+, +A.B1.C2 = 2+, and +A.B2.C3 = 3+, the
-    # nested structure will be:
-    #
-    # +{"A" => {"B1" => {"C1" => 1, "C2" => 2}, "B2" => {"C3" => 3}}}+
-    #
-    # This whole hash would be returned if you called +hash+ without any key. If you called it with the
-    # key "A.B1", it would return
-    #
-    # +{"C1" => 1, "C2" => 2}+
-    #
-    # @param key [String, Symbol] the prefix patter to fetch keys for; default to returning all settings
-    # @param default [Hash] value to return if the setting value is nil
-    # @param delimiter [String] the delimiter to use to define nested keys in the hash; defaults to "."
-    # @return [Hash]
-    def structured(key = nil, default = nil, delimiter: ".", max_depth: nil)
-      value = local_cache.structured(key, delimiter: delimiter, max_depth: max_depth)
-      return (default || {}) if value.empty?
-      value
     end
 
     # Create settings and update the local cache with the values. If a block is given, then the
@@ -148,6 +126,7 @@ module SuperSettings
         setting.save!
         local_cache.load_settings unless local_cache.loaded?
         local_cache.update_setting(setting)
+
         if block_given?
           yield
         end
@@ -158,6 +137,19 @@ module SuperSettings
           local_cache.load_settings unless local_cache.loaded?
           local_cache.update_setting(setting)
         end
+      end
+    end
+
+    # Define a block where settings will remain unchanged. This is useful to
+    # prevent settings from changing while you are in the middle of a block of
+    # code that depends on the settings.
+    def context(&block)
+      reset_context = Thread.current[:super_settings_context].nil?
+      begin
+        Thread.current[:super_settings_context] ||= {}
+        yield
+      ensure
+        Thread.current[:super_settings_context] = nil if reset_context
       end
     end
 
@@ -229,6 +221,23 @@ module SuperSettings
 
     def local_cache
       @local_cache ||= LocalCache.new(refresh_interval: DEFAULT_REFRESH_INTERVAL)
+    end
+
+    def current_context
+      Thread.current[:super_settings_context]
+    end
+
+    def context_setting(key)
+      key = key.to_s
+      context = current_context
+      if context
+        unless context.include?(key)
+          context[key] = local_cache[key]
+        end
+        context[key]
+      else
+        local_cache[key]
+      end
     end
   end
 end

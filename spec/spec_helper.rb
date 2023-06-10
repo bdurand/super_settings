@@ -79,7 +79,13 @@ end
 
 Capybara.javascript_driver = :cuprite
 Capybara.register_driver(:cuprite) do |app|
-  Capybara::Cuprite::Driver.new(app, window_size: [1024, 800], browser_options: {"no-sandbox": nil}, timeout: 15)
+  Capybara::Cuprite::Driver.new(
+    app,
+    window_size: [1024, 800],
+    browser_options: {"no-sandbox": nil},
+    headless: true,
+    process_timeout: 20
+  )
 end
 WebMock.disable_net_connect!(allow_localhost: true)
 
