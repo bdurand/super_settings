@@ -4,23 +4,23 @@ module SuperSettings
   # Engine that is loaded in a Rails environment. The engine will take care of applying any
   # settings overriding behavior in the Configuration as well as eager loading the settings
   # into memory.
-  class Engine < Rails::Railtie
-    unless config.middleware.include?(SuperSettings::Context::RackMiddleware)
-      config.middleware.unshift(SuperSettings::Context::RackMiddleware)
-    end
+  class Engine < Rails::Engine
+    initializer("SuperSettings") do
+      Rails.configuration.middleware.unshift(SuperSettings::Context::RackMiddleware)
 
-    if defined?(ActiveJob::Base.around_perform)
-      ActiveJob::Base.around_perform do |job, block|
-        SuperSettings.context(&block)
+      if defined?(ActiveJob::Base.around_perform)
+        ActiveJob::Base.around_perform do |job, block|
+          SuperSettings.context(&block)
+        end
       end
-    end
 
-    if defined?(Sidekiq.server?) && Sidekiq.server?
-      require_relative "context/sidekiq_middleware"
+      if defined?(Sidekiq.server?) && Sidekiq.server?
+        require_relative "context/sidekiq_middleware"
 
-      Sidekiq.configure_server do |config|
-        config.server_middleware do |chain|
-          chain.prepend(SuperSettings::Context::SidekiqMiddleware)
+        Sidekiq.configure_server do |sidekiq_config|
+          sidekiq_config.server_middleware do |chain|
+            chain.prepend(SuperSettings::Context::SidekiqMiddleware)
+          end
         end
       end
     end

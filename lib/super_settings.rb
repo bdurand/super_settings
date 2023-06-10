@@ -15,8 +15,8 @@ require_relative "super_settings/history_item"
 require_relative "super_settings/storage"
 require_relative "super_settings/version"
 
-if defined?(Rails::Railtie)
-  require_relative "super_settings/railtie"
+if defined?(Rails::Engine)
+  require_relative "super_settings/engine"
 end
 
 # This is the main interface to the access settings.
