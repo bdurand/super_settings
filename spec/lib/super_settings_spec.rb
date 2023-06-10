@@ -36,6 +36,17 @@ describe SuperSettings do
       expect(SuperSettings.get("key", "bar")).to eq "bar"
     end
 
+    it "should memoize values inside a context block" do
+      SuperSettings::Setting.create!(key: "key", value: "foo", value_type: :string)
+      SuperSettings.load_settings
+      SuperSettings.context do
+        expect(SuperSettings.get("key")).to eq "foo"
+        SuperSettings.set("key", "bar")
+        expect(SuperSettings.get("key")).to eq "foo"
+      end
+      expect(SuperSettings.get("key")).to eq "bar"
+    end
+
     it "can use hash sytax" do
       SuperSettings::Setting.create!(key: "key", value: "foo", value_type: :string)
       SuperSettings.load_settings
@@ -54,6 +65,17 @@ describe SuperSettings do
       expect(SuperSettings.integer("key")).to eq nil
       expect(SuperSettings.integer("key", 2)).to eq 2
     end
+
+    it "should memoize values inside a context block" do
+      SuperSettings::Setting.create!(key: "key", value: "1", value_type: :string)
+      SuperSettings.load_settings
+      SuperSettings.context do
+        expect(SuperSettings.integer("key")).to eq 1
+        SuperSettings.set("key", "2")
+        expect(SuperSettings.integer("key")).to eq 1
+      end
+      expect(SuperSettings.integer("key")).to eq 2
+    end
   end
 
   describe "float" do
@@ -66,6 +88,17 @@ describe SuperSettings do
     it "should return a default if the key is not defined" do
       expect(SuperSettings.float("key")).to eq nil
       expect(SuperSettings.float("key", 2.1)).to eq 2.1
+    end
+
+    it "should memoize values inside a context block" do
+      SuperSettings::Setting.create!(key: "key", value: "1.1", value_type: :string)
+      SuperSettings.load_settings
+      SuperSettings.context do
+        expect(SuperSettings.float("key")).to eq 1.1
+        SuperSettings.set("key", "1.2")
+        expect(SuperSettings.float("key")).to eq 1.1
+      end
+      expect(SuperSettings.float("key")).to eq 1.2
     end
   end
 
@@ -92,6 +125,17 @@ describe SuperSettings do
       expect(SuperSettings.disabled?("key", true)).to eq true
       expect(SuperSettings.disabled?("key", false)).to eq false
     end
+
+    it "should memoize values inside a context block" do
+      SuperSettings::Setting.create!(key: "key", value: "true", value_type: :string)
+      SuperSettings.load_settings
+      SuperSettings.context do
+        expect(SuperSettings.enabled?("key")).to eq true
+        SuperSettings.set("key", "false")
+        expect(SuperSettings.enabled?("key")).to eq true
+      end
+      expect(SuperSettings.enabled?("key")).to eq false
+    end
   end
 
   describe "datetime" do
@@ -105,6 +149,17 @@ describe SuperSettings do
       expect(SuperSettings.datetime("key")).to eq nil
       time = Time.now
       expect(SuperSettings.datetime("key", time)).to eq time
+    end
+
+    it "should memoize values inside a context block" do
+      SuperSettings::Setting.create!(key: "key", value: "2023-06-09T12:00", value_type: :string)
+      SuperSettings.load_settings
+      SuperSettings.context do
+        expect(SuperSettings.datetime("key")).to eq Time.new(2023, 6, 9, 12, 0)
+        SuperSettings.set("key", "2023-06-09T12:15")
+        expect(SuperSettings.datetime("key")).to eq Time.new(2023, 6, 9, 12, 0)
+      end
+      expect(SuperSettings.datetime("key")).to eq Time.new(2023, 6, 9, 12, 15)
     end
   end
 
@@ -125,6 +180,17 @@ describe SuperSettings do
       SuperSettings.load_settings
       expect(SuperSettings.array("key")).to eq nil
       expect(SuperSettings.array("key", 1)).to eq ["1"]
+    end
+
+    it "should memoize values inside a context block" do
+      SuperSettings::Setting.create!(key: "key", value: "foo", value_type: :string)
+      SuperSettings.load_settings
+      SuperSettings.context do
+        expect(SuperSettings.array("key")).to eq ["foo"]
+        SuperSettings.set("key", "bar")
+        expect(SuperSettings.array("key")).to eq ["foo"]
+      end
+      expect(SuperSettings.array("key")).to eq ["bar"]
     end
   end
 

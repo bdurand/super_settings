@@ -77,6 +77,34 @@ SuperSettings.array("enabled_users", []).include?(id)
 
 The cache will scale without issue to handle hundreds of settings. However, you should avoid creating thousands of settings. Because all settings are read into memory, having too many settings records can lead to performance or memory issues.
 
+#### Request Context
+
+You can ensure that settings won't change in a block of code by surrounding it with a `SuperSettings.context` block. Inside a `context` block, a setting will always return the same value. This can prevent race conditions where you code may branch based on a setting value.
+
+```ruby
+# This code could be unsafe since the value of the "threshold" setting could
+# change after the if statement is checked.
+if SuperSettings.integer("threshold") > 0
+  do_something(SuperSettings.integer("threshold"))
+end
+
+# With a context block, the value for the "threshold setting will always
+# return the same value
+SuperSettings.context do
+  if SuperSettings.integer("threshold") > 0
+    do_something(SuperSettings.integer("threshold"))
+  end
+end
+```
+
+It's a good idea to add a `context` block around your main unit of work:
+
+- Rack application: add `SuperSettings::Context::RackMiddleware` to your middleware stack
+- Sidekiq: add `SuperSettings::Context::SidekiqMiddleware` to your server middleware
+- ActiveJob: add an `around_perform` callback that calls `SuperSettings.context`
+
+In a Rails application all of these will be done automatically.
+
 ### Data Model
 
 Each setting has a key, value, value type, and optional description. The key must be unique. The value type can be one of "string", "integer", "float", "boolean", "datetime", or "array". The array value type will always return an array of strings.

@@ -227,7 +227,7 @@ module SuperSettings
         end
         load_settings(Setting.storage.load_asynchronous?)
       elsif Time.now >= @next_check_at
-        refresh
+        refresh(Setting.storage.load_asynchronous?)
       end
     end
 
