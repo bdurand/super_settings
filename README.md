@@ -19,6 +19,8 @@ SuperSettings provides a simple interface for accessing settings backed by a thr
 
 There is also an out of the box Web UI and REST API for managing settings. You can specify data types for your settings (string, integer, float, boolean, datetime, or array) to ensure that values will be valid. You can also supply documentation for each setting so that it's clear what each one does and how it is used.
 
+There is a companion gem [ultra_settings](https://github.com/bdurand/ultra_settings) that can be used to integrate SuperSettings into a combined configuration system alongside YAML files and environment variables.
+
 ## Usage
 
 - [Getting Value](#getting-values)
