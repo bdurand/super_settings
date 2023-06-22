@@ -22,7 +22,7 @@ module SuperSettings
     #     include Sidekiq::Worker
     #     sidekiq_options super_settings_context: false
     #   end
-    class ServerMiddleware
+    class SidekiqMiddleware
       if defined?(Sidekiq::ServerMiddleware)
         include Sidekiq::ServerMiddleware
       end
