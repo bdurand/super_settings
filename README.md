@@ -188,7 +188,7 @@ The gem ships with a Rails engine that provides easy integration with a Rails ap
 The default storage engine for a Rails application will be the ActiveRecord storage. You need to install the database migrations first with:
 
 ```bash
-rails app:super_settings:install:migrations
+rails super_settings:install:migrations
 ```
 
 You also need to mount the engine routes in your application's `config/routes.rb` file. The routes can be mounted under any prefix you'd like.
