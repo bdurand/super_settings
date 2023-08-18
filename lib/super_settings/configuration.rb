@@ -126,6 +126,20 @@ module SuperSettings
           end
         end
       end
+
+      # Add an after_save callback to the setting model. The block will be called with the
+      # setting object after it is saved.
+      #
+      # @yieldparam setting [SuperSettings::Setting]
+      def after_save(&block)
+        after_save_blocks << block
+      end
+
+      # @return [Array<Proc>] The after_save block
+      # @api private
+      def after_save_blocks
+        @after_save_blocks ||= []
+      end
     end
 
     # Return the model specific configuration object.

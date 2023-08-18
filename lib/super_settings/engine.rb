@@ -66,6 +66,10 @@ module SuperSettings
         Setting.cache = (configuration.model.cache || Rails.cache)
         Setting.storage = configuration.model.storage_class
 
+        configuration.model.after_save_blocks.each do |block|
+          Setting.after_save(&block)
+        end
+
         if !SuperSettings.loaded?
           begin
             SuperSettings.load_settings

@@ -54,6 +54,21 @@ module SuperSettings
         end
       end
 
+      # Add a block of code that will be called when a setting is saved. The block will be
+      # called with a Setting object. The object will have been saved, but the `changes`
+      # hash will still be set indicating what was changed. You can define multiple after_save blocks.
+      #
+      # @yieldparam setting [SuperSetting::Setting]
+      def after_save(&block)
+        after_save_blocks << block
+      end
+
+      # @return [Array<Proc>] Blocks to be called after a setting is saved.
+      # @api private
+      def after_save_blocks
+        @after_save_blocks ||= []
+      end
+
       # Create a new setting with the specified attributes.
       #
       # @param attributes [Hash] hash of attribute names and values
@@ -433,6 +448,7 @@ module SuperSettings
 
         begin
           self.class.clear_last_updated_cache
+          call_after_save_callbacks
         ensure
           clear_changes
         end
@@ -506,6 +522,15 @@ module SuperSettings
     # @return [String]
     def to_json(options = nil)
       as_json.to_json(options)
+    end
+
+    # Get hash of attribute changes. The hash keys are the names of attributes that
+    # have changed and the values are an array with [old value, new value]. The keys
+    # will be one of key, raw_value, value_type, description, deleted, created_at, or updated_at.
+    #
+    # @return [Hash<String, Array>]
+    def changes
+      @changes.dup
     end
 
     private
@@ -617,6 +642,12 @@ module SuperSettings
         @errors[attribute] = attribute_errors
       end
       attribute_errors << "#{attribute.tr("_", " ")} #{message}"
+    end
+
+    def call_after_save_callbacks
+      self.class.after_save_blocks.each do |block|
+        block.call(self)
+      end
     end
   end
 end

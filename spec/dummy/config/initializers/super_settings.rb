@@ -38,5 +38,9 @@ unless ENV["SUPER_SETTINGS_NO_OVERRIDES"].present?
     elsif config.model.storage.to_s == "http"
       SuperSettings::Storage::HttpStorage.redis = ENV["SUPER_SETTINGS_BASE_URL"]
     end
+
+    config.model.after_save do |setting|
+      Rails.logger.info("Setting #{setting.key} changed: #{setting.changes.inspect}")
+    end
   end
 end

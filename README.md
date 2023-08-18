@@ -19,6 +19,8 @@ SuperSettings provides a simple interface for accessing settings backed by a thr
 
 There is also an out of the box Web UI and REST API for managing settings. You can specify data types for your settings (string, integer, float, boolean, datetime, or array) to ensure that values will be valid. You can also supply documentation for each setting so that it's clear what each one does and how it is used.
 
+Changes to settings are stored whenever a setting is changed to give you an audit trail if you need it for compliance reasons. In addition, you can provide your own callbacks to execute whenever a setting is changed.
+
 There is a companion gem [ultra_settings](https://github.com/bdurand/ultra_settings) that can be used to integrate SuperSettings into a combined configuration system alongside YAML files and environment variables.
 
 ## Usage
@@ -116,6 +118,16 @@ You can request a setting using one of the accessor methods on `SuperSettings` r
 It is not possible to store an empty string in a setting; empty strings will be always be returned as `nil`.
 
 A history of all settings changes is updated every time the value is changed in the `histories` association. You can also record who made the changes.
+
+#### Callbacks
+
+You can define custom callbacks on the `SuperSettings::Setting` model that will be called whenever a setting is changed. For example, if you needed to log all changes to you settings in your application logs, you could do something like this:
+
+```ruby
+SuperSettings::Setting.after_save do |setting|
+  Application.logger.info("Setting #{setting.key} changed: #{setting.changes.inspect})
+end
+```
 
 #### Storage Engines
 
@@ -252,6 +264,11 @@ SuperSettings.configure do |config|
   # You can also specify a cache implementation to use to cache the last updated timestamp
   # for model changes. By default this will use `Rails.cache`.
   # config.model.cache = Rails.cache
+
+  # You can define after_save callbacks for the model.
+  # config.model.after_save do |setting|
+  #   Rail.logger.info("Setting #{setting.key} changed to #{setting.value.inspect}")
+  # end
 end
 ```
 

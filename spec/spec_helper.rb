@@ -122,6 +122,27 @@ end
 
 SuperSettings::Storage::HttpStorage.base_url = "https://example.com/super_settings"
 
+class FakeLogger
+  class << self
+    def instance
+      @instance ||= new
+    end
+  end
+
+  attr_reader :messages
+
+  def initialize
+    @messages = []
+  end
+end
+
+SuperSettings::Setting.after_save do |setting|
+  important_changes = setting.changes.slice("key", "raw_value")
+  if important_changes.any?
+    FakeLogger.instance.messages << important_changes
+  end
+end
+
 I18n.locale = :en if defined?(I18n)
 
 # Needed to handle specs for Rails 4.2.

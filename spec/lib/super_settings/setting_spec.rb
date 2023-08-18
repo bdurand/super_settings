@@ -288,6 +288,26 @@ describe SuperSettings::Setting do
       setting = SuperSettings::Setting.new
       expect { setting.save! }.to raise_error(SuperSettings::Setting::InvalidRecordError)
     end
+
+    it "should call the after_save hooks" do
+      FakeLogger.instance.messages.clear
+      setting = SuperSettings::Setting.new(key: "foo", value: "bar")
+      setting.save!
+      expect(FakeLogger.instance.messages).to include({"key" => [nil, "foo"], "raw_value" => [nil, "bar"]})
+    end
+  end
+
+  describe "changes" do
+    it "gets the changes for the record and clears them after the record is saved" do
+      setting = SuperSettings::Setting.new(key: "test", value: "foobar")
+      expect(setting.changes).to eq({"key" => [nil, "test"], "raw_value" => [nil, "foobar"], "value_type" => [nil, "string"]})
+      setting.value = "bizbaz"
+      expect(setting.changes).to eq({"key" => [nil, "test"], "raw_value" => [nil, "bizbaz"], "value_type" => [nil, "string"]})
+      setting.save!
+      expect(setting.changes).to eq({})
+      setting.value = "newvalue"
+      expect(setting.changes).to eq({"raw_value" => ["bizbaz", "newvalue"]})
+    end
   end
 
   describe "histories" do
