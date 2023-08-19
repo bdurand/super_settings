@@ -299,7 +299,7 @@ describe SuperSettings::Setting do
 
   describe "changes" do
     it "gets the changes for the record and clears them after the record is saved" do
-      setting = SuperSettings::Setting.new(key: "test", value: "foobar")
+      setting = SuperSettings::Setting.new(key: "test", value: "foobar", value_type: "string")
       expect(setting.changes).to eq({"key" => [nil, "test"], "raw_value" => [nil, "foobar"], "value_type" => [nil, "string"]})
       setting.value = "bizbaz"
       expect(setting.changes).to eq({"key" => [nil, "test"], "raw_value" => [nil, "bizbaz"], "value_type" => [nil, "string"]})
