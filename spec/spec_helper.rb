@@ -137,10 +137,7 @@ class FakeLogger
 end
 
 SuperSettings::Setting.after_save do |setting|
-  important_changes = setting.changes.slice("key", "raw_value")
-  if important_changes.any?
-    FakeLogger.instance.messages << important_changes
-  end
+  FakeLogger.instance.messages << {key: setting.changes["key"], value: setting.changes["raw_value"]}
 end
 
 I18n.locale = :en if defined?(I18n)
