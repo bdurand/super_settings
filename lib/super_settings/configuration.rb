@@ -190,7 +190,7 @@ module SuperSettings
     #
     # @api private
     def call
-      while block = @deferred_configs.shift
+      while (block = @deferred_configs.shift)
         block&.call(self)
       end
     end

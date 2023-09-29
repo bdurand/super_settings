@@ -36,7 +36,7 @@ if defined?(Rails)
 
   Dir.glob(File.expand_path("../db/migrate/*.rb", __dir__)).sort.each do |path|
     require(path)
-    class_name = File.basename(path).sub(/\.rb/, "").split("_", 2).last.camelcase
+    class_name = File.basename(path).sub(".rb", "").split("_", 2).last.camelcase
     class_name.constantize.migrate(:up)
   end
   SuperSettings::Storage::ActiveRecordStorage::Model.reset_column_information
