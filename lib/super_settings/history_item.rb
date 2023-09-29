@@ -14,21 +14,21 @@ module SuperSettings
       !!(defined?(@deleted) && @deleted)
     end
 
-    # The method could be overriden to change how the changed_by attribute is displayed.
-    # For instance, you could store a user id in the changed_by column and add an association
-    # on this model.
+    # The display value for the changed_by attribute. This method can be overridden
+    # in the configuration by calling `model.define_changed_by_display` with the block to use
+    # to get the display value for the changed_by attribute. The default value is
+    # the changed_by attribute itself.
     #
-    # @example
-    #   class SuperSettings::HistoryItem
-    #     def changed_by_display
-    #       user = User.find_by(id: changed_by) if changed_by
-    #       user ? user.name : changed_by
-    #     end
-    #   end
-    #
-    # @return [String]
+    # @return [String, nil]
     def changed_by_display
-      changed_by
+      return changed_by if changed_by.nil?
+
+      display_proc = Configuration.instance.model.changed_by_display
+      if display_proc && !changed_by.nil?
+        display_proc.call(changed_by) || changed_by
+      else
+        changed_by
+      end
     end
   end
 end

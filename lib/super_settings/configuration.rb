@@ -140,6 +140,25 @@ module SuperSettings
       def after_save_blocks
         @after_save_blocks ||= []
       end
+
+      # Define how the changed_by attibute on the setting history will be displayed. The block
+      # will be called with the changed_by attribute and should return a string to display.
+      # The block will not be called if the changed_by attribute is nil.
+      #
+      # @example
+      #   define_changed_by_display { |changed_by| User.find_by(id: changed_by)&.name }
+      #
+      # @yield Block of code to call on the controller at request time
+      # @yieldparam changed_by [String] The value of the changed_by attribute
+      def define_changed_by_display(&block)
+        @changed_by_display = block
+      end
+
+      # @return [Proc, nil] The block to call to display the changed_by attribute in setting history
+      # @api private
+      def changed_by_display
+        @changed_by_display if defined?(@changed_by_display)
+      end
     end
 
     # Return the model specific configuration object.
@@ -155,6 +174,7 @@ module SuperSettings
     def initialize
       @model = Model.new
       @controller = Controller.new
+      @deferred_configs = []
     end
 
     # Defer the execution of a block that will be yielded to with the config object. This
@@ -163,15 +183,16 @@ module SuperSettings
     #
     # @api private
     def defer(&block)
-      @block = block
+      @deferred_configs << block
     end
 
     # Call the block deferred during initialization.
     #
     # @api private
     def call
-      @block&.call(self)
-      @block = nil
+      while block = @deferred_configs.shift
+        block&.call(self)
+      end
     end
   end
 end

@@ -31,6 +31,10 @@ unless ENV["SUPER_SETTINGS_NO_OVERRIDES"].present?
 
     config.controller.authentication_url = "/login"
 
+    config.model.define_changed_by_display do |changed_by|
+      "[#{changed_by}]"
+    end
+  
     config.model.cache = Rails.cache
     config.model.storage = ENV["SUPER_SETTINGS_STORAGE"]
     if config.model.storage.to_s == "redis"

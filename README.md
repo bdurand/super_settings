@@ -250,10 +250,15 @@ SuperSettings.configure do |config|
     end
   end
 
-  # Define a method that returns the value that will be stored in the settings history in
+  # Define a block that returns the value that will be stored in the settings history in
   # the `changed_by` column.
   config.controller.define_changed_by do
-    current_user.name
+    current_user.id
+  end
+
+  # Define a block that determines how to display the `changed_by`` value in the setting history.
+  config.model.define_changed_by_display do |changed_by_id|
+    User.find_by(id: changed_by_id)&.name
   end
 
   # You can define the storage engine for the model. This can be either done either with a Class
