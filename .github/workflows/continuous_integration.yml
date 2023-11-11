@@ -32,9 +32,6 @@ jobs:
         include:
           - ruby: "ruby"
             standardrb: true
-          - ruby: "ruby"
-            appraisal: "rails_latest"
-            coverage: true
           - ruby: "3.2"
             appraisal: "rails_7.1"
           - ruby: "3.1"
