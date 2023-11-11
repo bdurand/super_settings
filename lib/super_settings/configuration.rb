@@ -22,8 +22,14 @@ module SuperSettings
       # since it will be compatible with class reloading in a development environment.
       attr_writer :superclass
 
+      def initialize
+        @superclass = nil
+        @web_ui_enabled = true
+        @changed_by_block = nil
+      end
+
       def superclass
-        if defined?(@superclass) && @superclass.is_a?(String)
+        if @superclass.is_a?(String)
           @superclass.constantize
         else
           @superclass
@@ -54,9 +60,6 @@ module SuperSettings
       attr_writer :web_ui_enabled
 
       def web_ui_enabled?
-        unless defined?(@web_ui_enabled)
-          @web_ui_enabled = true
-        end
         !!@web_ui_enabled
       end
 
@@ -87,7 +90,7 @@ module SuperSettings
       #
       # @api private
       def changed_by(controller)
-        if defined?(@changed_by_block) && @changed_by_block
+        if @changed_by_block
           controller.instance_eval(&@changed_by_block)
         end
       end
@@ -101,15 +104,19 @@ module SuperSettings
 
       attr_writer :storage
 
+      attr_reader :after_save_blocks, :changed_by_display
+
+      def initialize
+        @storage = :active_record
+        @after_save_blocks = []
+        @changed_by_display = nil
+      end
+
       # Specify the storage engine to use for persisting settings. The value can either be specified
       # as a full class name or an underscored class name for a storage classed defined in the
       # SuperSettings::Storage namespace. The default storage engine is +SuperSettings::Storage::ActiveRecord+.
       def storage
-        if defined?(@storage) && @storage
-          @storage
-        else
-          :active_record
-        end
+        @storage || :active_record
       end
 
       # @return [Class]
@@ -135,12 +142,6 @@ module SuperSettings
         after_save_blocks << block
       end
 
-      # @return [Array<Proc>] The after_save block
-      # @api private
-      def after_save_blocks
-        @after_save_blocks ||= []
-      end
-
       # Define how the changed_by attibute on the setting history will be displayed. The block
       # will be called with the changed_by attribute and should return a string to display.
       # The block will not be called if the changed_by attribute is nil.
@@ -152,12 +153,6 @@ module SuperSettings
       # @yieldparam changed_by [String] The value of the changed_by attribute
       def define_changed_by_display(&block)
         @changed_by_display = block
-      end
-
-      # @return [Proc, nil] The block to call to display the changed_by attribute in setting history
-      # @api private
-      def changed_by_display
-        @changed_by_display if defined?(@changed_by_display)
       end
     end
 

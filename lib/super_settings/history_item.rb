@@ -9,9 +9,13 @@ module SuperSettings
     attr_accessor :key, :value, :changed_by, :created_at
     attr_writer :deleted
 
+    def initialize(*)
+      @deleted = false
+      super
+    end
+
     def deleted?
-      # Stupid strict mode...
-      !!(defined?(@deleted) && @deleted)
+      !!@deleted
     end
 
     # The display value for the changed_by attribute. This method can be overridden

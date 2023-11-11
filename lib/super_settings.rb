@@ -23,6 +23,8 @@ end
 module SuperSettings
   DEFAULT_REFRESH_INTERVAL = 5.0
 
+  @local_cache = LocalCache.new(refresh_interval: DEFAULT_REFRESH_INTERVAL)
+
   class << self
     # Get a setting value cast to a string.
     #
@@ -219,9 +221,7 @@ module SuperSettings
 
     private
 
-    def local_cache
-      @local_cache ||= LocalCache.new(refresh_interval: DEFAULT_REFRESH_INTERVAL)
-    end
+    attr_reader :local_cache
 
     def current_context
       Thread.current[:super_settings_context]

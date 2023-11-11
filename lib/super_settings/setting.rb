@@ -22,6 +22,9 @@ module SuperSettings
 
     ARRAY_DELIMITER = /[\n\r]+/.freeze
 
+    NOT_SET = Object.new.freeze
+    private_constant :NOT_SET
+
     # Exception raised if you try to save with invalid data.
     class InvalidRecordError < StandardError
     end
@@ -33,6 +36,9 @@ module SuperSettings
     # and is cleared after the record is saved.
     attr_accessor :changed_by
 
+    @storage = NOT_SET
+    @after_save_blocks = []
+
     class << self
       # Set a cache to use for caching values. This feature is optional. The cache must respond
       # to +delete(key)+ and +fetch(key, &block)+. If you are running in a Rails environment,
@@ -42,15 +48,19 @@ module SuperSettings
       # Set the storage class to use for persisting data.
       attr_writer :storage
 
+      attr_reader :after_save_blocks
+
       # @return [Class] The storage class to use for persisting data.
       # @api private
       def storage
-        if defined?(@storage)
-          @storage
-        elsif defined?(::SuperSettings::Storage::ActiveRecordStorage)
-          ::SuperSettings::Storage::ActiveRecordStorage
+        if @storage == NOT_SET
+          if defined?(::SuperSettings::Storage::ActiveRecordStorage)
+            ::SuperSettings::Storage::ActiveRecordStorage
+          else
+            raise ArgumentError.new("No storage class defined for #{name}")
+          end
         else
-          raise ArgumentError.new("No storage class defined for #{name}")
+          @storage
         end
       end
 
@@ -61,12 +71,6 @@ module SuperSettings
       # @yieldparam setting [SuperSetting::Setting]
       def after_save(&block)
         after_save_blocks << block
-      end
-
-      # @return [Array<Proc>] Blocks to be called after a setting is saved.
-      # @api private
-      def after_save_blocks
-        @after_save_blocks ||= []
       end
 
       # Create a new setting with the specified attributes.
