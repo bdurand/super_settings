@@ -13,13 +13,13 @@ module SuperSettings
       attr_reader :key, :raw_value, :description, :value_type, :updated_at, :created_at
       attr_accessor :changed_by
 
+      @settings = {}
+      @history = {}
+
       class << self
-        def settings
-          @settings ||= {}
-        end
+        attr_reader :settings
 
         def history(key)
-          @history ||= {}
           items = @history[key]
           unless items
             items = []
@@ -66,6 +66,18 @@ module SuperSettings
         def default_load_asynchronous?
           true
         end
+      end
+
+      def initialize(*)
+        @original_key = nil
+        @raw_value = nil
+        @created_at = nil
+        @updated_at = nil
+        @description = nil
+        @value_type = nil
+        @deleted = false
+        @persisted = false
+        super
       end
 
       def history(limit: nil, offset: 0)
@@ -121,11 +133,11 @@ module SuperSettings
       end
 
       def deleted?
-        !!(defined?(@deleted) && @deleted)
+        !!@deleted
       end
 
       def persisted?
-        !!(defined?(@persisted) && @persisted)
+        !!@persisted
       end
 
       private

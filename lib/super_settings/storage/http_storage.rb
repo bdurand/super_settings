@@ -14,6 +14,9 @@ module SuperSettings
       DEFAULT_HEADERS = {"Accept" => "application/json"}.freeze
       DEFAULT_TIMEOUT = 5.0
 
+      @headers = {}
+      @query_params = {}
+
       attr_reader :key, :raw_value, :description, :value_type, :updated_at, :created_at
 
       class Error < StandardError
@@ -36,12 +39,17 @@ module SuperSettings
 
         attr_accessor :key, :value, :changed_by, :deleted
 
+        def initialize(*)
+          @deleted = false
+          super
+        end
+
         def created_at=(val)
           @created_at = SuperSettings::Coerce.time(val)
         end
 
         def deleted?
-          !!(defined?(@deleted) && @deleted)
+          !!@deleted
         end
       end
 
@@ -75,13 +83,9 @@ module SuperSettings
 
         attr_accessor :timeout
 
-        def headers
-          @headers ||= {}
-        end
+        attr_reader :headers
 
-        def query_params
-          @query_params ||= {}
-        end
+        attr_reader :query_params
 
         protected
 
@@ -178,6 +182,12 @@ module SuperSettings
         end
       end
 
+      def initialize(*)
+        @persisted = false
+        @deleted = false
+        super
+      end
+
       def save!
         payload = {key: key}
         if deleted?
@@ -248,11 +258,11 @@ module SuperSettings
       end
 
       def deleted?
-        !!(defined?(@deleted) && @deleted)
+        !!@deleted
       end
 
       def persisted?
-        !!(defined?(@persisted) && @persisted)
+        !!@persisted
       end
 
       private

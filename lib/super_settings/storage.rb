@@ -10,6 +10,8 @@ module SuperSettings
     def self.included(base)
       base.extend(ClassMethods)
       base.include(Attributes) unless base.instance_methods.include?(:attributes=)
+
+      base.instance_variable_set(:@load_asynchronous, nil)
     end
 
     module ClassMethods
@@ -76,7 +78,7 @@ module SuperSettings
       #
       # @return [Boolean]
       def load_asynchronous?
-        !!((defined?(@load_asynchronous) && !@load_asynchronous.nil?) ? @load_asynchronous : default_load_asynchronous?)
+        !!(@load_asynchronous.nil? ? default_load_asynchronous? : @load_asynchronous)
       end
 
       # Set to true to force loading setting asynchronously in a background thread.

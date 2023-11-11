@@ -123,6 +123,8 @@ end
 SuperSettings::Storage::HttpStorage.base_url = "https://example.com/super_settings"
 
 class FakeLogger
+  @instance = nil
+
   class << self
     def instance
       @instance ||= new

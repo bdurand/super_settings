@@ -1,6 +1,7 @@
 # SuperSettings
 
 [![Continuous Integration](https://github.com/bdurand/super_settings/actions/workflows/continuous_integration.yml/badge.svg)](https://github.com/bdurand/super_settings/actions/workflows/continuous_integration.yml)
+[![Regression Test](https://github.com/bdurand/super_settings/actions/workflows/regression_test.yml/badge.svg)](https://github.com/bdurand/super_settings/actions/workflows/regression_test.yml)
 [![Ruby Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://github.com/testdouble/standard)
 
 This gem provides a framework for maintaining runtime application settings. Settings are persisted in a database but cached in memory for quick, efficient access. The settings are designed so they can be updated dynamically without requiring code deployment or restarting processes. The code scales very well and can easily handle very high throughput environments.

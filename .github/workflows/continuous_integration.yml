@@ -12,7 +12,6 @@ env:
   BUNDLE_PATH: vendor/bundle
   BUNDLE_JOBS: 3
   BUNDLE_RETRY: 3
-  CC_TEST_REPORTER_ID: 9100bb64cf3ff1765ecab9ccdb7d2507c9f42829d50e65497d54f5cef0a18e40
 jobs:
   specs:
     name: ruby-${{ matrix.ruby }} ${{ matrix.appraisal }}
@@ -56,7 +55,7 @@ jobs:
       BUNDLE_GEMFILE: ${{ matrix.gemfile }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Ruby ${{ matrix.ruby }}
         uses: ruby/setup-ruby@v1
         with:
@@ -77,9 +76,6 @@ jobs:
           bundle update
       - name: Run specs
         run:  bundle exec rake spec
-      - name: Code coverage
-        if:   matrix.coverage == true
-        uses: paambaati/codeclimate-action@v2.7.5
       - name: Run standardrb
         if:   matrix.standardrb == true
         run:  bundle exec rake standard

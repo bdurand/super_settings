@@ -65,6 +65,11 @@ module SuperSettings
           end
         end
 
+        def initialize(*)
+          @deleted = false
+          super
+        end
+
         def created_at=(val)
           @created_at = SuperSettings::Coerce.time(val)
         end
@@ -77,7 +82,7 @@ module SuperSettings
         end
 
         def deleted?
-          !!(defined?(@deleted) && @deleted)
+          !!@deleted
         end
 
         private
@@ -184,6 +189,12 @@ module SuperSettings
         end
       end
 
+      def initialize(*)
+        @deleted = false
+        @persisted = false
+        super
+      end
+
       def history(limit: nil, offset: 0)
         HistoryStorage.find_all_by_key(key: key, limit: limit, offset: offset).collect do |record|
           HistoryItem.new(key: key, value: record.value, changed_by: record.changed_by, created_at: record.created_at, deleted: record.deleted?)
@@ -242,11 +253,11 @@ module SuperSettings
       end
 
       def deleted?
-        !!(defined?(@deleted) && @deleted)
+        !!@deleted
       end
 
       def persisted?
-        !!(defined?(@persisted) && @persisted)
+        !!@persisted
       end
 
       private
