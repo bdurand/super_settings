@@ -74,6 +74,8 @@ jobs:
         run: |
           bundle update
       - name: Run specs
+        env:
+          FERRUM_PROCESS_TIMEOUT: "30"
         run:  bundle exec rake spec
       - name: Run standardrb
         if:   matrix.standardrb == true
