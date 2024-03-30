@@ -272,10 +272,8 @@ end
 require_relative "storage/http_storage"
 require_relative "storage/redis_storage"
 if defined?(ActiveSupport) && ActiveSupport.respond_to?(:on_load)
-  ActiveSupport.on_load(:active_record) do
+  ActiveSupport.on_load(:active_record_base) do
     require_relative "storage/active_record_storage"
   end
-elsif defined?(ActiveRecord::Base)
-  require_relative "storage/active_record_storage"
 end
 # :nocov:

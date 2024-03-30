@@ -13,8 +13,8 @@ module SuperSettings
 
     def attributes=(values)
       values.each do |name, value|
-        if respond_to?("#{name}=", true)
-          send("#{name}=", value)
+        if respond_to?(:"#{name}=", true)
+          send(:"#{name}=", value)
         else
           raise UnknownAttributeError.new("unknown attribute #{name.to_s.inspect} for #{self.class}")
         end

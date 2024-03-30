@@ -1,26 +1,24 @@
 # frozen_string_literal: true
 
-require_relative "super_settings/application"
+# These classes are required for the gem to function.
 require_relative "super_settings/coerce"
 require_relative "super_settings/configuration"
 require_relative "super_settings/context"
-require_relative "super_settings/context/rack_middleware"
 require_relative "super_settings/local_cache"
-require_relative "super_settings/rest_api"
-require_relative "super_settings/rack_application"
-require_relative "super_settings/controller_actions"
 require_relative "super_settings/attributes"
 require_relative "super_settings/setting"
-require_relative "super_settings/history_item"
 require_relative "super_settings/storage"
-require_relative "super_settings/version"
-
-if defined?(Rails::Engine)
-  require_relative "super_settings/engine"
-end
 
 # This is the main interface to the access settings.
 module SuperSettings
+  # These classes are autoloaded when they are needed.
+  autoload :Application, "super_settings/application"
+  autoload :RestAPI, "super_settings/rest_api"
+  autoload :RackApplication, "super_settings/rack_application"
+  autoload :ControllerActions, "super_settings/controller_actions"
+  autoload :HistoryItem, "super_settings/history_item"
+  autoload :VERSION, "super_settings/version"
+
   DEFAULT_REFRESH_INTERVAL = 5.0
 
   @local_cache = LocalCache.new(refresh_interval: DEFAULT_REFRESH_INTERVAL)
@@ -240,4 +238,8 @@ module SuperSettings
       end
     end
   end
+end
+
+if defined?(Rails::Engine)
+  require_relative "super_settings/engine"
 end
