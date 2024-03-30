@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 # These classes are required for the gem to function.
+require_relative "super_settings/attributes"
 require_relative "super_settings/coerce"
 require_relative "super_settings/configuration"
 require_relative "super_settings/context"
 require_relative "super_settings/local_cache"
-require_relative "super_settings/attributes"
 require_relative "super_settings/setting"
 require_relative "super_settings/storage"
 

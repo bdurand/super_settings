@@ -4,6 +4,10 @@ module SuperSettings
   # Abstraction over how a setting is stored and retrieved from the storage engine. Models
   # must implement the methods module in this module that raise NotImplementedError.
   module Storage
+    autoload :ActiveRecordStorage, File.join(__dir__, "storage/active_record_storage")
+    autoload :HttpStorage, File.join(__dir__, "storage/http_storage")
+    autoload :RedisStorage, File.join(__dir__, "storage/redis_storage")
+
     class RecordInvalid < StandardError
     end
 
