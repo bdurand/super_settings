@@ -2,7 +2,7 @@
 
 require_relative "../../../spec_helper"
 
-if defined?(SuperSettings::Storage::ActiveRecordStorage)
+if defined?(ActiveRecord)
   describe SuperSettings::Storage::ActiveRecordStorage do
     describe "all" do
       it "should return all settings" do

@@ -17,8 +17,6 @@ module SuperSettings
       end
 
       if defined?(Sidekiq.server?) && Sidekiq.server?
-        require_relative "context/sidekiq_middleware"
-
         Sidekiq.configure_server do |sidekiq_config|
           sidekiq_config.server_middleware do |chain|
             chain.prepend(SuperSettings::Context::SidekiqMiddleware)

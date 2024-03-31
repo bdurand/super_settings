@@ -12,7 +12,6 @@ options = Rack::Server::Options.new.parse!(ARGV)
 
 storage = (ARGV[0] || "redis")
 if storage == "redis"
-  require "redis"
   SuperSettings::Setting.storage = SuperSettings::Storage::RedisStorage
   SuperSettings::Storage::RedisStorage.redis = Redis.new(url: ENV["REDIS_URL"])
 elsif storage == "http"

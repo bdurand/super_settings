@@ -5,6 +5,7 @@ format: progress
 ignore:
   - '**/*':
     - Style/RedundantBegin
+    - Style/RedundantParentheses
   - 'spec/**/*':
     - Lint/UselessAssignment
   - 'spec/dummy/db/schema.rb'
