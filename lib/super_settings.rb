@@ -103,6 +103,28 @@ module SuperSettings
       Array(val).collect { |v| v&.to_s }
     end
 
+    # Get a pseudo random number. This method works the same as Kernel.rand. However, if you are
+    # inside a context block, then the random number will be the same each time you call this method.
+    # This is useful when you need to generate a random number for a setting that you want to remain
+    # constant for the duration of the block.
+    #
+    # So, for instance, if you are generating a random number to determine if a feature is enabled,
+    # you can use this method to ensure that the feature is either always enabled or always disabled
+    # for the duration of the block.
+    #
+    # @param max [Integer, Float, Range] the maximum value or range to use for the random number
+    # @return [Integer, Float] the random number. It will be an integer if max is an integer, otherwise
+    #   it will be a float.
+    def rand(max = nil)
+      max ||= 1.0
+      context = current_context
+      if context
+        context.rand(max)
+      else
+        Random.rand(max)
+      end
+    end
+
     # Create settings and update the local cache with the values. If a block is given, then the
     # value will be reverted at the end of the block. This method can be used in tests when you
     # need to inject a specific value into your settings.
@@ -146,7 +168,7 @@ module SuperSettings
     def context(&block)
       reset_context = Thread.current[:super_settings_context].nil?
       begin
-        Thread.current[:super_settings_context] ||= {}
+        Thread.current[:super_settings_context] ||= Context::Current.new
         yield
       ensure
         Thread.current[:super_settings_context] = nil if reset_context
