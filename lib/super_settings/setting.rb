@@ -54,7 +54,7 @@ module SuperSettings
       # @api private
       def storage
         if @storage == NOT_SET
-          if defined?(::SuperSettings::Storage::ActiveRecordStorage)
+          if defined?(ActiveRecord) && defined?(::SuperSettings::Storage::ActiveRecordStorage)
             ::SuperSettings::Storage::ActiveRecordStorage
           else
             raise ArgumentError.new("No storage class defined for #{name}")
