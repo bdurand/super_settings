@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 1.0.2
 
+### Added
+
+- Added SuperSetting.rand method that can return a consistent random number inside of a context block.
+
 ### Changed
 
 - Lazy load non-required classes.

@@ -103,6 +103,16 @@ SuperSettings.context do
 end
 ```
 
+You can also use the `SuperSettings.rand` method inside a context block to return a consistent random number. This can be useful for things like feature flags that you want to turn on for only a percentage of requests:
+
+```ruby
+def enabled?
+  SuperSettings.float("feature_rollout_percent") <= SuperSettings.rand
+end
+```
+
+Now the value of `enabled?` will always return the same value inside of a context block. It will still be random if it is enabled for each context block.
+
 It's a good idea to add a `context` block around your main unit of work:
 
 - Rack application: add `SuperSettings::Context::RackMiddleware` to your middleware stack

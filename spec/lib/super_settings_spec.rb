@@ -194,6 +194,30 @@ describe SuperSettings do
     end
   end
 
+  describe "rand" do
+    it "should get a random value" do
+      n = SuperSettings.rand
+      expect(n).to be_a(Float)
+      expect(SuperSettings.rand).to_not eq n
+
+      i = SuperSettings.rand(1_000_000_000)
+      expect(i).to be_a(Integer)
+      expect(SuperSettings.rand(1_000_000_000)).to_not eq i
+    end
+
+    it "should always return the same number inside a context block" do
+      SuperSettings.context do
+        n = SuperSettings.rand
+        expect(n).to be_a(Float)
+        expect(SuperSettings.rand).to eq n
+
+        i = SuperSettings.rand(1_000_000_000)
+        expect(i).to be_a(Integer)
+        expect(SuperSettings.rand(1_000_000_000)).to eq i
+      end
+    end
+  end
+
   describe "set" do
     it "updates a setting in the database and cache" do
       setting = SuperSettings::Setting.create!(key: "foo", value: "bar")
