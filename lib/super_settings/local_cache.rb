@@ -21,7 +21,8 @@ module SuperSettings
     attr_reader :refresh_interval
 
     # @param refresh_interval [Numeric] number of seconds to wait between checking for setting updates
-    def initialize(refresh_interval:)
+    def initialize(namespace:, refresh_interval:)
+      @settings = NamespacedSettings.new(namespace)
       @refresh_interval = refresh_interval
       @lock = Mutex.new
       reset
@@ -46,7 +47,7 @@ module SuperSettings
         if @refreshing
           value = NOT_DEFINED
         else
-          setting = Setting.find_by_key(key)
+          setting = @settings.find_by_key(key)
           value = (setting ? setting.value : NOT_DEFINED)
           # Guard against caching too many cache missees; at some point it's better to slam
           # the database rather than run out of memory.
@@ -118,7 +119,7 @@ module SuperSettings
         begin
           values = {}
           start_time = Time.now
-          Setting.active.each do |setting|
+          @settings.active.each do |setting|
             values[setting.key] = setting.value.freeze
           end
           set_cache_values(start_time) { values }
@@ -149,7 +150,7 @@ module SuperSettings
 
       refresh_block = lambda do
         begin
-          last_db_update = Setting.last_updated_at
+          last_db_update = @settings.last_updated_at
           if last_db_update.nil? || last_db_update >= last_refresh_time - 1
             merge_load(last_refresh_time)
           end
@@ -209,7 +210,7 @@ module SuperSettings
     def merge_load(last_refresh_time)
       changed_settings = {}
       start_time = Time.now
-      Setting.updated_since(last_refresh_time - 1).each do |setting|
+      @settings.updated_since(last_refresh_time - 1).each do |setting|
         value = (setting.deleted? ? NOT_DEFINED : setting.value)
         changed_settings[setting.key] = value
       end
@@ -225,9 +226,9 @@ module SuperSettings
         @lock.synchronize do
           return unless previous_cache_id == @cache.object_id
         end
-        load_settings(Setting.storage.load_asynchronous?)
+        load_settings(SuperSettings.storage.load_asynchronous?)
       elsif Time.now >= @next_check_at
-        refresh(Setting.storage.load_asynchronous?)
+        refresh(SuperSettings.storage.load_asynchronous?)
       end
     end
 

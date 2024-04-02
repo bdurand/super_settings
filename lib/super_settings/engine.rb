@@ -61,8 +61,8 @@ module SuperSettings
       end
 
       model_load_block = proc do
-        Setting.cache = (configuration.model.cache || Rails.cache)
-        Setting.storage = configuration.model.storage_class
+        SuperSettings.cache = (configuration.model.cache || Rails.cache)
+        SuperSettings.storage = configuration.model.storage_class
 
         configuration.model.after_save_blocks.each do |block|
           Setting.after_save(&block)

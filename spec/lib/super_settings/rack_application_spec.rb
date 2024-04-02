@@ -3,21 +3,23 @@
 require_relative "../../spec_helper"
 
 describe SuperSettings::RackApplication do
+  let(:namespace) { nil }
+  let(:settings) { SuperSettings::NamespacedSettings.new(namespace) }
   let(:app) { lambda { |env| [200, {}, ["OK"]] } }
   let(:middleware) do
-    SuperSettings::RackApplication.new(app, "/prefix") do
+    SuperSettings::RackApplication.new(app, "/prefix", namespace) do
       def current_user(request)
         "user@example.com"
       end
     end
   end
 
-  let!(:setting_1) { SuperSettings::Setting.create!(key: "string", value_type: :string, value: "foobar") }
-  let!(:setting_2) { SuperSettings::Setting.create!(key: "integer", value_type: :integer, value: 4) }
-  let!(:setting_3) { SuperSettings::Setting.create!(key: "float", value_type: :float, value: 12.5) }
-  let!(:setting_4) { SuperSettings::Setting.create!(key: "boolean", value_type: :boolean, value: true) }
-  let!(:setting_5) { SuperSettings::Setting.create!(key: "datetime", value_type: :datetime, value: Time.now) }
-  let!(:setting_6) { SuperSettings::Setting.create!(key: "array", value_type: :array, value: ["foo", "bar"]) }
+  let!(:setting_1) { settings.create!(key: "string", value_type: :string, value: "foobar") }
+  let!(:setting_2) { settings.create!(key: "integer", value_type: :integer, value: 4) }
+  let!(:setting_3) { settings.create!(key: "float", value_type: :float, value: 12.5) }
+  let!(:setting_4) { settings.create!(key: "boolean", value_type: :boolean, value: true) }
+  let!(:setting_5) { settings.create!(key: "datetime", value_type: :datetime, value: Time.now) }
+  let!(:setting_6) { settings.create!(key: "array", value_type: :array, value: ["foo", "bar"]) }
 
   describe "method definition" do
     it "should allow overriding methods in the initialize block" do
@@ -184,9 +186,9 @@ describe SuperSettings::RackApplication do
       expect(response[1]).to match("content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache")
       body = response[2].first
       expect(JSON.parse(body)).to eq({"success" => true})
-      expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "new value"
-      expect(SuperSettings::Setting.all.detect { |s| s.key == setting_2.key }.deleted?).to eq true
-      expect(SuperSettings::Setting.find_by_key("newkey").value).to eq 44
+      expect(settings.find_by_key(setting_1.key).value).to eq "new value"
+      expect(settings.all.detect { |s| s.key == setting_2.key }.deleted?).to eq true
+      expect(settings.find_by_key("newkey").value).to eq 44
     end
 
     it "should not update any settings on the REST endpoint if there is an error" do
@@ -213,8 +215,8 @@ describe SuperSettings::RackApplication do
       expect(response[1]).to match("content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache")
       body = response[2].first
       expect(JSON.parse(body)).to eq({"success" => false, "errors" => {"integer" => ["value type must be one of string, integer, float, boolean, datetime, array"]}})
-      expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "foobar"
-      expect(SuperSettings::Setting.find_by_key("newkey")).to eq nil
+      expect(settings.find_by_key(setting_1.key).value).to eq "foobar"
+      expect(settings.find_by_key("newkey")).to eq nil
     end
 
     it "should return a forbidden response if access is denied" do

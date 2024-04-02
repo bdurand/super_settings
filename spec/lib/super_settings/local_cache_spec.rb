@@ -3,12 +3,14 @@
 require_relative "../../spec_helper"
 
 describe SuperSettings::LocalCache do
-  let(:cache) { SuperSettings::LocalCache.new(refresh_interval: 5) }
+  let(:namespace) { "sample" }
+  let(:settings) { SuperSettings::NamespacedSettings.new(namespace) }
+  let(:cache) { SuperSettings::LocalCache.new(namespace: namespace, refresh_interval: 5) }
 
   before do
-    SuperSettings::Setting.create!(key: "key.1", value: 1, value_type: :integer)
-    SuperSettings::Setting.create!(key: "key.2", value: 2, value_type: :integer, deleted: true)
-    SuperSettings::Setting.create!(key: "key.3", value: 3, value_type: :integer)
+    settings.create!(key: "key.1", value: 1, value_type: :integer)
+    settings.create!(key: "key.2", value: 2, value_type: :integer, deleted: true)
+    settings.create!(key: "key.3", value: 3, value_type: :integer)
   end
 
   describe "get key" do
@@ -27,7 +29,7 @@ describe SuperSettings::LocalCache do
       cache["key.1"]
       cache.wait_for_load
       expect(cache["key.1"]).to eq 1
-      SuperSettings::Setting.find_by_key("key.1").update!(value: 10)
+      settings.find_by_key("key.1").update!(value: 10)
       expect(cache["key.1"]).to eq 1
       sleep(0.1)
       cache["key.1"]
@@ -44,7 +46,7 @@ describe SuperSettings::LocalCache do
       expect(cache.size).to eq 3
       expect(cache).to include("key.4")
 
-      SuperSettings::Setting.create!(key: "key.4", value: 4, value_type: :integer)
+      settings.create!(key: "key.4", value: 4, value_type: :integer)
       sleep(0.1)
       cache["key.4"]
       cache.wait_for_load
@@ -64,16 +66,16 @@ describe SuperSettings::LocalCache do
 
   describe "refresh" do
     it "should do nothing if no settings are loaded" do
-      expect(SuperSettings::Setting).to_not receive(:last_updated_at)
+      expect(settings).to_not receive(:last_updated_at)
       expect(cache.loaded?).to eq false
     end
 
     it "should load updated records" do
       cache.load_settings
-      SuperSettings::Setting.find_by_key("key.1").update!(value: 10)
-      SuperSettings::Setting.all.detect { |setting| setting.key == "key.2" }.update!(deleted: false)
-      SuperSettings::Setting.find_by_key("key.3").update!(deleted: true)
-      SuperSettings::Setting.create!(key: "key.4", value: 4, value_type: :integer)
+      settings.find_by_key("key.1").update!(value: 10)
+      settings.all.detect { |setting| setting.key == "key.2" }.update!(deleted: false)
+      settings.find_by_key("key.3").update!(deleted: true)
+      settings.create!(key: "key.4", value: 4, value_type: :integer)
       expect(cache["key.1"]).to eq 1
       expect(cache["key.2"]).to eq 2
       expect(cache["key.3"]).to eq 3
@@ -102,8 +104,8 @@ describe SuperSettings::LocalCache do
     end
 
     it "should include keys with nil values, but not undefined keys" do
-      SuperSettings::Setting.create!(key: "key.4", value: nil, value_type: :integer)
-      SuperSettings::Setting.find_by_key("key.3").update!(deleted: true)
+      settings.create!(key: "key.4", value: nil, value_type: :integer)
+      settings.find_by_key("key.3").update!(deleted: true)
       cache["key.5"]
       cache.wait_for_load
       expect(cache.to_h).to eq("key.1" => 1, "key.4" => nil)

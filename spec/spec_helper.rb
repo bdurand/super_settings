@@ -41,10 +41,10 @@ if defined?(Rails)
   end
   SuperSettings::Storage::ActiveRecordStorage::Model.reset_column_information
 
-  SuperSettings::Setting.storage = SuperSettings::Storage::ActiveRecordStorage
+  SuperSettings.storage = SuperSettings::Storage::ActiveRecordStorage
 else
   require "dotenv/load"
-  SuperSettings::Setting.storage = SuperSettings::Storage::TestStorage
+  SuperSettings.storage = SuperSettings::Storage::TestStorage
 end
 
 require "webmock/rspec"

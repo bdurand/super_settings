@@ -225,14 +225,14 @@ describe SuperSettings do
       expect(SuperSettings.get("foo")).to eq "bar"
       SuperSettings.set("foo", "bip")
       expect(SuperSettings.get("foo")).to eq "bip"
-      expect(SuperSettings::Setting.find_by_key(setting.key).value).to eq "bip"
+      expect(SuperSettings::NamespacedSettings.new(nil).find_by_key(setting.key).value).to eq "bip"
     end
 
     it "creates a setting in the database and cache" do
       expect(SuperSettings.get("foo")).to eq nil
       SuperSettings.set("foo", "bip")
       expect(SuperSettings.get("foo")).to eq "bip"
-      expect(SuperSettings::Setting.find_by_key("foo").value).to eq "bip"
+      expect(SuperSettings::NamespacedSettings.new(nil).find_by_key("foo").value).to eq "bip"
     end
   end
 end

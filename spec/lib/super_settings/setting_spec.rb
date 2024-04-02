@@ -3,8 +3,11 @@
 require_relative "../../spec_helper"
 
 describe SuperSettings::Setting do
+  let(:namespace) { "sample" }
+  let(:settings) { SuperSettings::NamespacedSettings.new(namespace) }
+
   after do
-    SuperSettings::Setting.cache = nil
+    SuperSettings.cache = nil
   end
 
   describe "value type" do
@@ -28,8 +31,8 @@ describe SuperSettings::Setting do
       end
 
       it "should cast the value to a string" do
-        setting = SuperSettings::Setting.create!(key: "test", value: :foobar, value_type: :string)
-        expect(SuperSettings::Setting.find_by_key(setting.key).value).to eq "foobar"
+        setting = SuperSettings::Setting.create!(key: "test", value: :foobar, value_type: :string, namespace: namespace)
+        expect(settings.find_by_key(setting.key).value).to eq "foobar"
       end
     end
 
@@ -53,12 +56,12 @@ describe SuperSettings::Setting do
       end
 
       it "should cast the value to an integer" do
-        setting = SuperSettings::Setting.create!(key: "test", value: "123", value_type: :integer)
-        expect(SuperSettings::Setting.find_by_key(setting.key).value).to eq 123
+        setting = SuperSettings::Setting.create!(key: "test", value: "123", value_type: :integer, namespace: namespace)
+        expect(settings.find_by_key(setting.key).value).to eq 123
       end
 
       it "should not be valid with a non-integer" do
-        setting = SuperSettings::Setting.new(key: "test", value: "foo", value_type: :integer)
+        setting = SuperSettings::Setting.new(key: "test", value: "foo", value_type: :integer, namespace: namespace)
         expect(setting).not_to be_valid
         expect(setting.errors["value"]).to eq ["value must be an integer"]
       end
@@ -84,8 +87,8 @@ describe SuperSettings::Setting do
       end
 
       it "should cast the value to a float" do
-        setting = SuperSettings::Setting.create!(key: "test", value: "12.5", value_type: :float)
-        expect(SuperSettings::Setting.find_by_key(setting.key).value).to eq 12.5
+        setting = SuperSettings::Setting.create!(key: "test", value: "12.5", value_type: :float, namespace: namespace)
+        expect(settings.find_by_key(setting.key).value).to eq 12.5
       end
 
       it "should not be valid with a non-number" do
@@ -211,64 +214,6 @@ describe SuperSettings::Setting do
     end
   end
 
-  describe "all" do
-    it "should return all settings" do
-      setting_1 = SuperSettings::Setting.create!(key: "setting.1", value: "foo")
-      setting_2 = SuperSettings::Setting.create!(key: "setting.2", value: "foo", deleted: true)
-      setting_3 = SuperSettings::Setting.create!(key: "setting.3", value: "foo")
-      expect(SuperSettings::Setting.all.collect(&:key)).to match_array(["setting.1", "setting.2", "setting.3"])
-    end
-  end
-
-  describe "updated_since" do
-    it "should return all settings updated since a specified time" do
-      setting_1 = SuperSettings::Setting.create!(key: "setting.1", value: "foo", updated_at: Time.now - 1)
-      timestamp = Time.now
-      setting_2 = SuperSettings::Setting.create!(key: "setting.2", value: "foo", deleted: true)
-      setting_3 = SuperSettings::Setting.create!(key: "setting.3", value: "foo")
-      expect(SuperSettings::Setting.updated_since(timestamp).collect(&:key)).to match_array(["setting.2", "setting.3"])
-    end
-  end
-
-  describe "active" do
-    it "should return only the active settings" do
-      setting_1 = SuperSettings::Setting.create!(key: "setting.1", value: "foo")
-      setting_2 = SuperSettings::Setting.create!(key: "setting.2", value: "foo", deleted: true)
-      setting_3 = SuperSettings::Setting.create!(key: "setting.3", value: "foo")
-      expect(SuperSettings::Setting.active.collect(&:key)).to match_array(["setting.1", "setting.3"])
-    end
-  end
-
-  describe "last_updated_at" do
-    it "should get the last updated at timestamp for any record" do
-      setting_1 = SuperSettings::Setting.create!(key: "test1", value: "foobar", updated_at: Time.now - 10)
-      expect(SuperSettings::Setting.last_updated_at).to eq SuperSettings::Setting.find_by_key(setting_1.key).updated_at
-      setting_2 = SuperSettings::Setting.create!(key: "test2", value: "foobar", updated_at: Time.now - 5)
-      expect(SuperSettings::Setting.last_updated_at).to eq SuperSettings::Setting.find_by_key(setting_2.key).updated_at
-      setting_1.update!(value: "new value")
-      expect(SuperSettings::Setting.last_updated_at).to eq SuperSettings::Setting.find_by_key(setting_1.key).updated_at
-    end
-
-    if defined?(ActiveSupport)
-      it "should cache the last updated timestamp" do
-        cache = ActiveSupport::Cache::MemoryStore.new
-        SuperSettings::Setting.cache = cache
-        setting = SuperSettings::Setting.create!(key: "test", value: "foobar", updated_at: Time.now - 10)
-        last_updated_at = SuperSettings::Setting.last_updated_at
-        expect(SuperSettings::Setting.last_updated_at).to eq last_updated_at
-        expect(cache.read(SuperSettings::Setting::LAST_UPDATED_CACHE_KEY)).to eq last_updated_at
-      end
-    end
-
-    it "should have the last updated handle deleted records" do
-      setting_1 = SuperSettings::Setting.create!(key: "test1", value: "foobar", updated_at: Time.now - 10)
-      setting_2 = SuperSettings::Setting.create!(key: "test2", value: "foobar", updated_at: Time.now - 5)
-      setting_1.update!(deleted: true)
-      setting_1 = SuperSettings::Setting.all.detect { |s| s.key == setting_1.key }
-      expect(SuperSettings::Setting.last_updated_at).to eq setting_1.updated_at
-    end
-  end
-
   describe "as_json" do
     it "should serialize the setting" do
       setting = SuperSettings::Setting.create!(key: "test", value: "foobar", description: "Test")
@@ -343,65 +288,6 @@ describe SuperSettings::Setting do
       setting.update!(value: "newvalue", changed_by: "John")
       histories = setting.history(limit: 10)
       expect(histories.collect(&:changed_by)).to eq ["John", nil, "Joe"]
-    end
-  end
-
-  describe "bulk_update" do
-    it "should update settings in a batch" do
-      setting_1 = SuperSettings::Setting.create!(key: "string", value_type: :string, value: "foobar")
-      setting_2 = SuperSettings::Setting.create!(key: "integer", value_type: :integer, value: 4)
-      setting_3 = SuperSettings::Setting.create!(key: "other", value_type: :string, value: 4)
-      success, settings = SuperSettings::Setting.bulk_update([
-        {
-          key: "string",
-          value: "new value",
-          value_type: "string"
-        },
-        {
-          key: "integer",
-          deleted: true
-        },
-        {
-          key: "newkey",
-          value: 44,
-          value_type: "integer"
-        }
-      ])
-      expect(success).to eq true
-      expect(settings.size).to eq 3
-      expect(settings.all? { |setting| setting.errors.empty? }).to eq true
-      expect(settings.all?(&:persisted?)).to eq true
-      expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "new value"
-      expect(SuperSettings::Setting.all.detect { |s| s.key == setting_2.key }.deleted?).to eq true
-      expect(SuperSettings::Setting.find_by_key("newkey").value).to eq 44
-    end
-
-    it "should not update any settings if there is an error" do
-      setting_1 = SuperSettings::Setting.create!(key: "string", value_type: :string, value: "foobar")
-      setting_2 = SuperSettings::Setting.create!(key: "integer", value_type: :integer, value: 4)
-      setting_3 = SuperSettings::Setting.create!(key: "other", value_type: :string, value: 4)
-      success, settings = SuperSettings::Setting.bulk_update([
-        {
-          key: "string",
-          value: "new value",
-          value_type: "string"
-        },
-        {
-          key: "newkey",
-          value: 44,
-          value_type: "integer"
-        },
-        {
-          key: "integer",
-          value_type: "invalid"
-        }
-      ])
-      expect(success).to eq false
-      expect(settings.size).to eq 3
-      expect(settings.detect { |setting| setting.key == "integer" }.errors).to_not be_empty
-      expect(settings.detect { |setting| setting.key == "newkey" }.persisted?).to eq false
-      expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "foobar"
-      expect(SuperSettings::Setting.find_by_key("newkey")).to eq nil
     end
   end
 

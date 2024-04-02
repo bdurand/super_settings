@@ -22,9 +22,6 @@ module SuperSettings
 
     ARRAY_DELIMITER = /[\n\r]+/.freeze
 
-    NOT_SET = Object.new.freeze
-    private_constant :NOT_SET
-
     # Exception raised if you try to save with invalid data.
     class InvalidRecordError < StandardError
     end
@@ -36,33 +33,13 @@ module SuperSettings
     # and is cleared after the record is saved.
     attr_accessor :changed_by
 
-    @storage = NOT_SET
+    # The namespace that the setting is saved under.
+    attr_reader :namespace
+
     @after_save_blocks = []
 
     class << self
-      # Set a cache to use for caching values. This feature is optional. The cache must respond
-      # to +delete(key)+ and +fetch(key, &block)+. If you are running in a Rails environment,
-      # you can use +Rails.cache+ or any ActiveSupport::Cache::Store object.
-      attr_accessor :cache
-
-      # Set the storage class to use for persisting data.
-      attr_writer :storage
-
       attr_reader :after_save_blocks
-
-      # @return [Class] The storage class to use for persisting data.
-      # @api private
-      def storage
-        if @storage == NOT_SET
-          if defined?(::SuperSettings::Storage::ActiveRecordStorage)
-            ::SuperSettings::Storage::ActiveRecordStorage
-          else
-            raise ArgumentError.new("No storage class defined for #{name}")
-          end
-        else
-          @storage
-        end
-      end
 
       # Add a block of code that will be called when a setting is saved. The block will be
       # called with a Setting object. The object will have been saved, but the `changes`
@@ -85,95 +62,6 @@ module SuperSettings
         setting
       end
 
-      # Get all the settings. This will even return settings that have been marked as deleted.
-      # If you just want current settings, then call #active instead.
-      #
-      # @return [Array<Setting>]
-      def all
-        storage.with_connection do
-          storage.all.collect { |record| new(record) }
-        end
-      end
-
-      # Get all the current settings.
-      #
-      # @return [Array<Setting>]
-      def active
-        storage.with_connection do
-          storage.active.collect { |record| new(record) }
-        end
-      end
-
-      # Get all settings that have been updated since the specified time stamp.
-      #
-      # @param time [Time]
-      # @return [Array<Setting>]
-      def updated_since(time)
-        storage.with_connection do
-          storage.updated_since(time).collect { |record| new(record) }
-        end
-      end
-
-      # Get a setting by its unique key.
-      #
-      # @return Setting
-      def find_by_key(key)
-        record = storage.with_connection { storage.find_by_key(key) }
-        if record
-          new(record)
-        end
-      end
-
-      # Return the maximum updated at value from all the rows. This is used in the caching
-      # scheme to determine if data needs to be reloaded from the database.
-      #
-      # @return [Time]
-      def last_updated_at
-        fetch_from_cache(LAST_UPDATED_CACHE_KEY) do
-          storage.with_connection { storage.last_updated_at }
-        end
-      end
-
-      # Bulk update settings in a single database transaction. No changes will be saved
-      # if there are any invalid records.
-      #
-      # @example
-      #
-      #   SuperSettings.bulk_update([
-      #     {
-      #       key: "setting-key",
-      #       value: "foobar",
-      #       value_type: "string",
-      #       description: "A sample setting"
-      #     },
-      #     {
-      #       key: "setting-to-delete",
-      #       deleted: true
-      #     }
-      #   ])
-      #
-      # @param params [Array] Array of hashes with setting attributes. Each hash must include
-      #   a "key" element to identify the setting. To update a key, it must also include at least
-      #   one of "value", "value_type", or "description". If one of these attributes is present in
-      #   the hash, it will be updated. If a setting with the given key does not exist, it will be created.
-      #   A setting may also be deleted by providing the attribute "deleted: true".
-      # @return [Array] Boolean indicating if update succeeded, Array of settings affected by the update;
-      #   if the settings were not updated, the +errors+ on the settings that failed validation will be filled.
-      def bulk_update(params, changed_by = nil)
-        all_valid, settings = update_settings(params, changed_by)
-        if all_valid
-          storage.with_connection do
-            storage.transaction do
-              settings.each do |setting|
-                setting.save!
-              end
-            end
-          end
-          clear_last_updated_cache
-        end
-        [all_valid, settings]
-      end
-
       # Determine the value type from a value.
       #
       # @return [String]
@@ -194,69 +82,34 @@ module SuperSettings
         end
       end
 
-      # Clear the last updated timestamp from the cache.
+      # Get the storage class to use for persisting data.
       #
+      # @return [SuperSettings::Storage]
       # @api private
-      def clear_last_updated_cache
-        cache&.delete(Setting::LAST_UPDATED_CACHE_KEY)
+      def storage
+        SuperSettings.storage
       end
 
-      private
-
-      # Updates settings in memory from an array of parameters.
+      # Deprecated method for setting the storage class.
       #
-      # @param params [Array<Hash>] Each hash must contain a "key" element and may contain elements
-      #     for "value", "value_type", "description", and "deleted".
-      # @param changed_by [String] Value to be stored in the history for each setting
-      # @return [Array] The first value is a boolean indicating if all the settings are valid,
-      #     the second is an array of settings with their attributes updated in memory and ready to be saved.
-      def update_settings(params, changed_by)
-        changed = {}
-        all_valid = true
-
-        params.each do |setting_params|
-          setting_params = stringify_keys(setting_params)
-          next if Coerce.blank?(setting_params["key"])
-          next if ["value_type", "value", "description", "deleted"].all? { |name| Coerce.blank?(setting_params[name]) }
-
-          key = setting_params["key"]
-          setting = changed[key] || Setting.find_by_key(key)
-          unless setting
-            next if Coerce.present?(setting_params["delete"])
-            setting = Setting.new(key: setting_params["key"])
-          end
-
-          if Coerce.boolean(setting_params["deleted"])
-            setting.deleted = true
-            setting.changed_by = changed_by
-          else
-            setting.value_type = setting_params["value_type"] if setting_params.include?("value_type")
-            setting.value = setting_params["value"] if setting_params.include?("value")
-            setting.description = setting_params["description"] if setting_params.include?("description")
-            setting.deleted = false if setting.deleted?
-            setting.changed_by = changed_by
-            all_valid &= setting.valid?
-          end
-          changed[setting.key] = setting
-        end
-
-        [all_valid, changed.values]
+      # @deprecated use SuperSetting.storage instead.
+      def storage=(val)
+        SuperSettings.storage = val
       end
 
-      def fetch_from_cache(key, &block)
-        if cache
-          cache.fetch(key, expires_in: 60, &block)
-        else
-          block.call
-        end
+      # Get the cache to use for caching values.
+      #
+      # @return [Object]
+      # @api private
+      def cache
+        SuperSettings.cache
       end
 
-      def stringify_keys(hash)
-        transformed = {}
-        hash.each do |key, value|
-          transformed[key.to_s] = value
-        end
-        transformed
+      # Deprecated method for setting the cache.
+      #
+      # @deprecated use SuperSetting.cache instead.
+      def cache=(val)
+        SuperSettings.cache = val
       end
     end
 
@@ -271,6 +124,16 @@ module SuperSettings
         self.attributes = attributes
         self.value_type ||= STRING
       end
+    end
+
+    def namespace
+      @record.namespace
+    end
+
+    def namespace=(val)
+      val = val&.to_s
+      will_change!(:namespace, val) unless namespace == val
+      @record.namespace = val
     end
 
     # Get the unique key for the setting.
@@ -451,7 +314,7 @@ module SuperSettings
         end
 
         begin
-          self.class.clear_last_updated_cache
+          NamespacedSettings.new(namespace).clear_last_updated_cache
           call_after_save_callbacks
         ensure
           clear_changes

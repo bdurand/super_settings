@@ -11,29 +11,31 @@ module SuperSettings
       include Storage
 
       attr_reader :key, :raw_value, :description, :value_type, :updated_at, :created_at
-      attr_accessor :changed_by
+      attr_accessor :namespace, :changed_by
 
-      @settings = {}
-      @history = {}
+      @namespaces = {}
 
       class << self
-        attr_reader :settings
-
-        def history(key)
-          items = @history[key]
+        def history(key, namespace:)
+          namespaced_history = namespace_for(namespace)[:history]
+          items = namespaced_history[key]
           unless items
             items = []
-            @history[key] = items
+            namespaced_history[key] = items
           end
           items
         end
 
-        def clear
-          @settings = {}
-          @history = {}
+        def settings(namespace:)
+          namespace_for(namespace)[:settings]
         end
 
-        def all
+        def clear
+          @namespaces = {}
+        end
+
+        def all(namespace:)
+          settings = settings(namespace: namespace)
           settings.values.collect do |attributes|
             setting = new(attributes)
             setting.send(:set_persisted!)
@@ -41,7 +43,8 @@ module SuperSettings
           end
         end
 
-        def updated_since(time)
+        def updated_since(time, namespace:)
+          settings = settings(namespace: namespace)
           settings.values.select { |attributes| attributes[:updated_at].to_f >= time.to_f }.collect do |attributes|
             setting = new(attributes)
             setting.send(:set_persisted!)
@@ -49,7 +52,8 @@ module SuperSettings
           end
         end
 
-        def find_by_key(key)
+        def find_by_key(key, namespace:)
+          settings = settings(namespace: namespace)
           attributes = settings[key]
           return nil unless attributes
           setting = new(attributes)
@@ -57,8 +61,8 @@ module SuperSettings
           setting
         end
 
-        def last_updated_at
-          settings.values.collect { |attributes| attributes[:updated_at] }.max
+        def last_updated_at(namespace:)
+          settings(namespace: namespace).values.collect { |attributes| attributes[:updated_at] }.max
         end
 
         protected
@@ -66,9 +70,22 @@ module SuperSettings
         def default_load_asynchronous?
           true
         end
+
+        private
+
+        def namespace_for(namespace)
+          namespace = namespace&.to_s
+          values = @namespaces[namespace]
+          unless values
+            values = {settings: {}, history: {}}
+            @namespaces[namespace] = values
+          end
+          values
+        end
       end
 
       def initialize(*)
+        @namespace = nil
         @original_key = nil
         @raw_value = nil
         @created_at = nil
@@ -81,7 +98,7 @@ module SuperSettings
       end
 
       def history(limit: nil, offset: 0)
-        items = self.class.history(key)
+        items = self.class.history(key, namespace: namespace)
         items[offset, limit || items.length].collect do |attributes|
           HistoryItem.new(attributes)
         end
@@ -89,16 +106,17 @@ module SuperSettings
 
       def create_history(changed_by:, created_at:, value: nil, deleted: false)
         item = {key: key, value: value, deleted: deleted, changed_by: changed_by, created_at: created_at}
-        self.class.history(key).unshift(item)
+        self.class.history(key, namespace: namespace).unshift(item)
       end
 
       def save!
+        settings = self.class.settings(namespace: namespace)
         self.updated_at ||= Time.now
         self.created_at ||= updated_at
         if defined?(@original_key) && @original_key
-          self.class.settings.delete(@original_key)
+          settings.delete(@original_key)
         end
-        self.class.settings[key] = attributes
+        settings[key] = attributes
         set_persisted!
         true
       end

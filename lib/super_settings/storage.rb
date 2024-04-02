@@ -21,8 +21,9 @@ module SuperSettings
     module ClassMethods
       # Storage classes must implent this method to return all settings included deleted ones.
       #
+      # @param namespace [String, nil] the namespace for the settings
       # @return [Array<SuperSetting::Setting::Storage>]
-      def all
+      def all(namespace:)
         # :nocov:
         raise NotImplementedError
         # :nocov:
@@ -30,16 +31,19 @@ module SuperSettings
 
       # Return all non-deleted settings.
       #
+      # @param namespace [String, nil] the namespace for the settings
       # @return [Array<SuperSetting::Setting::Storage>]
-      def active
-        all.reject(&:deleted?)
+      def active(namespace:)
+        all(namespace: namespace).reject(&:deleted?)
       end
 
       # Storage classes must implement this method to return all settings updates since the
       # specified timestamp.
       #
+      # @param timestamp [Time] the time to compare against
+      # @param namespace [String, nil] the namespace for the settings
       # @return [Array<SuperSetting::Setting::Storage>]
-      def updated_since(timestamp)
+      def updated_since(timestamp, namespace:)
         # :nocov:
         raise NotImplementedError
         # :nocov:
@@ -47,8 +51,10 @@ module SuperSettings
 
       # Storage classes must implement this method to return a settings by it's key.
       #
+      # @param key [String] the key for the setting
+      # @param namespace [String, nil] the namespace for the settings
       # @return [SuperSetting::Setting::Storage]
-      def find_by_key(key)
+      def find_by_key(key, namespace:)
         # :nocov:
         raise NotImplementedError
         # :nocov:
@@ -57,8 +63,9 @@ module SuperSettings
       # Storage classes must implement this method to return most recent time that any
       # setting was updated.
       #
+      # @param namespace [String, nil] the namespace for the settings
       # @return [Time]
-      def last_updated_at
+      def last_updated_at(namespace:)
         # :nocov:
         raise NotImplementedError
         # :nocov:
@@ -95,6 +102,25 @@ module SuperSettings
       def default_load_asynchronous?
         false
       end
+    end
+
+    # The namespace for the setting.
+    #
+    # @return [String]
+    def namespace
+      # :nocov:
+      raise NotImplementedError
+      # :nocov:
+    end
+
+    # Set the namespace for the setting.
+    #
+    # @param val [String]
+    # @return [void]
+    def namespace=(val)
+      # :nocov:
+      raise NotImplementedError
+      # :nocov:
     end
 
     # The key for the setting

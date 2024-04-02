@@ -151,7 +151,7 @@ This gem abstracts out the storage engine and can support multiple storage mecha
 
 Additional storage engines can be built by creating a class that includes `SuperSettings::Storage` and implements the unimplemented methods in that module.
 
-The storage engine is defined by setting `SuperSettings::Setting.storage` to a storage class. Note that each storage class may also require additional configuration. For instance, the Redis storage class requires you to provide a connection to a Redis database. If you are running a Rails application, then the storage engine will be set to ActiveRecord by default. Otherwise, you will need to define the storage class somewhere in your application's initialization.
+The storage engine is defined by setting `SuperSettings.storage` to a storage class. Note that each storage class may also require additional configuration. For instance, the Redis storage class requires you to provide a connection to a Redis database. If you are running a Rails application, then the storage engine will be set to ActiveRecord by default. Otherwise, you will need to define the storage class somewhere in your application's initialization.
 
 ### Web UI
 
