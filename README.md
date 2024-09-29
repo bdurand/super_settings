@@ -292,6 +292,54 @@ SuperSettings.configure do |config|
 end
 ```
 
+#### Using your own controller
+
+You can embed the SuperSettings web UI into your own templates. This gives you the option to more tightly integrate it with your application's navigation and look and feel.
+
+First disable the web UI in the configuration since you won't need it.
+
+```ruby
+# config/initializers/super_settings.rb
+
+SuperSettings.configure do |config|
+  # Disable the built in web UI since you won't be using it.
+  config.controller.web_ui_enabled = false
+end
+```
+
+Create your controller that will render the SuperSettings web UI.
+
+```ruby
+class AppSettingsController < ApplicationController
+  def index
+  end
+end
+```
+
+Mount the engine routes in your `config/routes.rb` file.
+
+```ruby
+# config/routes.rb
+
+Rails.application.routes.draw do
+  mount SuperSettings::Engine => "/settings"
+
+  controller :app_settings do
+    get "/app_settings", action: :index
+  end
+end
+```
+
+Create a view that embeds the SuperSettings web UI using the `SuperSettings::Application` class. You need to specify the path you mounted the engine at as the base URL for the REST API.
+
+```erb
+# app/views/app_settings/index.html.erb
+
+<h1>Application Settings</h1>
+
+<%= SuperSettings::Application.new(api_base_url: "/settings").render %>
+```
+
 ## Installation
 
 Add this line to your application's Gemfile:

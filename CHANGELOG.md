@@ -8,9 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Controls for sorting the order of the setting in the web UI by key or last modified time.
-- Isolation of CSS classes in the web UI to prevent conflicts with other CSS libraries.
+- Added controls for sorting settings in the web UI by keys or last modified time.
+- Isolated of CSS classes in the web UI to prevent conflicts with other CSS libraries.
 - Dark mode support in web UI.
+- Added ability to embed the web UI in a view to allow tighter integration with your application's UI.
 
 ## 1.0.2
 
