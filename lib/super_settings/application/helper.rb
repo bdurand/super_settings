@@ -5,13 +5,16 @@ module SuperSettings
   # are mixed in to the Application class so they are accessible from the ERB templates.
   module Helper
     ICON_SVG = Dir.glob(File.join(__dir__, "images", "*.svg")).each_with_object({}) do |file, cache|
-      cache[File.basename(file, ".svg")] = File.read(file).chomp
+      svg = File.read(file).chomp
+      svg.sub!(/width="[^"]+"/, 'width="100%"')
+      svg.sub!(/height="[^"]+"/, 'height="100%"')
+      cache[File.basename(file, ".svg")] = svg
     end.freeze
 
     ICON_BUTTON_STYLE = {
       cursor: "pointer",
-      width: "1.5rem",
-      height: "1.5rem",
+      width: "1.35rem",
+      height: "1.35rem",
       "min-width": "20px",
       "min-height": "20px",
       "margin-top": "0.25rem",
@@ -22,7 +25,7 @@ module SuperSettings
       width: "1rem",
       height: "1rem",
       display: "inline-block",
-      "vertical-align": "middle"
+      "vertical-align": "text-bottom"
     }.freeze
 
     # Render the scripts.js file as an inline <script> tag.
@@ -59,18 +62,22 @@ module SuperSettings
     # is specified, it will be applied to the SVG image.
     def icon_image(name, options = {})
       svg = ICON_SVG[name.to_s]
-      if Coerce.present?(options[:color])
-        svg = svg.gsub("currentColor", options[:color])
+      style = {display: "inline-block"}.merge(options[:style] || {})
+      css = DEFAULT_ICON_STYLE.merge(style).map { |name, value| "#{name}: #{value}" }.join("; ")
+      options = options.merge(style: css)
+      if options[:data].is_a?(Hash)
+        options[:data].each do |key, value|
+          options["data-#{key}"] = value
+        end
+        options.delete(:data)
       end
-      css = DEFAULT_ICON_STYLE.merge(options[:style] || {}).map { |name, value| "#{name}:#{value}" }.join("; ")
-      options = {alt: ""}.merge(options).merge(src: "data:image/svg+xml;utf8,#{svg}", style: css)
-      tag(:img, options)
+      content_tag(:span, svg, options)
     end
 
     # Render an icon image as a link tag.
     def icon_button(icon, title:, color:, js_class:, url: nil, disabled: false, style: {}, link_style: nil)
       url = "#" if Coerce.blank?(url)
-      image = icon_image(icon, alt: title, color: color, style: ICON_BUTTON_STYLE.merge(style))
+      image = icon_image(icon, alt: title, style: ICON_BUTTON_STYLE.merge(style).merge(color: color))
       content_tag(:a, image, href: url, class: js_class, disabled: disabled, style: link_style)
     end
 

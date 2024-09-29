@@ -16,5 +16,6 @@ gem "dotenv"
 gem "appraisal"
 gem "standard", "~> 1.0"
 gem "simplecov", "~> 0.22", require: false
+gem "nokogiri"
 gem "rake"
 gem "yard"

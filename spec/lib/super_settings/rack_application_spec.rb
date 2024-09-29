@@ -71,6 +71,13 @@ describe SuperSettings::RackApplication do
       expect(JSON.parse(body)["settings"]).to eq [setting_6, setting_4, setting_5, setting_3, setting_2, setting_1].collect { |s| JSON.parse(s.to_json) }
     end
 
+    it "renders valid HTML" do
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/settings")
+      html = response[2].first
+      doc = Nokogiri::HTML(html)
+      expect(doc.errors).to be_empty
+    end
+
     it "should return a forbidden response if access is denied" do
       allow(middleware).to receive(:current_user).and_return(:user)
       allow(middleware).to receive(:allow_read?).with(:user).and_return(false)

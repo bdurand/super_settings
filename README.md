@@ -313,6 +313,23 @@ Open a pull request on GitHub.
 
 Please use the [standardrb](https://github.com/testdouble/standard) syntax and lint your code with `standardrb --fix` before submitting.
 
+You can run a local development rack server using Redis storage with
+
+```bash
+bin/rackup
+```
+
+Or a local development Rails server using ActiveRecord storage with
+
+```bash
+# Initialize the database (one time only)
+bin/rails bin/rails super_settings:install:migrations
+bin/rails db:migrate
+
+# Start the server
+bin/rails s
+```
+
 ## License
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).

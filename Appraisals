@@ -1,5 +1,21 @@
 # frozen_string_literal: true
 
+appraise "rails_latest" do
+  gem "rails"
+  gem "rspec-rails", "~> 6.0"
+  gem "sqlite3", "~> 1.4.0"
+  gem "puma", "~> 6.0"
+  remove_gem "rackup"
+end
+
+appraise "rails_7.2" do
+  gem "rails", "~> 7.2"
+  gem "rspec-rails", "~> 6.0"
+  gem "sqlite3", "~> 1.4.0"
+  gem "puma", "~> 6.0"
+  remove_gem "rackup"
+end
+
 appraise "rails_7.1" do
   gem "rails", "~> 7.1.0"
   gem "rspec-rails", "~> 6.0"

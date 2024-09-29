@@ -50,6 +50,7 @@ end
 require "webmock/rspec"
 require "capybara/rspec"
 require "capybara/cuprite"
+require "nokogiri"
 
 class TestMiddleware < SuperSettings::RackApplication
   protected
