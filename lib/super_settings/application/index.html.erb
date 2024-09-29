@@ -6,15 +6,15 @@
       <span class="js-settings-count" style="display:inline-block; margin-right:1rem;"></span>
 
       <label for="filter" class="super-settings-sr-only">Filter</label>
-      <input type="text" name="filter" value="" placeholder="Filter Keys" size="20" class="super-settings-form-control" title="Filter Keys" id="filter" style="margin-right:1rem;">
+      <input type="text" name="filter" value="" placeholder="Filter Keys" size="20" class="super-settings-form-control" title="Filter Keys" id="super-settings-filter" style="margin-right:1rem;">
 
-      <button type="button" class="super-settings-btn super-settings-btn-default" id="add-setting"><%= icon_image(:plus) %> Add Setting</button>
+      <button type="button" class="super-settings-btn super-settings-btn-default" id="super-settings-add-setting"><%= icon_image(:plus) %> Add Setting</button>
 
-      <button type="button" class="super-settings-btn super-settings-btn-default" id="discard-changes" disabled>
+      <button type="button" class="super-settings-btn super-settings-btn-default" id="super-settings-discard-changes" disabled>
         Discard Changes
       </button>
 
-      <button type="button" class="super-settings-btn super-settings-btn-primary" id="save-settings" disabled>
+      <button type="button" class="super-settings-btn super-settings-btn-primary" id="super-settings-save-settings" disabled>
         Save <span class="count"></span> Changes
       </button>
 
@@ -26,9 +26,9 @@
         <tr>
           <th scope="col" class="super-settings-key">
             Key
-            <button class="super-settings-sort-control" data-field="key" title="Sort by key">
-              <%= icon_image("arrow-down-short", class: "js-sort-order", data: {order: :asc}) %>
-              <%= icon_image("arrow-up-short", class: "js-sort-order", data: {order: :desc}, style: {display: "none"}) %>
+            <button class="super-settings-sort-control" data-field="key" data-order="asc" data-selected="true" title="Sort by key">
+              <%= icon_image("arrow-down-short", data: {order: :asc}, style: {display: "block"}) %>
+              <%= icon_image("arrow-up-short", data: {order: :desc}, style: {display: "none"}) %>
             </button>
           </th>
           <th scope="col" class="super-settings-value">Value</th>
@@ -36,9 +36,9 @@
           <th scope="col" class="super-settings-description">Description</th>
           <th scope="col" data-field="updated_at">
             Modified
-            <button class="super-settings-sort-control" title="Sort by modified time">
-              <%= icon_image("arrow-down-short", class: "js-sort-order", data: {order: :asc}) %>
-              <%= icon_image("arrow-up-short", class: "js-sort-order", data: {order: :desc}, style: {display: "none"}) %>
+            <button class="super-settings-sort-control" data-field="updated_at" data-order="asc" title="Sort by modified time">
+              <%= icon_image("arrow-down-short", data: {order: :asc}, style: {display: "block"}) %>
+              <%= icon_image("arrow-up-short", data: {order: :desc}, style: {display: "none"}) %>
             </button>
           </th>
           <th scope="col" class="super-settings-controls"><span class="super-settings-sr-only">Controls</span></th>
@@ -49,7 +49,7 @@
     </table>
   </form>
 
-  <div id="modal" class="super-settings-modal js-close-modal" aria-hidden="true" aria-role="dialog">
+  <div id="super-settings-modal" class="super-settings-modal js-close-modal" aria-hidden="true" aria-role="dialog">
     <div class="super-settings-modal-dialog">
       <button type="button" title="Close Dialog" class="super-settings-modal-close js-close-modal">&times;</button>
       <div class="super-settings-modal-content">
