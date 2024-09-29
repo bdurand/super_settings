@@ -90,7 +90,7 @@ end
 
 Capybara.default_driver = :cuprite
 Capybara.javascript_driver = :cuprite
-Capybara.default_max_wait_time = 30
+Capybara.default_max_wait_time = 5
 
 WebMock.disable_net_connect!(allow_localhost: true)
 
