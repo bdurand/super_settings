@@ -1,47 +1,3 @@
-.super-settings {
-  --edit-bg-color: #f2fdf2;
-  --deleted-row-color: darkred;
-  --deleted-row-bg-color: #ffd1d8;
-  --history-key-color: royalblue;
-  --table-header-bg-color: #fff;
-  --table-border-color: #dee2e6;
-  --alt-row-color: rgba(0, 0, 0, .05);
-  --form-control-color: #495057;
-  --form-control-bg-color: #fff;
-  --form-control-border-color: #ced4da;
-  --modal-bg-color: #fff;
-  --modal-transparency: 0.4;
-  --modal-control-color: #000;
-  --success-color: green;
-  --danger-color: firebrick;
-  --muted-color: #666;
-  --selected-color: #9fb4f2;
-  --unselected-color: #333;
-}
-
-@media (prefers-color-scheme: dark) {
-  .super-settings {
-    --edit-bg-color: #8dc796;
-    --deleted-row-color: #e0b1b8;
-    --deleted-row-bg-color: #cc5e5e;
-    --history-key-color: #a7d6f4;
-    --table-header-bg-color: #333;
-    --table-border-color: #555;
-    --alt-row-color: rgba(0, 0, 0, .30);
-    --form-control-color: #eee;
-    --form-control-bg-color: #666;
-    --form-control-border-color: #555;
-    --modal-bg-color: #333;
-    --modal-transparency: 0.75;
-    --modal-control-color: #fff;
-    --success-color: #00ff00;
-    --danger-color: #ff0000;
-    --muted-color: #999;
-    --selected-color: #5b6c9f;
-    --unselected-color: #ccc;
-  }
-}
-
 .super-settings-container {
   padding-left: 15px;
   padding-right: 15px;
@@ -74,6 +30,15 @@
 
 .super-settings-sort-control {
   color: var(--unselected-color);
+  background-color: inherit;
+  border: 0;
+  padding: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.super-settings-sort-control svg {
+  vertical-align: inherit;
 }
 
 .super-settings-edit-row {
@@ -127,6 +92,7 @@
 .super-settings-table thead th {
   vertical-align: bottom;
   border-bottom: 2px solid var(--table-border-color);
+  white-space: nowrap;
 }
 
 .super-settings-table td, .super-settings-table th {

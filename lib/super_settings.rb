@@ -221,6 +221,13 @@ module SuperSettings
       end
     end
 
+    # Return the configuration object.
+    #
+    # @return [SuperSettings::Configuration]
+    def configuration
+      Configuration.instance
+    end
+
     # Set the number of seconds between checks to synchronize the in memory cache from the database.
     # This setting aids in performance since it throttles the number of times the database is queried
     # for changes. However, changes made to the settings in the databae will take up to the number of

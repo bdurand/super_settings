@@ -1,6 +1,6 @@
 <%= style_tag %>
 
-<main class="super-settings">
+<main class="super-settings" data-api-base-url="<%= html_escape(api_base_url) %>">
   <form class="super-settings-form-inline" style="display:block;" onsubmit="return false">
     <div class="super-settings-sticky-top">
       <span class="js-settings-count" style="display:inline-block; margin-right:1rem;"></span>
@@ -26,20 +26,20 @@
         <tr>
           <th scope="col" class="super-settings-key">
             Key
-            <a href="#" class="super-settings-sort-control" data-field="key" title="Sort by key">
+            <button class="super-settings-sort-control" data-field="key" title="Sort by key">
               <%= icon_image("arrow-down-short", class: "js-sort-order", data: {order: :asc}) %>
               <%= icon_image("arrow-up-short", class: "js-sort-order", data: {order: :desc}, style: {display: "none"}) %>
-            </a>
+            </button>
           </th>
           <th scope="col" class="super-settings-value">Value</th>
           <th scope="col" class="super-settings-value-type">Type</th>
           <th scope="col" class="super-settings-description">Description</th>
           <th scope="col" data-field="updated_at">
             Modified
-            <a href="#" class="super-settings-sort-control" title="Sort by modified time">
+            <button class="super-settings-sort-control" title="Sort by modified time">
               <%= icon_image("arrow-down-short", class: "js-sort-order", data: {order: :asc}) %>
               <%= icon_image("arrow-up-short", class: "js-sort-order", data: {order: :desc}, style: {display: "none"}) %>
-            </span>
+            </button>
           </th>
           <th scope="col" class="super-settings-controls"><span class="super-settings-sr-only">Controls</span></th>
         </tr>
@@ -114,7 +114,7 @@
         <label for="settings_{{id}}_value_type" class="super-settings-sr-only">Value Type</label>
         <select name="settings[{{id}}][value_type]" class="super-settings-form-control js-setting-value-type" id="settings_{{id}}_value_type">
           <% SuperSettings::Setting::VALUE_TYPES.each do |value_type| %>
-            <option value="<%= ERB::Util.html_escape(value_type) %>"><%= ERB::Util.html_escape(value_type) %></option>
+            <option value="<%= html_escape(value_type) %>"><%= html_escape(value_type) %></option>
           <% end %>
         </select>
       </div>

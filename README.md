@@ -242,6 +242,9 @@ SuperSettings.configure do |config|
   # Set the superclass to use for the controller. Defaults to using `ApplicationController`.
   config.controller.superclass = Admin::BaseController
 
+  # Set the color scheme to use for the Web UI. Options are :light (default), :dark, or :system.
+  config.controller.color_scheme = :dark
+
   # Add additional code to the controller. In this case we are adding code to ensure only
   # admins can access the functionality and changing the layout to use one defined by the application.
   config.controller.enhance do

@@ -1,0 +1,51 @@
+<% unless color_scheme == :dark %>
+  .super-settings {
+    --edit-bg-color: #f2fdf2;
+    --deleted-row-color: darkred;
+    --deleted-row-bg-color: #ffd1d8;
+    --history-key-color: royalblue;
+    --table-header-bg-color: #fff;
+    --table-border-color: #dee2e6;
+    --alt-row-color: rgba(0, 0, 0, .05);
+    --form-control-color: #495057;
+    --form-control-bg-color: #fff;
+    --form-control-border-color: #ced4da;
+    --modal-bg-color: #fff;
+    --modal-transparency: 0.4;
+    --modal-control-color: #000;
+    --success-color: green;
+    --danger-color: firebrick;
+    --muted-color: #666;
+    --selected-color: #9fb4f2;
+    --unselected-color: #333;
+  }
+<% end %>
+
+<% if color_scheme == :system %>
+  @media (prefers-color-scheme: dark) {
+<% end %>
+<% if color_scheme == :system || color_scheme == :dark %>
+  .super-settings {
+    --edit-bg-color: #8dc796;
+    --deleted-row-color: #e0b1b8;
+    --deleted-row-bg-color: #cc5e5e;
+    --history-key-color: #a7d6f4;
+    --table-header-bg-color: #333;
+    --table-border-color: #555;
+    --alt-row-color: rgba(0, 0, 0, .30);
+    --form-control-color: #eee;
+    --form-control-bg-color: #666;
+    --form-control-border-color: #555;
+    --modal-bg-color: #333;
+    --modal-transparency: 0.75;
+    --modal-control-color: #fff;
+    --success-color: #00ff00;
+    --danger-color: #ff0000;
+    --muted-color: #999;
+    --selected-color: #5b6c9f;
+    --unselected-color: #ccc;
+  }
+<% end %>
+<% if color_scheme == :system %>
+  }
+<% end %>

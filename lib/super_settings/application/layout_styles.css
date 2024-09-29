@@ -1,17 +1,5 @@
-* {box-sizing:border-box;}
-
-:root {
-  --text-color: #212529;
-  --background-color: #ffffff;
-  --link-color: #369;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text-color: #fff;
-    --background-color: #333;
-    --link-color: rgb(133, 179, 225);
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
@@ -53,9 +41,9 @@ header h1.logo img {
 
 a {
   text-decoration: none;
-  color: #369;
+  color: var(--link-color);
 }
 
 a:visited {
-  color: #369;
+  color: var(--link-color);
 }

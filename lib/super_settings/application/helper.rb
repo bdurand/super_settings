@@ -24,8 +24,7 @@ module SuperSettings
     DEFAULT_ICON_STYLE = {
       width: "1rem",
       height: "1rem",
-      display: "inline-block",
-      "vertical-align": "text-bottom"
+      display: "inline-block"
     }.freeze
 
     # Render the scripts.js file as an inline <script> tag.
@@ -44,6 +43,7 @@ module SuperSettings
     def style_tag
       <<~HTML
         <style type="text/css">
+          #{render_partial("style_vars.css.erb")}
           #{File.read(File.join(__dir__, "styles.css"))}
         </style>
       HTML
@@ -53,9 +53,27 @@ module SuperSettings
     def layout_style_tag
       <<~HTML
         <style type="text/css">
+          #{render_partial("layout_vars.css.erb")}
           #{File.read(File.join(__dir__, "layout_styles.css"))}
         </style>
       HTML
+    end
+
+    # Render an ERB template.
+    #
+    # @param erb_file [String] the path to the ERB file to render
+    # @return [String] the rendered HTML
+    def render_partial(erb_file)
+      template = ERB.new(File.read(File.expand_path(erb_file, __dir__)))
+      template.result(binding)
+    end
+
+    # Escape text for use in HTML.
+    #
+    # @param text [String] the text to escape
+    # @return [String] the escaped text
+    def html_escape(text)
+      ERB::Util.html_escape(text)
     end
 
     # Render an image tag for one of the SVG images in the images directory. If the :color option
@@ -83,13 +101,13 @@ module SuperSettings
 
     # Return the application name set by the configuration or a default value.
     def application_name
-      ERB::Util.html_escape(Configuration.instance.controller.application_name || "Application")
+      html_escape(SuperSettings.configuration.controller.application_name || "Application")
     end
 
     # Render the header for the web pages using values set in the configuration.
     def application_header
-      config = Configuration.instance.controller
-      content = ERB::Util.html_escape("#{application_name} Settings")
+      config = SuperSettings.configuration.controller
+      content = html_escape("#{application_name} Settings")
       if Coerce.present?(config.application_logo)
         content = tag(:img, src: config.application_logo, alt: "") + content
       end
@@ -114,14 +132,30 @@ module SuperSettings
     def html_attributes(options)
       html_options = []
       options.each do |name, value|
-        html_options << "#{name}=\"#{ERB::Util.html_escape(value.to_s)}\""
+        html_options << "#{name}=\"#{html_escape(value.to_s)}\""
       end
       html_options.join(" ")
     end
 
-    # Add additional HTML code to the <head> element on the page.
+    # Additional HTML code that should go into the <head> element on the page.
+    #
+    # @return [String]
     def add_to_head
       @add_to_head if defined?(@add_to_head)
+    end
+
+    # The base URL for the REST API.
+    #
+    # @return [String]
+    def api_base_url
+      @api_base_url if defined?(@api_base_url)
+    end
+
+    # Whether to use dark mode for the application UI.
+    #
+    # @return [Boolean, nil]
+    def color_scheme
+      @color_scheme if defined?(@color_scheme)
     end
   end
 end
