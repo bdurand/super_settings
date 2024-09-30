@@ -219,6 +219,16 @@ module SuperSettings
           next if Coerce.blank?(setting_params["key"])
           next if ["value_type", "value", "description", "deleted"].all? { |name| Coerce.blank?(setting_params[name]) }
 
+          key_was = setting_params["key_was"]
+          if key_was && !changed.include?(key_was)
+            old_setting = Setting.find_by_key(key_was)
+            if old_setting
+              old_setting.deleted = true
+              old_setting.changed_by = changed_by
+              changed[old_setting.key] = old_setting
+            end
+          end
+
           key = setting_params["key"]
           setting = changed[key] || Setting.find_by_key(key)
           unless setting
