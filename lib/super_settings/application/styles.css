@@ -28,7 +28,17 @@
   display: none;
 }
 
-.btn-no-chrome {
+.super-settings-icon {
+  display: inline-block;
+}
+
+.super-settings-icon svg {
+  width: 100%;
+  height: 100%;
+  vertical-align: inherit;
+}
+
+.super-settings-btn-no-chrome {
   display: inline-block;
   vertical-align: middle;
   background-color: transparent;
@@ -37,12 +47,14 @@
   cursor: pointer;
 }
 
+
+
 .super-settings-sort-control {
   color: var(--unselected-color);
 }
 
 .super-settings-sort-control svg {
-  vertical-align: inherit;
+  vertical-align: middle;
 }
 
 .super-settings-edit-row {

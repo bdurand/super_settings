@@ -6,8 +6,6 @@ module SuperSettings
   module Helper
     ICON_SVG = Dir.glob(File.join(__dir__, "images", "*.svg")).each_with_object({}) do |file, cache|
       svg = File.read(file).chomp
-      svg.sub!(/width="[^"]+"/, 'width="100%"')
-      svg.sub!(/height="[^"]+"/, 'height="100%"')
       cache[File.basename(file, ".svg")] = svg
     end.freeze
 
@@ -80,9 +78,9 @@ module SuperSettings
     # is specified, it will be applied to the SVG image.
     def icon_image(name, options = {})
       svg = ICON_SVG[name.to_s]
-      style = {display: "inline-block"}.merge(options[:style] || {})
+      style = (options[:style] || {})
       css = DEFAULT_ICON_STYLE.merge(style).map { |name, value| "#{name}: #{value}" }.join("; ")
-      options = options.merge(style: css)
+      options = options.merge(style: css, class: "super-settings-icon")
       if options[:data].is_a?(Hash)
         options[:data].each do |key, value|
           options["data-#{key}"] = value

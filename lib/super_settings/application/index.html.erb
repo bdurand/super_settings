@@ -26,8 +26,8 @@
         <tr>
           <th scope="col" class="super-settings-key">
             Key
-            <button class="super-settings-sort-control btn-no-chrome" data-field="key" data-order="asc" data-selected="true" title="Sort by key">
-              <%= icon_image("arrow-down-short", data: {order: :asc}, style: {display: "block"}) %>
+            <button class="super-settings-sort-control super-settings-btn-no-chrome" data-field="key" data-order="asc" data-selected="true" title="Sort by key">
+              <%= icon_image("arrow-down-short", data: {order: :asc}, style: {display: "inline-block"}) %>
               <%= icon_image("arrow-up-short", data: {order: :desc}, style: {display: "none"}) %>
             </button>
           </th>
@@ -36,8 +36,8 @@
           <th scope="col" class="super-settings-description">Description</th>
           <th scope="col" data-field="updated_at">
             Modified
-            <button class="super-settings-sort-control btn-no-chrome" data-field="updated_at" data-order="asc" title="Sort by modified time">
-              <%= icon_image("arrow-down-short", data: {order: :asc}, style: {display: "block"}) %>
+            <button class="super-settings-sort-control super-settings-btn-no-chrome" data-field="updated_at" data-order="asc" title="Sort by modified time">
+              <%= icon_image("arrow-down-short", data: {order: :asc}, style: {display: "inline-block"}) %>
               <%= icon_image("arrow-up-short", data: {order: :desc}, style: {display: "none"}) %>
             </button>
           </th>
@@ -51,7 +51,7 @@
 
   <div id="super-settings-modal" class="super-settings-modal js-close-modal" aria-hidden="true" aria-role="dialog">
     <div class="super-settings-modal-dialog">
-      <button type="button" title="Close Dialog" class="super-settings-modal-close btn-no-chrome js-close-modal">&times;</button>
+      <button type="button" title="Close Dialog" class="super-settings-modal-close super-settings-btn-no-chrome js-close-modal">&times;</button>
       <div class="super-settings-modal-content">
       </div>
     </div>
@@ -78,7 +78,7 @@
       <div class="js-value-placeholder super-settings-max-height-text"></div>
     </td>
 
-    <td class="super-settings-last-modified">
+    <td class="super-settings-last-modified super-settings-text-nowrap">
       <div class="js-value-placeholder"></div>
     </td>
 
