@@ -364,13 +364,7 @@ Open a pull request on GitHub.
 
 Please use the [standardrb](https://github.com/testdouble/standard) syntax and lint your code with `standardrb --fix` before submitting.
 
-You can run a local development rack server using Redis storage with
-
-```bash
-bin/rackup
-```
-
-Or a local development Rails server using ActiveRecord storage with
+You can run a local Rails development using ActiveRecord storage with
 
 ```bash
 # Initialize the database (one time only)
@@ -379,6 +373,30 @@ bin/rails db:migrate
 
 # Start the server
 bin/rails s
+```
+
+You can also bring up a local rack server with
+
+```bash
+bundle exec rackup
+```
+
+By default this will use Redis for storage using the default Redis URL. You can change the storage engine with the `SUPER_SETTINGS_STORAGE` environment variable.
+
+```bash
+SUPER_SETTINGS_STORAGE=redis://localhost:9500 bundle exec rackup
+```
+
+Or you can use the HTTP storage engine to connect to the REST API running on the Rails server.
+
+```bash
+SUPER_SETTINGS_STORAGE=http://localhost:3000/settings bundle exec rackup
+```
+
+Finally, you can run the application in dark mode by setting the `COLOR_SCHEME` environment variable.
+
+```bash
+COLOR_SCHEME=dark bundle exec rackup
 ```
 
 ## License

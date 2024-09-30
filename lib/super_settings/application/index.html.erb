@@ -8,7 +8,7 @@
       <label for="filter" class="super-settings-sr-only">Filter</label>
       <input type="text" name="filter" value="" placeholder="Filter Keys" size="20" class="super-settings-form-control" title="Filter Keys" id="super-settings-filter" style="margin-right:1rem;">
 
-      <button type="button" class="super-settings-btn super-settings-btn-default" id="super-settings-add-setting"><%= icon_image(:plus) %> Add Setting</button>
+      <button type="button" class="super-settings-btn super-settings-btn-default" id="super-settings-add-setting"><%= icon_image(:plus, style: {"vertical-align": "text-top"}) %> Add Setting</button>
 
       <button type="button" class="super-settings-btn super-settings-btn-default" id="super-settings-discard-changes" disabled>
         Discard Changes
@@ -26,7 +26,7 @@
         <tr>
           <th scope="col" class="super-settings-key">
             Key
-            <button class="super-settings-sort-control" data-field="key" data-order="asc" data-selected="true" title="Sort by key">
+            <button class="super-settings-sort-control btn-no-chrome" data-field="key" data-order="asc" data-selected="true" title="Sort by key">
               <%= icon_image("arrow-down-short", data: {order: :asc}, style: {display: "block"}) %>
               <%= icon_image("arrow-up-short", data: {order: :desc}, style: {display: "none"}) %>
             </button>
@@ -36,7 +36,7 @@
           <th scope="col" class="super-settings-description">Description</th>
           <th scope="col" data-field="updated_at">
             Modified
-            <button class="super-settings-sort-control" data-field="updated_at" data-order="asc" title="Sort by modified time">
+            <button class="super-settings-sort-control btn-no-chrome" data-field="updated_at" data-order="asc" title="Sort by modified time">
               <%= icon_image("arrow-down-short", data: {order: :asc}, style: {display: "block"}) %>
               <%= icon_image("arrow-up-short", data: {order: :desc}, style: {display: "none"}) %>
             </button>
@@ -51,7 +51,7 @@
 
   <div id="super-settings-modal" class="super-settings-modal js-close-modal" aria-hidden="true" aria-role="dialog">
     <div class="super-settings-modal-dialog">
-      <button type="button" title="Close Dialog" class="super-settings-modal-close js-close-modal">&times;</button>
+      <button type="button" title="Close Dialog" class="super-settings-modal-close btn-no-chrome js-close-modal">&times;</button>
       <div class="super-settings-modal-content">
       </div>
     </div>
@@ -83,10 +83,10 @@
     </td>
 
     <td class="super-settings-controls">
-      <%= icon_button("info-circle", title: "Setting Info", color: "royalblue", js_class: "js-show-history") %>
-      <%= icon_button("pencil-square", title: "Edit Setting", color: "green", js_class: "js-edit-setting") %>
-      <%= icon_button("trash3", title: "Remove Setting", color: "firebrick", js_class: "js-remove-setting") %>
-      <%= icon_button("x-circle", title: "Cancel Changes", color: "firebrick", js_class: "js-restore-setting", link_style: "display:none;") %>
+      <%= icon_button("info-circle", title: "Setting Info", color: "#0dcaf0", js_class: "js-show-history") %>
+      <%= icon_button("pencil-square", title: "Edit Setting", color: "#198754", js_class: "js-edit-setting") %>
+      <%= icon_button("trash3", title: "Remove Setting", color: "#dc3545", js_class: "js-remove-setting") %>
+      <%= icon_button("x-circle", title: "Cancel Changes", color: "#dc3545", js_class: "js-restore-setting", link_style: "display:none;") %>
     </td>
   </tr>
 </template>
