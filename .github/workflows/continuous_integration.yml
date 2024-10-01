@@ -25,13 +25,13 @@ jobs:
         image: redis
         ports:
           - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          options: >-
+            --health-cmd "redis-cli ping"
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
       minio:
-        image: minio/minio:RELEASE.2024-09-22T00-33-43Z
+        image: minio/minio:edge-cicd
         ports:
           - 9000:9000
         env:
@@ -40,12 +40,10 @@ jobs:
         volumes:
           - ${{ github.workspace }}/.github/services/minio:/service
         options: >-
-          --entrypoint /bin/sh
-          # --health-cmd "curl -f http://localhost:9000/minio/health/live"
-          # --health-interval 10s
-          # --health-timeout 5s
-          # --health-retries 5
-          # --entrypoint /service/entrypoint.sh
+          --health-cmd "curl -f http://localhost:9000/minio/health/live"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     strategy:
       fail-fast: false
       matrix:
@@ -77,11 +75,6 @@ jobs:
     env:
       BUNDLE_GEMFILE: ${{ matrix.gemfile }}
     steps:
-      - name: Debug
-        run: |
-          echo "github.workspace: ${{ github.workspace }}"
-          ls ${{ github.workspace }}/.github/services/minio
-          docker exec $(docker ps -q -f ancestor=minio/minio) ls /service
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up Ruby ${{ matrix.ruby }}
