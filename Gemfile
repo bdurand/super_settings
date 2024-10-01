@@ -5,7 +5,7 @@ gemspec
 gem "redis"
 gem "connection_pool"
 
-gem 'aws-sdk-s3'
+gem "aws-sdk-s3"
 
 gem "rspec", "~> 3.12"
 gem "capybara"

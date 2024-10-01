@@ -3,8 +3,6 @@
 require_relative "../../spec_helper"
 
 if ENV["TEST_S3_URL"]
-  puts "*********** Running RedisStorage tests"
-
   describe SuperSettings::Storage::S3Storage do
     describe ".last_updated_at" do
       it "should be the last modified time of the object" do
@@ -23,6 +21,7 @@ if ENV["TEST_S3_URL"]
 
     describe ".all" do
       it "should return all settings" do
+        puts "*** TESTING S3Storage.all ***"
         setting_1 = SuperSettings::Storage::S3Storage.new(key: "setting_1", raw_value: "1")
         setting_1.save!
         setting_2 = SuperSettings::Storage::S3Storage.new(key: "setting_2", deleted: true)

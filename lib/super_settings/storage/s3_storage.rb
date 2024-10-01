@@ -33,14 +33,13 @@ module SuperSettings
         attr_accessor :access_key_id, :secret_access_key, :region, :endpoint, :bucket, :object
 
         def initialize
-          self.url = ENV["SUPER_SETTINGS_S3_URL"] unless ENV["SUPER_SETTINGS_S3_URL"].to_s.empty?
-
           @access_key_id ||= ENV.fetch("SUPER_SETTINGS_AWS_ACCESS_KEY_ID", ENV["AWS_ACCESS_KEY_ID"])
           @secret_access_key ||= ENV.fetch("SUPER_SETTINGS_AWS_SECRET_ACCESS_KEY", ENV["AWS_SECRET_ACCESS_KEY"])
           @region ||= ENV.fetch("SUPER_SETTINGS_AWS_REGION", ENV["AWS_REGION"])
           @endpoint ||= ENV.fetch("SUPER_SETTINGS_AWS_ENDPOINT", ENV["AWS_ENDPOINT"])
           @bucket ||= ENV.fetch("SUPER_SETTINGS_S3_BUCKET", ENV["AWS_S3_BUCKET"])
           @object ||= ENV.fetch("SUPER_SETTINGS_S3_OBJECT", "super_settings.json")
+          self.url = ENV["SUPER_SETTINGS_S3_URL"] unless ENV["SUPER_SETTINGS_S3_URL"].to_s.empty?
         end
 
         def url=(url)
@@ -52,7 +51,7 @@ module SuperSettings
           self.access_key_id = uri.user if uri.user
           self.secret_access_key = uri.password if uri.password
           self.region = uri.host if uri.host
-          _, bucket, object = uri.path.split('/', 3) if uri.path
+          _, bucket, object = uri.path.split("/", 3) if uri.path
           self.bucket = bucket if bucket
           self.object = object if object
         end
