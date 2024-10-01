@@ -30,21 +30,21 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      # minio:
-      #   image: minio/minio:RELEASE.2024-09-22T00-33-43Z
-      #   ports:
-      #     - 9000:9000
-      #   env:
-      #     MINIO_ROOT_USER: accesskey
-      #     MINIO_ROOT_PASSWORD: secretkey
-      #   volumes:
-      #     - "${{env.GITHUB_WORKSPACE}}/.github/services/minio:/service"
-      #   options: >-
-      #     --health-cmd "curl -f http://localhost:9000/minio/health/live"
-      #     --health-interval 10s
-      #     --health-timeout 5s
-      #     --health-retries 5
-      #     --entrypoint /service/entrypoint.sh
+      minio:
+        image: minio/minio:RELEASE.2024-09-22T00-33-43Z
+        ports:
+          - 9000:9000
+        env:
+          MINIO_ROOT_USER: accesskey
+          MINIO_ROOT_PASSWORD: secretkey
+        volumes:
+          - ${{ github.workspace }}/.github/services/minio:/service
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --entrypoint /service/entrypoint.sh
     strategy:
       fail-fast: false
       matrix:
@@ -76,11 +76,6 @@ jobs:
     env:
       BUNDLE_GEMFILE: ${{ matrix.gemfile }}
     steps:
-      - name: Debug
-        run: |
-          pwd
-          echo "github.workspace: ${{ github.workspace }}"
-          echo "env.GITHUB_WORKSPACE: ${{ env.GITHUB_WORKSPACE }}"
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up Ruby ${{ matrix.ruby }}
