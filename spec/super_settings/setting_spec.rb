@@ -419,7 +419,7 @@ describe SuperSettings::Setting do
       expect(settings.all? { |setting| setting.errors.empty? }).to eq true
       expect(settings.all?(&:persisted?)).to eq true
       new_key = SuperSettings::Setting.find_by_key("new_key")
-      old_key = SuperSettings::Setting.find_by_key("old_key")
+      old_key = SuperSettings::Setting.all.detect { |s| s.key == "old_key" }
       expect(new_key.value).to eq "new value"
       expect(new_key.deleted).to be(false)
       expect(old_key.deleted).to be(true)
