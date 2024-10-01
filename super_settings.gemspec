@@ -23,6 +23,7 @@ Gem::Specification.new do |spec|
     Gemfile
     Gemfile.lock
     Rakefile
+    docker-compose.yml
     config.ru
     assets/
     bin/

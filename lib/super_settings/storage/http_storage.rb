@@ -10,6 +10,7 @@ module SuperSettings
     # central application that exposes the SuperSettings::RestAPI.
     class HttpStorage
       include Storage
+      include Transaction
 
       DEFAULT_HEADERS = {"Accept" => "application/json"}.freeze
       DEFAULT_TIMEOUT = 5.0
@@ -40,6 +41,10 @@ module SuperSettings
         attr_accessor :key, :value, :changed_by, :deleted
 
         def initialize(*)
+          @key = nil
+          @value = nil
+          @changed_by = nil
+          @created_at = nil
           @deleted = false
           super
         end
@@ -77,6 +82,31 @@ module SuperSettings
         def last_updated_at
           value = call_api(:get, "/settings/last_updated_at")["last_updated_at"]
           SuperSettings::Coerce.time(value)
+        end
+
+        def save_all(changes)
+          payload = []
+          changes.each do |setting|
+            setting_payload = {key: setting.key}
+
+            if setting.deleted?
+              setting_payload[:deleted] = true
+            else
+              setting_payload[:value] = setting.value
+              setting_payload[:value_type] = setting.value_type
+              setting_payload[:description] = setting.description
+            end
+
+            payload << setting_payload
+          end
+
+          begin
+            call_api(:post, "/settings", settings: payload)
+          rescue InvalidRecordError
+            return false
+          end
+
+          true
         end
 
         attr_accessor :base_url
@@ -184,27 +214,14 @@ module SuperSettings
 
       def initialize(*)
         @persisted = false
+        @key = nil
+        @raw_value = nil
+        @description = nil
+        @value_type = nil
+        @created_at = nil
+        @updated_at = nil
         @deleted = false
         super
-      end
-
-      def save!
-        payload = {key: key}
-        if deleted?
-          payload[:deleted] = true
-        else
-          payload[:value] = value
-          payload[:value_type] = value_type
-          payload[:description] = description
-        end
-
-        begin
-          call_api(:post, "/settings", settings: [payload])
-          set_persisted!
-        rescue InvalidRecordError
-          return false
-        end
-        true
       end
 
       def history(limit: nil, offset: 0)

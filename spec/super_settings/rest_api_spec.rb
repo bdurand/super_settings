@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../../spec_helper"
+require_relative "../spec_helper"
 
 describe SuperSettings::RestAPI do
   let!(:setting_1) { SuperSettings::Setting.create!(key: "string", value_type: :string, value: "foobar") }
@@ -23,12 +23,26 @@ describe SuperSettings::RestAPI do
       response = SuperSettings::RestAPI.index
       expect(response[:settings]).to eq [reload(setting_6), reload(setting_4), reload(setting_5), reload(setting_3), reload(setting_2), reload(setting_1)].collect(&:as_json)
     end
+
+    it "should not include deleted settings" do
+      setting_1.deleted = true
+      setting_1.save!
+      response = SuperSettings::RestAPI.index
+      expect(response[:settings]).to eq [reload(setting_6), reload(setting_4), reload(setting_5), reload(setting_3), reload(setting_2)].collect(&:as_json)
+    end
   end
 
   describe "show" do
     it "should have a REST endpoint" do
       response = SuperSettings::RestAPI.show(setting_1.key)
       expect(response).to eq reload(setting_1).as_json
+    end
+
+    it "should not return deleted settings" do
+      setting_1.deleted = true
+      setting_1.save!
+      response = SuperSettings::RestAPI.show(setting_1.key)
+      expect(response).to eq nil
     end
   end
 
@@ -128,6 +142,16 @@ describe SuperSettings::RestAPI do
       setting_2.save!
       response = SuperSettings::RestAPI.updated_since(Time.now + 5)
       expect(response[:settings]).to match_array([reload(setting_1).as_json, reload(setting_2).as_json])
+    end
+
+    it "should not return deleted settings" do
+      setting_1.updated_at = Time.now + 20
+      setting_1.save!
+      setting_2.updated_at = Time.now + 20
+      setting_2.deleted = true
+      setting_2.save!
+      response = SuperSettings::RestAPI.updated_since(Time.now + 5)
+      expect(response[:settings]).to eq [reload(setting_1).as_json]
     end
   end
 end

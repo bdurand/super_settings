@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../../spec_helper"
+require_relative "../spec_helper"
 
 describe SuperSettings::LocalCache do
   let(:cache) { SuperSettings::LocalCache.new(refresh_interval: 5) }

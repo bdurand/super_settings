@@ -94,9 +94,28 @@ Capybara.default_max_wait_time = 5
 
 WebMock.disable_net_connect!(allow_localhost: true)
 
-redis = Redis.new(url: ENV["TEST_REDIS_URL"]) if ENV["TEST_REDIS_URL"]
-if redis
-  SuperSettings::Storage::RedisStorage.redis = redis
+if ENV["TEST_REDIS_URL"] == "default"
+  ENV["TEST_REDIS_URL"] = "redis://localhost:#{ENV.fetch("REDIS_PORT", "6379")}/1"
+end
+if ENV["TEST_REDIS_URL"]
+  redis = Redis.new(url: ENV["TEST_REDIS_URL"])
+  if redis
+    SuperSettings::Storage::RedisStorage.redis = redis
+  end
+end
+
+if ENV["TEST_S3_URL"] == "default"
+  storage_url = "s3://accesskey:secretkey@region-1/settings/test_settings.json"
+  endpoint = "http://localhost:#{ENV.fetch("S3_PORT", "9000")}"
+  config = SuperSettings::Storage::S3Storage.configuration
+  config.endpoint = endpoint
+  config.url = storage_url
+  bucket = SuperSettings::Storage::S3Storage.send(:bucket)
+  bucket.create unless bucket.exists?
+  object = SuperSettings::Storage::S3Storage.s3_object
+  object.delete if object.exists?
+elsif ENV["TEST_S3_URL"]
+  SuperSettings::Storage::S3Storage.configuration.storage_url = ENV["TEST_S3_URL"]
 end
 
 RSpec.configure do |config|

@@ -148,10 +148,11 @@ This gem abstracts out the storage engine and can support multiple storage mecha
 * `SuperSettings::Storage::ActiveRecordStorage` - Stores the settings in a relational database using ActiveRecord. This is the default storage engine for Rails applications.
 * `SuperSettings::Storage::RedisStorage` - Stores the settings in a Redis database using the [redis](https://github.com/redis/redis-rb) gem.
 * `SuperSettings::Storage::HttpStorage` - Uses the SuperSettings REST API running on another server. This is useful in a microservices architecture so you can have a central settings server used by all the services.
+* `SuperSettings::Storage::S3Storage` - Stores the settings in JSON in an S3 object. This is useful for applications running on AWS that want to store settings in a central location since it does not require a dedicated database. It is possible to read the settings directly from S3 from another application.
 
 Additional storage engines can be built by creating a class that includes `SuperSettings::Storage` and implements the unimplemented methods in that module.
 
-The storage engine is defined by setting `SuperSettings::Setting.storage` to a storage class. Note that each storage class may also require additional configuration. For instance, the Redis storage class requires you to provide a connection to a Redis database. If you are running a Rails application, then the storage engine will be set to ActiveRecord by default. Otherwise, you will need to define the storage class somewhere in your application's initialization.
+The storage engine is defined by setting `SuperSettings::Setting.storage` to a storage class. Note that each storage class may also require additional configuration. For instance, the Redis storage class requires you to provide a connection to a Redis database. If you are running a Rails application, then the storage engine will be set to ActiveRecord by default. Otherwise, you will need to define the storage class somewhere in your application's initialization. See the storage class documentation for more information.
 
 ### Web UI
 

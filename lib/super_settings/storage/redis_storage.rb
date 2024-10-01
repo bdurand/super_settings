@@ -25,6 +25,7 @@ module SuperSettings
     #   SuperSettings::Storage::RedisStorage.redis = ConnectionPool.new(size: 5) { Redis.new(url: ENV["REDIS_URL"]) }
     class RedisStorage
       include Storage
+      include Transaction
 
       SETTINGS_KEY = "SuperSettings.settings"
       UPDATED_KEY = "SuperSettings.order_by_updated_at"
@@ -55,10 +56,8 @@ module SuperSettings
             record
           end
 
-          def destroy_all_by_key(key)
-            RedisStorage.transaction do |redis|
-              redis.del("#{HISTORY_KEY_PREFIX}.#{key}")
-            end
+          def destroy_all_by_key(key, redis)
+            redis.del("#{HISTORY_KEY_PREFIX}.#{key}")
           end
 
           def redis_key(key)
@@ -67,6 +66,10 @@ module SuperSettings
         end
 
         def initialize(*)
+          @key = nil
+          @value = nil
+          @changed_by = nil
+          @created_at = nil
           @deleted = false
           super
         end
@@ -77,13 +80,18 @@ module SuperSettings
 
         def save!
           raise ArgumentError.new("Missing key") if Coerce.blank?(key)
-          RedisStorage.transaction do |redis|
-            redis.lpush(self.class.redis_key(key), payload_json.to_json)
+
+          RedisStorage.transaction do |changes|
+            changes << self
           end
         end
 
         def deleted?
           !!@deleted
+        end
+
+        def save_to_redis(redis)
+          redis.lpush(self.class.redis_key(key), payload_json.to_json)
         end
 
         private
@@ -152,26 +160,15 @@ module SuperSettings
           end
         end
 
-        def transaction(&block)
-          if Thread.current[:super_settings_transaction_redis]
-            block.call(Thread.current[:super_settings_transaction_redis])
-          else
-            begin
-              with_redis do |redis|
-                redis.multi do |multi_redis|
-                  Thread.current[:super_settings_transaction_redis] = multi_redis
-                  Thread.current[:super_settings_transaction_after_commit] = []
-                  block.call(multi_redis)
-                end
-                after_commits = Thread.current[:super_settings_transaction_after_commit]
-                Thread.current[:super_settings_transaction_after_commit] = nil
-                after_commits.each(&:call)
+        def save_all(changes)
+          with_redis do |redis|
+            redis.multi do |multi_redis|
+              changes.each do |object|
+                object.save_to_redis(multi_redis)
               end
-            ensure
-              Thread.current[:super_settings_transaction_redis] = nil
-              Thread.current[:super_settings_transaction_after_commit] = nil
             end
           end
+          true
         end
 
         protected
@@ -185,7 +182,7 @@ module SuperSettings
         def load_from_json(json)
           attributes = JSON.parse(json)
           setting = new(attributes)
-          setting.send(:set_persisted!)
+          setting.persisted = true
           setting
         end
       end
@@ -206,22 +203,18 @@ module SuperSettings
         HistoryStorage.create!(key: key, value: value, deleted: deleted, changed_by: changed_by, created_at: created_at)
       end
 
-      def save!
-        self.updated_at ||= Time.now
-        self.created_at ||= updated_at
-        self.class.transaction do |redis|
-          redis.hset(SETTINGS_KEY, key, payload_json)
-          redis.zadd(UPDATED_KEY, updated_at.to_f, key)
-          set_persisted!
-        end
-        true
+      def save_to_redis(redis)
+        redis.hset(SETTINGS_KEY, key, payload_json)
+        redis.zadd(UPDATED_KEY, updated_at.to_f, key)
       end
 
       def destroy
-        self.class.transaction do |redis|
-          redis.hdel(SETTINGS_KEY, key)
-          redis.zrem(UPDATED_KEY, key)
-          HistoryStorage.destroy_all_by_key(key)
+        self.class.with_redis do |redis|
+          redis.multi do |multi_redis|
+            multi_redis.hdel(SETTINGS_KEY, key)
+            multi_redis.zrem(UPDATED_KEY, key)
+            HistoryStorage.destroy_all_by_key(key, multi_redis)
+          end
         end
       end
 
@@ -262,18 +255,6 @@ module SuperSettings
       end
 
       private
-
-      def after_commit(&block)
-        if Thread.current[:super_settings_transaction_after_commit]
-          Thread.current[:super_settings_transaction_after_commit] << block
-        else
-          block.call
-        end
-      end
-
-      def set_persisted!
-        @persisted = true
-      end
 
       def payload_json
         payload = {
