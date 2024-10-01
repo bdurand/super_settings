@@ -19,7 +19,7 @@ module SuperSettings
 
     # Render the HTML application for managing settings.
     def root
-      html = SuperSettings::Application.new.render("index.html.erb")
+      html = SuperSettings::Application.new.render
       render html: html.html_safe, layout: true
     end
 
@@ -40,7 +40,7 @@ module SuperSettings
 
     # API endpoint for updating settings. See SuperSettings::RestAPI for details.
     def update
-      changed_by = Configuration.instance.controller.changed_by(self)
+      changed_by = SuperSettings.configuration.controller.changed_by(self)
       result = SuperSettings::RestAPI.update(params[:settings], changed_by)
       if result[:success]
         render json: result

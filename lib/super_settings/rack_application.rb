@@ -122,7 +122,7 @@ module SuperSettings
     #
     # @return [Boolean]
     def web_ui_enabled?
-      true
+      SuperSettings.configuration.controller.web_ui_enabled?
     end
 
     private
@@ -159,7 +159,7 @@ module SuperSettings
 
     def handle_root_request(request)
       response = check_authorization(request, write_required: true) do |user|
-        [200, {"content-type" => "text/html; charset=utf-8", "cache-control" => "no-cache"}, [Application.new(:default, add_to_head(request)).render("index.html.erb")]]
+        [200, {"content-type" => "text/html; charset=utf-8", "cache-control" => "no-cache"}, [Application.new(layout: :default, add_to_head: add_to_head(request), color_scheme: SuperSettings.configuration.controller.color_scheme).render]]
       end
 
       if [401, 403].include?(response.first)

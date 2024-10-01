@@ -245,7 +245,7 @@ describe "web UI", type: :feature, js: true do
   describe "discard changes" do
     it "should link to the current page" do
       visit "/"
-      discard_changes_button = find("#discard-changes")
+      discard_changes_button = find("#super-settings-discard-changes")
       expect(discard_changes_button[:disabled]).to eq true
       click_on("Add Setting")
       expect(discard_changes_button[:disabled]).to eq false
@@ -297,7 +297,7 @@ describe "web UI", type: :feature, js: true do
         find_setting_field(array_id, :value).fill_in(with: "car\nboat\nplane")
       end
 
-      find("#save-settings").click
+      find("#super-settings-save-settings").click
 
       expect(page).to_not have_content("key.string")
       expect(page).to_not have_content("foo")
@@ -326,7 +326,7 @@ describe "web UI", type: :feature, js: true do
       within_setting_row(integer_id) do
         find("a.js-show-history").click
       end
-      within("#modal") do
+      within("#super-settings-modal") do
         expect(all("#super-settings-history tbody tr").size).to eq 25
         click_on("Older")
         expect(all("#super-settings-history tbody tr").size).to eq 1

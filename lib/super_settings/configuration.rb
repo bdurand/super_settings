@@ -25,6 +25,7 @@ module SuperSettings
       def initialize
         @superclass = nil
         @web_ui_enabled = true
+        @color_scheme = false
         @changed_by_block = nil
       end
 
@@ -61,6 +62,14 @@ module SuperSettings
 
       def web_ui_enabled?
         !!@web_ui_enabled
+      end
+
+      # Set dark mode for the web UI. Possible values are :light, :dark, or :system.
+      # The default value is :light.
+      attr_writer :color_scheme
+
+      def color_scheme
+        (@color_scheme ||= :light).to_sym
       end
 
       # Enhance the controller. You can define methods or call controller class methods like

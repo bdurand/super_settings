@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.0 - unreleased
+
+### Added
+
+- Added controls for sorting settings in the web UI by keys or last modified time.
+- Isolated of CSS classes in the web UI to prevent conflicts with other CSS libraries.
+- Dark mode support in web UI.
+- Added ability to embed the web UI in a view to allow tighter integration with your application's UI.
+
+### Fixed
+
+- Changing a key now works as expected. Previously, a new setting was created with the new key and the old setting was left unchanged. Now, the old setting is properly marked as deleted.
+
 ## 1.0.2
 
 ### Added

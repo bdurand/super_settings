@@ -50,6 +50,7 @@ end
 require "webmock/rspec"
 require "capybara/rspec"
 require "capybara/cuprite"
+require "nokogiri"
 
 class TestMiddleware < SuperSettings::RackApplication
   protected
@@ -89,7 +90,7 @@ end
 
 Capybara.default_driver = :cuprite
 Capybara.javascript_driver = :cuprite
-Capybara.default_max_wait_time = 30
+Capybara.default_max_wait_time = 5
 
 WebMock.disable_net_connect!(allow_localhost: true)
 

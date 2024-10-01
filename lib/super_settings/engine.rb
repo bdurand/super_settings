@@ -27,7 +27,7 @@ module SuperSettings
 
     config.after_initialize do
       # Call the deferred initialization block.
-      configuration = Configuration.instance
+      configuration = SuperSettings.configuration
       configuration.call
 
       SuperSettings.refresh_interval = configuration.refresh_interval unless configuration.refresh_interval.nil?

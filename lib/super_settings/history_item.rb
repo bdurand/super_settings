@@ -27,7 +27,7 @@ module SuperSettings
     def changed_by_display
       return changed_by if changed_by.nil?
 
-      display_proc = Configuration.instance.model.changed_by_display
+      display_proc = SuperSettings.configuration.model.changed_by_display
       if display_proc && !changed_by.nil?
         display_proc.call(changed_by) || changed_by
       else

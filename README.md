@@ -242,6 +242,9 @@ SuperSettings.configure do |config|
   # Set the superclass to use for the controller. Defaults to using `ApplicationController`.
   config.controller.superclass = Admin::BaseController
 
+  # Set the color scheme to use for the Web UI. Options are :light (default), :dark, or :system.
+  config.controller.color_scheme = :dark
+
   # Add additional code to the controller. In this case we are adding code to ensure only
   # admins can access the functionality and changing the layout to use one defined by the application.
   config.controller.enhance do
@@ -289,6 +292,54 @@ SuperSettings.configure do |config|
 end
 ```
 
+#### Using your own controller
+
+You can embed the SuperSettings web UI into your own templates. This gives you the option to more tightly integrate it with your application's navigation and look and feel.
+
+First disable the web UI in the configuration since you won't need it.
+
+```ruby
+# config/initializers/super_settings.rb
+
+SuperSettings.configure do |config|
+  # Disable the built in web UI since you won't be using it.
+  config.controller.web_ui_enabled = false
+end
+```
+
+Create your controller that will render the SuperSettings web UI.
+
+```ruby
+class AppSettingsController < ApplicationController
+  def index
+  end
+end
+```
+
+Mount the engine routes in your `config/routes.rb` file.
+
+```ruby
+# config/routes.rb
+
+Rails.application.routes.draw do
+  mount SuperSettings::Engine => "/settings"
+
+  controller :app_settings do
+    get "/app_settings", action: :index
+  end
+end
+```
+
+Create a view that embeds the SuperSettings web UI using the `SuperSettings::Application` class. You need to specify the path you mounted the engine at as the base URL for the REST API.
+
+```erb
+# app/views/app_settings/index.html.erb
+
+<h1>Application Settings</h1>
+
+<%= SuperSettings::Application.new(api_base_url: "/settings").render %>
+```
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -312,6 +363,41 @@ $ gem install super_settings
 Open a pull request on GitHub.
 
 Please use the [standardrb](https://github.com/testdouble/standard) syntax and lint your code with `standardrb --fix` before submitting.
+
+You can run a local Rails development using ActiveRecord storage with
+
+```bash
+# Initialize the database (one time only)
+bin/rails bin/rails super_settings:install:migrations
+bin/rails db:migrate
+
+# Start the server
+bin/rails s
+```
+
+You can also bring up a local rack server with
+
+```bash
+bundle exec rackup
+```
+
+By default this will use Redis for storage using the default Redis URL. You can change the storage engine with the `SUPER_SETTINGS_STORAGE` environment variable.
+
+```bash
+SUPER_SETTINGS_STORAGE=redis://localhost:9500 bundle exec rackup
+```
+
+Or you can use the HTTP storage engine to connect to the REST API running on the Rails server.
+
+```bash
+SUPER_SETTINGS_STORAGE=http://localhost:3000/settings bundle exec rackup
+```
+
+Finally, you can run the application in dark mode by setting the `COLOR_SCHEME` environment variable.
+
+```bash
+COLOR_SCHEME=dark bundle exec rackup
+```
 
 ## License
 

@@ -403,6 +403,81 @@ describe SuperSettings::Setting do
       expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "foobar"
       expect(SuperSettings::Setting.find_by_key("newkey")).to eq nil
     end
+
+    it "should create a new setting and delete the old one if the key changed" do
+      setting = SuperSettings::Setting.create!(key: "old_key", value_type: :string, value: "old value")
+      success, settings = SuperSettings::Setting.bulk_update([
+        {
+          key: "new_key",
+          key_was: "old_key",
+          value: "new value",
+          value_type: "string"
+        }
+      ])
+      expect(success).to eq true
+      expect(settings.size).to eq 2
+      expect(settings.all? { |setting| setting.errors.empty? }).to eq true
+      expect(settings.all?(&:persisted?)).to eq true
+      new_key = SuperSettings::Setting.find_by_key("new_key")
+      old_key = SuperSettings::Setting.all.detect { |s| s.key == "old_key" }
+      expect(new_key.value).to eq "new value"
+      expect(new_key.deleted).to be(false)
+      expect(old_key.deleted).to be(true)
+    end
+
+    it "should create a new setting and not delete the old one if the key was already updated" do
+      setting = SuperSettings::Setting.create!(key: "old_key", value_type: :string, value: "foobar")
+      success, settings = SuperSettings::Setting.bulk_update([
+        {
+          key: "old_key",
+          value: "new old value",
+          value_type: "string"
+        },
+        {
+          key: "new_key",
+          key_was: "old_key",
+          value: "new value",
+          value_type: "string"
+        }
+      ])
+      expect(success).to eq true
+      expect(settings.size).to eq 2
+      expect(settings.all? { |setting| setting.errors.empty? }).to eq true
+      expect(settings.all?(&:persisted?)).to eq true
+      new_key = SuperSettings::Setting.find_by_key("new_key")
+      old_key = SuperSettings::Setting.find_by_key("old_key")
+      expect(new_key.value).to eq "new value"
+      expect(new_key.deleted).to be(false)
+      expect(old_key.value).to eq "new old value"
+      expect(old_key.deleted).to be(false)
+    end
+
+    it "should create a new setting and not delete the old one if the key will be updated" do
+      setting = SuperSettings::Setting.create!(key: "old_key", value_type: :string, value: "foobar")
+      success, settings = SuperSettings::Setting.bulk_update([
+        {
+          key: "new_key",
+          key_was: "old_key",
+          value: "new value",
+          value_type: "string"
+        },
+        {
+          key: "old_key",
+          value: "new old value",
+          value_type: "string"
+        }
+      ])
+      expect(success).to eq true
+      expect(settings.size).to eq 2
+      expect(settings.all? { |setting| setting.errors.empty? }).to eq true
+      expect(settings.all?(&:persisted?)).to eq true
+      new_key = SuperSettings::Setting.find_by_key("new_key")
+      old_key = SuperSettings::Setting.find_by_key("old_key")
+      expect(new_key.value).to eq "new value"
+      expect(new_key.deleted).to be(false)
+      expect(old_key.value).to eq "new old value"
+      expect(old_key.deleted).to be(false)
+    end
   end
 
   describe "set" do

@@ -10,6 +10,8 @@ unless ENV["SUPER_SETTINGS_NO_OVERRIDES"].present?
 
     config.controller.superclass = "::ApplicationController"
 
+    config.controller.color_scheme = ENV.fetch("COLOR_SCHEME", nil)
+
     config.controller.enhance do
       # Request forgery protection is enabled by default for requests with cookies; it can be disabled with:
       # skip_before_action :verify_authenticity_token

@@ -4,14 +4,24 @@ ENV['BUNDLE_GEMFILE'] ||= "Gemfile"
 require 'bundler/setup' if File.exist?(ENV['BUNDLE_GEMFILE'])
 
 require "dotenv/load"
+require "rackup"
 
 require_relative "../lib/super_settings"
 
-app = SuperSettings::Rack::Router.new
-options = Rack::Server::Options.new.parse!(ARGV)
+class TestApplication < SuperSettings::RackApplication
+  def current_user(request)
+    "John Doe"
+  end
+end
+
+SuperSettings.configuration.controller.color_scheme = ENV.fetch("COLOR_SCHEME", "light")
+
+app = TestApplication.new
+options = Rackup::Server::Options.new.parse!(ARGV)
 
 storage = (ARGV[0] || "redis")
 if storage == "redis"
+  require "redis"
   SuperSettings::Setting.storage = SuperSettings::Storage::RedisStorage
   SuperSettings::Storage::RedisStorage.redis = Redis.new(url: ENV["REDIS_URL"])
 elsif storage == "http"
@@ -21,4 +31,4 @@ else
   STDERR.puts "Usage: #{$0} [redis | http]"
 end
 
-Rack::Server.start(options.merge(app: app))
+Rackup::Server.start(options.merge(app: app))

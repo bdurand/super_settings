@@ -2,7 +2,7 @@
 
 SuperSettings::Engine.routes.draw do
   controller :settings do
-    if SuperSettings::Configuration.instance.controller.web_ui_enabled?
+    if SuperSettings.configuration.controller.web_ui_enabled?
       get "/", action: :root, as: :root
     end
     get "/settings", action: :index

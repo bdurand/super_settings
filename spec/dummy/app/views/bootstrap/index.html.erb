@@ -1,0 +1,14 @@
+<header>
+  <h2>My Application</h2>
+</header>
+
+<div class="container">
+
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item active" aria-current="page">Settings</li>
+    </ol>
+  </nav>
+
+  <%= SuperSettings::Application.new(api_base_url: "/settings").render %>
+</div>

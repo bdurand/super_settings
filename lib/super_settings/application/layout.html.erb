@@ -2,9 +2,12 @@
 <html lang="en">
   <head>
     <title><%= application_name %> Settings</title>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="pinterest" content="nopin" />
-    <meta name="format-detection" content="telephone=no">
+    <meta name="format-detection" content="telephone=no email=no date=no address=no">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="referrer" content="no-referrer-when-downgrade">
     <%= layout_style_tag %>
     <%= add_to_head %>
   </head>
@@ -15,7 +18,7 @@
         <%= application_header %>
       </h1>
     </header>
-    <div class="container">
+    <div class="super-settings-container">
       <%= yield %>
     </div>
   </body>

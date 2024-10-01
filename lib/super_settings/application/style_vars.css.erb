@@ -1,0 +1,62 @@
+.super-settings {
+  --primary-color-h: 216;
+  --primary-color-s: 98%;
+  --primary-color-l: 52%;
+  --primary-color-hsl: var(--primary-color-h), var(--primary-color-s), var(--primary-color-l);
+  --primary-color: hsl(var(--primary-color-hsl));
+  --primary-contrast-color: #fff;
+  --primary-hover-color: hsl(var(--primary-color-h), var(--primary-color-s), calc(var(--primary-color-l) - 10%));
+  --primary-border-color: hsl(var(--primary-color-h), var(--primary-color-s), calc(var(--primary-color-l) + 10%));
+}
+
+<% unless color_scheme == :dark %>
+  .super-settings {
+    --edit-bg-color: #f2fdf2;
+    --deleted-row-color: darkred;
+    --deleted-row-bg-color: #ffd1d8;
+    --history-key-color: royalblue;
+    --table-header-bg-color: #fff;
+    --table-border-color: #dee2e6;
+    --alt-row-color: rgba(0, 0, 0, .05);
+    --form-control-color: #495057;
+    --form-control-bg-color: #fff;
+    --form-control-border-color: #ced4da;
+    --form-control-placeholder-color: #bbb;
+    --modal-bg-color: #fff;
+    --modal-transparency: 0.4;
+    --modal-control-color: #000;
+    --success-color: green;
+    --danger-color: firebrick;
+    --muted-color: #666;
+    --unselected-color: #666;
+  }
+<% end %>
+
+<% if color_scheme == :system %>
+  @media (prefers-color-scheme: dark) {
+<% end %>
+<% if color_scheme == :system || color_scheme == :dark %>
+  .super-settings {
+    --edit-bg-color: #8dc875;
+    --deleted-row-color: #e0b1b8;
+    --deleted-row-bg-color: #7a3636;
+    --history-key-color: #a7d6f4;
+    --table-header-bg-color: #333;
+    --table-border-color: #555;
+    --alt-row-color: rgba(0, 0, 0, .30);
+    --form-control-color: #eee;
+    --form-control-bg-color: #666;
+    --form-control-border-color: #555;
+    --form-control-placeholder-color: #aaa;
+    --modal-bg-color: #333;
+    --modal-transparency: 0.75;
+    --modal-control-color: #fff;
+    --success-color: #00ff00;
+    --danger-color: #ff0000;
+    --muted-color: #999;
+    --unselected-color: #ccc;
+  }
+<% end %>
+<% if color_scheme == :system %>
+  }
+<% end %>

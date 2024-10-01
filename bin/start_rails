@@ -1,7 +1,0 @@
-#!/usr/bin/env ruby
-
-require "shellwords"
-
-default_gemfile = Dir.glob(File.expand_path("../gemfiles/rails_*.gemfile", __dir__)).sort.last
-ENV['BUNDLE_GEMFILE'] ||= File.expand_path("../gemfiles/rails_latest.gemfile", __dir__)
-system "bundle && bin/rails db:migrate && bin/rails s #{Shellwords.join(ARGV)}"
