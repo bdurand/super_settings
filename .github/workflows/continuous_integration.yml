@@ -38,7 +38,7 @@ jobs:
           MINIO_ROOT_USER: accesskey
           MINIO_ROOT_PASSWORD: secretkey
         volumes:
-          - .github/services/minio:/service
+          - ${GITHUB_WORKSPACE}/.github/services/minio:/service
         options: >-
           --health-cmd "curl -f http://localhost:9000/minio/health/live"
           --health-interval 10s
