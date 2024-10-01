@@ -42,7 +42,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        command: server /data
+          --entrypoint /bin/sh server /data
     strategy:
       fail-fast: false
       matrix:
