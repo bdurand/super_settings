@@ -3,6 +3,8 @@
 require_relative "../../spec_helper"
 
 if ENV["TEST_REDIS_URL"]
+  puts "*********** Running RedisStorage tests"
+
   describe SuperSettings::Storage::RedisStorage do
     describe "all" do
       it "should return all settings" do

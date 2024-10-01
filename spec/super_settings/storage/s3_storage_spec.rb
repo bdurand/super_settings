@@ -3,6 +3,8 @@
 require_relative "../../spec_helper"
 
 if ENV["TEST_S3_URL"]
+  puts "*********** Running RedisStorage tests"
+
   describe SuperSettings::Storage::S3Storage do
     describe ".last_updated_at" do
       it "should be the last modified time of the object" do
