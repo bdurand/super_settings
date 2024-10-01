@@ -49,8 +49,6 @@ jobs:
           - ruby: "ruby"
             standardrb: true
           - ruby: "ruby"
-            appraisal: "no_rails"
-          - ruby: "ruby"
             appraisal: "rails_latest"
           - ruby: "3.3"
             appraisal: "rails_7.2"
