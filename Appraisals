@@ -73,18 +73,6 @@ appraise "rails_5.0" do
   remove_gem "rackup"
 end
 
-appraise "rails_4.2" do
-  gem "rails", "~> 4.2.0"
-  gem "rspec-rails", "~> 4.1"
-  gem "bigdecimal", "~>1.3.5"
-  gem "sqlite3", "~> 1.3.0"
-  gem "redis", "~> 3.0"
-  gem "capybara", "~> 3.35"
-  gem "puma", "~> 5.0"
-  gem "bundler", "~> 1.0"
-  remove_gem "rackup"
-end
-
 appraise "no_rails" do
   gem "redis", "~> 3.0"
   gem "capybara", "~> 3.35"

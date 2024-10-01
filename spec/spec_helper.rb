@@ -168,15 +168,6 @@ end
 
 I18n.locale = :en if defined?(I18n)
 
-# Needed to handle specs for Rails 4.2.
-def request_params(params)
-  if defined?(Rails) && Rails.version.to_f < 5.0
-    params
-  else
-    {params: params}
-  end
-end
-
 def post_json(action, params)
   request.headers["content-type"] = "application/json"
   if defined?(Rails) && Rails.version.to_f < 5.0

@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Changing a key now works as expected. Previously, a new setting was created with the new key and the old setting was left unchanged. Now, the old setting is properly marked as deleted.
 
+### Removed
+
+- Rails 4.2 support has been removed.
+
 ## 1.0.2
 
 ### Added

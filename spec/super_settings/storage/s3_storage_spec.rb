@@ -21,7 +21,6 @@ if ENV["TEST_S3_URL"]
 
     describe ".all" do
       it "should return all settings" do
-        puts "*** TESTING S3Storage.all ***"
         setting_1 = SuperSettings::Storage::S3Storage.new(key: "setting_1", raw_value: "1")
         setting_1.save!
         setting_2 = SuperSettings::Storage::S3Storage.new(key: "setting_2", deleted: true)

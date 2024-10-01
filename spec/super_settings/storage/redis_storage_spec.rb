@@ -6,7 +6,6 @@ if ENV["TEST_REDIS_URL"]
   describe SuperSettings::Storage::RedisStorage do
     describe "all" do
       it "should return all settings" do
-        puts "*** TESTING RedisStorage.all ***"
         setting_1 = SuperSettings::Storage::RedisStorage.new(key: "setting_1", raw_value: "1")
         setting_1.save!
         setting_2 = SuperSettings::Storage::RedisStorage.new(key: "setting_2", deleted: true)
