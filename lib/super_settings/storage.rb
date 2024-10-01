@@ -4,6 +4,8 @@ module SuperSettings
   # Abstraction over how a setting is stored and retrieved from the storage engine. Models
   # must implement the methods module in this module that raise NotImplementedError.
   module Storage
+    autoload :StorageAttributes, File.join(__dir__, "storage/storage_attributes")
+    autoload :HistoryAttributes, File.join(__dir__, "storage/history_attributes")
     autoload :Transaction, File.join(__dir__, "storage/transaction")
     autoload :ActiveRecordStorage, File.join(__dir__, "storage/active_record_storage")
     autoload :HttpStorage, File.join(__dir__, "storage/http_storage")

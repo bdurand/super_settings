@@ -23,20 +23,14 @@ module SuperSettings
     #
     # @example
     #   SuperSettings::Storage::RedisStorage.redis = ConnectionPool.new(size: 5) { Redis.new(url: ENV["REDIS_URL"]) }
-    class RedisStorage
-      include Storage
+    class RedisStorage < StorageAttributes
       include Transaction
 
       SETTINGS_KEY = "SuperSettings.settings"
       UPDATED_KEY = "SuperSettings.order_by_updated_at"
 
-      class HistoryStorage
+      class HistoryStorage < HistoryAttributes
         HISTORY_KEY_PREFIX = "SuperSettings.history"
-
-        include SuperSettings::Attributes
-
-        attr_accessor :key, :value, :changed_by, :deleted
-        attr_reader :created_at
 
         class << self
           def find_all_by_key(key:, offset: 0, limit: nil)
@@ -65,29 +59,12 @@ module SuperSettings
           end
         end
 
-        def initialize(*)
-          @key = nil
-          @value = nil
-          @changed_by = nil
-          @created_at = nil
-          @deleted = false
-          super
-        end
-
-        def created_at=(val)
-          @created_at = SuperSettings::Coerce.time(val)
-        end
-
         def save!
           raise ArgumentError.new("Missing key") if Coerce.blank?(key)
 
           RedisStorage.transaction do |changes|
             changes << self
           end
-        end
-
-        def deleted?
-          !!@deleted
         end
 
         def save_to_redis(redis)
@@ -106,9 +83,6 @@ module SuperSettings
           payload
         end
       end
-
-      attr_reader :key, :raw_value, :description, :value_type, :updated_at, :created_at
-      attr_accessor :changed_by
 
       class << self
         def all
@@ -216,42 +190,6 @@ module SuperSettings
             HistoryStorage.destroy_all_by_key(key, multi_redis)
           end
         end
-      end
-
-      def key=(value)
-        @key = (Coerce.blank?(value) ? nil : value.to_s)
-      end
-
-      def raw_value=(value)
-        @raw_value = (Coerce.blank?(value) ? nil : value.to_s)
-      end
-
-      def value_type=(value)
-        @value_type = (Coerce.blank?(value) ? nil : value.to_s)
-      end
-
-      def description=(value)
-        @description = (Coerce.blank?(value) ? nil : value.to_s)
-      end
-
-      def deleted=(value)
-        @deleted = Coerce.boolean(value)
-      end
-
-      def created_at=(value)
-        @created_at = SuperSettings::Coerce.time(value)
-      end
-
-      def updated_at=(value)
-        @updated_at = SuperSettings::Coerce.time(value)
-      end
-
-      def deleted?
-        !!@deleted
-      end
-
-      def persisted?
-        !!@persisted
       end
 
       private

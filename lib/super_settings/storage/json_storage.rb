@@ -13,29 +13,10 @@ module SuperSettings
     # - self.all
     # - self.last_updated_at
     # - save!
-    class JSONStorage
-      include Storage
+    class JSONStorage < StorageAttributes
       include Transaction
 
-      class HistoryStorage
-        include SuperSettings::Attributes
-
-        attr_accessor :key, :value, :changed_by, :created_at
-        attr_writer :deleted
-
-        def initialize(*)
-          @key = nil
-          @value = nil
-          @changed_by = nil
-          @created_at = nil
-          @deleted = false
-          super
-        end
-
-        def deleted?
-          !!@deleted
-        end
-
+      class HistoryStorage < HistoryAttributes
         def as_json
           attributes = {
             value: value,
@@ -46,9 +27,6 @@ module SuperSettings
           attributes
         end
       end
-
-      attr_accessor :key, :raw_value, :description, :value_type, :updated_at, :created_at
-      attr_writer :deleted
 
       class << self
         def all
@@ -148,25 +126,9 @@ module SuperSettings
         end
       end
 
-      def initialize(attributes = nil)
-        @key = nil
-        @raw_value = nil
-        @description = nil
-        @value_type = nil
-        @deleted = false
-        @updated_at = nil
-        @created_at = nil
-        @persisted = false
+      def initialize(*)
         @history = []
         super
-      end
-
-      def deleted?
-        !!@deleted
-      end
-
-      def persisted?
-        !!@persisted
       end
 
       def history(limit: nil, offset: 0)
