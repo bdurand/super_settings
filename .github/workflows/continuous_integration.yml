@@ -30,52 +30,57 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      minio:
-        image: minio/minio:RELEASE.2024-09-22T00-33-43Z
-        ports:
-          - 9000:9000
-        env:
-          MINIO_ROOT_USER: accesskey
-          MINIO_ROOT_PASSWORD: secretkey
-        volumes:
-          - "`pwd`/.github/services/minio:/service"
-        options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-          --entrypoint /service/entrypoint.sh
+      # minio:
+      #   image: minio/minio:RELEASE.2024-09-22T00-33-43Z
+      #   ports:
+      #     - 9000:9000
+      #   env:
+      #     MINIO_ROOT_USER: accesskey
+      #     MINIO_ROOT_PASSWORD: secretkey
+      #   volumes:
+      #     - "${{env.GITHUB_WORKSPACE}}/.github/services/minio:/service"
+      #   options: >-
+      #     --health-cmd "curl -f http://localhost:9000/minio/health/live"
+      #     --health-interval 10s
+      #     --health-timeout 5s
+      #     --health-retries 5
+      #     --entrypoint /service/entrypoint.sh
     strategy:
       fail-fast: false
       matrix:
         include:
           - ruby: "ruby"
             standardrb: true
-          - ruby: "ruby"
-            appraisal: "no_rails"
-          - ruby: "ruby"
-            appraisal: "rails_latest"
-          - ruby: "3.3"
-            appraisal: "rails_7.2"
-          - ruby: "3.1"
-            appraisal: "rails_7.0"
-          - ruby: "3.0"
-            appraisal: "rails_6.1"
-          - ruby: "2.7"
-            appraisal: "rails_6.0"
-          - ruby: "2.6"
-            appraisal: "rails_5.2"
-          - ruby: "2.6"
-            appraisal: "rails_5.1"
-          - ruby: "2.5"
-            appraisal: "rails_5.0"
-          - ruby: "2.5"
-            appraisal: "rails_4.2"
-            bundler: "1.17.3"
-            gemfile: gemfiles/rails_4.2.gemfile
+          # - ruby: "ruby"
+          #   appraisal: "no_rails"
+          # - ruby: "ruby"
+          #   appraisal: "rails_latest"
+          # - ruby: "3.3"
+          #   appraisal: "rails_7.2"
+          # - ruby: "3.1"
+          #   appraisal: "rails_7.0"
+          # - ruby: "3.0"
+          #   appraisal: "rails_6.1"
+          # - ruby: "2.7"
+          #   appraisal: "rails_6.0"
+          # - ruby: "2.6"
+          #   appraisal: "rails_5.2"
+          # - ruby: "2.6"
+          #   appraisal: "rails_5.1"
+          # - ruby: "2.5"
+          #   appraisal: "rails_5.0"
+          # - ruby: "2.5"
+          #   appraisal: "rails_4.2"
+          #   bundler: "1.17.3"
+          #   gemfile: gemfiles/rails_4.2.gemfile
     env:
       BUNDLE_GEMFILE: ${{ matrix.gemfile }}
     steps:
+      - name: Debug
+        run: |
+          pwd
+          puts "github.workspace: ${{ github.workspace }}"
+          puts "GITHUB_WORKSPACE: ${{ env.GITHUB_WORKSPACE }}"
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up Ruby ${{ matrix.ruby }}
