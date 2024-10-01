@@ -1,29 +1,28 @@
 # SuperSettings
 
 [![Continuous Integration](https://github.com/bdurand/super_settings/actions/workflows/continuous_integration.yml/badge.svg)](https://github.com/bdurand/super_settings/actions/workflows/continuous_integration.yml)
-[![Regression Test](https://github.com/bdurand/super_settings/actions/workflows/regression_test.yml/badge.svg)](https://github.com/bdurand/super_settings/actions/workflows/regression_test.yml)
 [![Ruby Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://github.com/testdouble/standard)
 [![Gem Version](https://badge.fury.io/rb/super_settings.svg)](https://badge.fury.io/rb/super_settings)
 
-This gem provides a framework for maintaining runtime application settings. Settings are persisted in a database but cached in memory for quick, efficient access. The settings are designed so they can be updated dynamically without requiring code deployment or restarting processes. The code scales very well and can easily handle very high throughput environments.
+SuperSettings is a Ruby gem that provides a scalable framework for maintaining runtime application settings. Settings are persisted in a database but cached in memory for quick, efficient access. This design ensures settings can be updated dynamically without requiring code deployment or process restarts, making it ideal for high-throughput environments.
 
-As applications grow, they tend to accumulate many configuration options. Often these end up in environment variables, hard coded in YAML files, or sprinkled through various data models as additional columns. All of these methods of configuration have their place and are completely appropriate for different purposes (i.e. for storing application secrets, configuration required during application startup, etc.).
+As applications grow, they often accumulate a large number of configuration options. Common approaches such as environment variables, YAML files, or additional database columns all have their place:
 
-However, these methods don't work as well for runtime settings that you may want to change while your application is running.
+- **Environment variables** are suitable for environment-specific configuration, but require restarts for changes to take effect and can only store string values.
+- **YAML files** offer support for complex data structures and can be bundled with application code but typically require a new release to update.
+- **Database columns** - These are great for settings tied to data models; however, they don’t apply well outside of the data model, and you need to build custom tools to manage them in your application.
 
-- **Environment variables** - These are great for environment-specific configuration and they can be a good place to store sensitive data. However, they can be difficult to manage. All values must be stored as strings, and application processes need to be restarted for changes to take effect.
+Key features include:
 
-- **YAML files** - These are great for more complex configurations because they support data structures and they can be shipped with your application code. However, changing them usually requires a new release of the application.
+- **Caching:** A thread-safe, in-memory caching mechanism ensures high-performance access to settings, while minimizing database load. Cache refreshes are highly efficient and configurable.
+- **Dynamic Updates:** Settings can be changed on the fly, with automatic logging of changes to maintain an audit trail for compliance.
+- **Data Types and Validation:** Settings can be defined with specific data types (string, integer, float, boolean, datetime, or array) to ensure validity.
+- **Documentation:** Each setting can include a description to explain its purpose and usage.
+- **Web UI and REST API:** Manage settings via a built-in web interface or REST API.
+- **Custom Callbacks:** Execute custom logic whenever a setting changes, enabling more sophisticated behavior for logging and compliance.
+- **Pluggable Data Storage:** SuperSettings supports multiple storage engines, including ActiveRecord, Redis, and S3. You can also chain it to another application running SuperSettings via the HTTP storage engine to allow microservices to share settings.
 
-- **Database columns** - These are great for settings tied to data models, however, they don't apply very well outside the data model, and you need to build the tools for managing them into your application.
-
-SuperSettings provides a simple interface for accessing settings backed by a thread-safe caching mechanism, which provides in-memory performance while significantly limiting any load on the database. You can tune how frequently the cache is refreshed and each refresh call is tuned to be highly efficient.
-
-There is also an out of the box Web UI and REST API for managing settings. You can specify data types for your settings (string, integer, float, boolean, datetime, or array) to ensure that values will be valid. You can also supply documentation for each setting so that it's clear what each one does and how it is used.
-
-Changes to settings are stored whenever a setting is changed to give you an audit trail if you need it for compliance reasons. In addition, you can provide your own callbacks to execute whenever a setting is changed.
-
-There is a companion gem [ultra_settings](https://github.com/bdurand/ultra_settings) that can be used to integrate SuperSettings into a combined configuration system alongside YAML files and environment variables.
+For projects that require a combination of runtime settings, environment variables, and YAML files, SuperSettings integrates seamlessly with [ultra_settings](https://github.com/bdurand/ultra_settings), creating a flexible and powerful configuration system.
 
 ## Usage
 
