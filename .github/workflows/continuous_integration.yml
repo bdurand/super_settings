@@ -79,8 +79,8 @@ jobs:
       - name: Debug
         run: |
           pwd
-          puts "github.workspace: ${{ github.workspace }}"
-          puts "GITHUB_WORKSPACE: ${{ env.GITHUB_WORKSPACE }}"
+          echo "github.workspace: ${{ github.workspace }}"
+          echo "env.GITHUB_WORKSPACE: ${{ env.GITHUB_WORKSPACE }}"
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up Ruby ${{ matrix.ruby }}
