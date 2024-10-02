@@ -5,15 +5,23 @@ require_relative "../../spec_helper"
 describe SuperSettings::Storage::HttpStorage do
   describe "http settings" do
     it "should add query parameters on a GET request" do
-      allow(SuperSettings::Storage::HttpStorage).to receive(:query_params).and_return({foo: "bar"})
-      stub_request(:get, "https://example.com/super_settings/settings").with(query: {foo: "bar"}).to_return(body: {settings: []}.to_json, headers: {"content-type" => "application/json"})
-      SuperSettings::Storage::HttpStorage.all
+      SuperSettings::Storage::HttpStorage.query_params[:foo] = "bar"
+      begin
+        stub_request(:get, "https://example.com/super_settings/settings").with(query: {foo: "bar"}).to_return(body: {settings: []}.to_json, headers: {"content-type" => "application/json"})
+        SuperSettings::Storage::HttpStorage.all
+      ensure
+        SuperSettings::Storage::HttpStorage.query_params.delete(:foo)
+      end
     end
 
     it "should add headers to the request" do
-      allow(SuperSettings::Storage::HttpStorage).to receive(:headers).and_return({"Foo" => "bar"})
-      stub_request(:get, "https://example.com/super_settings/settings").with(headers: {"Accept" => "application/json", "Foo" => "bar"}).to_return(body: {settings: []}.to_json, headers: {"content-type" => "application/json"})
-      SuperSettings::Storage::HttpStorage.all
+      SuperSettings::Storage::HttpStorage.headers[:foo] = "bar"
+      begin
+        stub_request(:get, "https://example.com/super_settings/settings").with(headers: {"Accept" => "application/json", "foo" => "bar"}).to_return(body: {settings: []}.to_json, headers: {"content-type" => "application/json"})
+        SuperSettings::Storage::HttpStorage.all
+      ensure
+        SuperSettings::Storage::HttpStorage.headers.delete(:foo)
+      end
     end
   end
 
@@ -58,7 +66,7 @@ describe SuperSettings::Storage::HttpStorage do
   end
 
   describe "find_by_key" do
-    it "should return settings updated since a timestamp" do
+    it "should return non-deleted settings" do
       setting_1 = SuperSettings::Storage::HttpStorage.new(key: "setting_1", raw_value: "1", updated_at: Time.now - 100)
       setting_2 = SuperSettings::Storage::HttpStorage.new(key: "setting_2", raw_value: "2", updated_at: Time.now - 50)
       stub_request(:get, "https://example.com/super_settings/setting").with(query: {key: "setting_1"}).to_return(body: SuperSettings::Setting.new(setting_1).to_json, headers: {"content-type" => "application/json"})

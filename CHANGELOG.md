@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added ability to embed the web UI in a view to allow tighter integration with your application's UI.
 - Added storage adapter for storing settings in an S3 object.
 - Added storage adapter for storing settings in MongoDB.
+- HTTP storage adapter now uses keep-alive connections to improve performance.
 
 ### Fixed
 
