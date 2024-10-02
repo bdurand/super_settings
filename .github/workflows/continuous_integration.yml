@@ -16,6 +16,7 @@ env:
   BUNDLE_RETRY: 3
   TEST_REDIS_URL: default
   TEST_S3_URL: default
+  TEST_MONGODB_URL: default
 jobs:
   specs:
     name: ruby-${{ matrix.ruby }} ${{ matrix.appraisal }}
@@ -59,7 +60,7 @@ jobs:
           - ruby: "ruby"
             standardrb: true
           - ruby: "ruby"
-            appraisal: "rails_latest"
+            appraisal: "no_extensions"
           - ruby: "3.3"
             appraisal: "rails_7.2"
           - ruby: "3.1"

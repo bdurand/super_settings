@@ -13,6 +13,8 @@ rescue LoadError
 end
 
 ENV["RAILS_ENV"] = "test"
+db_file = File.expand_path("dummy/db/test.sqlite3", __dir__)
+File.unlink(db_file) if File.exist?(db_file)
 
 Bundler.require(:default, :test)
 
@@ -30,7 +32,6 @@ if defined?(Rails) && !SuperSettings::Coerce.boolean(ENV["SKIP_RAILS"])
 
   require File.expand_path("dummy/config/environment", __dir__)
 
-  ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
   Dir.glob(File.expand_path("../db/migrate/*.rb", __dir__)).sort.each do |path|
     require(path)
     class_name = File.basename(path).sub(".rb", "").split("_", 2).last.camelcase
