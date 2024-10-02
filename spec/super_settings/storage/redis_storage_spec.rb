@@ -4,6 +4,10 @@ require_relative "../../spec_helper"
 
 if ENV["TEST_REDIS_URL"]
   describe SuperSettings::Storage::RedisStorage do
+    before do
+      SuperSettings::Storage::RedisStorage.destroy_all
+    end
+
     describe "all" do
       it "should return all settings" do
         setting_1 = SuperSettings::Storage::RedisStorage.new(key: "setting_1", raw_value: "1")

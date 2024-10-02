@@ -28,7 +28,7 @@ module SuperSettings
           items
         end
 
-        def clear
+        def destroy_all
           @settings = {}
           @history = {}
         end

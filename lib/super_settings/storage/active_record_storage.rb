@@ -60,6 +60,13 @@ module SuperSettings
           Model.transaction(&block)
         end
 
+        def destroy_all
+          ApplicationRecord.transaction do
+            Model.delete_all
+            HistoryModel.delete_all
+          end
+        end
+
         protected
 
         # Only load settings asynchronously if there is an extra database connection left in the

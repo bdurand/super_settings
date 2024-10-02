@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dark mode support in web UI.
 - Added ability to embed the web UI in a view to allow tighter integration with your application's UI.
 - Added storage adapter for storing settings in an S3 object.
-- Added abstract storage adapter for storing settings in a JSON file.
+- Added storage adapter for storing settings in MongoDB.
 
 ### Fixed
 

@@ -30,7 +30,6 @@ if storage == "redis"
   SuperSettings::Storage::RedisStorage.redis = Redis.new(url: storage_url)
 elsif storage == "http"
   storage_url = ENV.fetch("REST_API_URL", "http://localhost:#{ENV.fetch("RAILS_PORT", "3000")}/settings")
-  puts storage_url
   SuperSettings::Setting.storage = SuperSettings::Storage::HttpStorage
   SuperSettings::Storage::HttpStorage.base_url = storage_url
 elsif storage == "s3"
@@ -53,8 +52,12 @@ elsif storage == "s3"
     bucket = SuperSettings::Storage::S3Storage.send(:bucket)
     bucket.create unless bucket.exists?
   end
+elsif storage == "mongodb"
+  storage_url = ENV.fetch("MONGODB_URL", "mongodb://localhost:#{ENV.fetch("MONGODB_PORT", "27017")}/super_settings")
+  SuperSettings::Setting.storage = SuperSettings::Storage::MongoDBStorage
+  SuperSettings::Storage::MongoDBStorage.url = storage_url
 else
-  warn "SUPER_SETTINGS_STORAGE must be set to 'redis', 'http', or 's3'."
+  warn "SUPER_SETTINGS_STORAGE must be set to 'redis', 'http', 's3', or 'mongodb'."
   exit 1
 end
 

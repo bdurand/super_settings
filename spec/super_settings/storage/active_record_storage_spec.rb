@@ -4,6 +4,10 @@ require_relative "../../spec_helper"
 
 if defined?(ActiveRecord)
   describe SuperSettings::Storage::ActiveRecordStorage do
+    before do
+      SuperSettings::Storage::ActiveRecordStorage.destroy_all
+    end
+
     describe "all" do
       it "should return all settings" do
         setting_1 = SuperSettings::Storage::ActiveRecordStorage.new(key: "setting_1", raw_value: "1")

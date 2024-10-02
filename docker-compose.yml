@@ -27,8 +27,21 @@ services:
       - "9001:${S3_CONSOLE_PORT:-9001}"  # Console access
     command: server /data --console-address ":9001"
 
+  mongodb:
+    image: mongo:6.0.18
+    volumes:
+      - type: volume
+        source: mongodb_data
+        target: /data/db
+        volume:
+          nocopy: true
+    ports:
+      - "27017:${MONGODB_PORT:-27017}"
+
 volumes:
   redis_data:
     driver: local
   minio_data:
+    driver: local
+  mongodb_data:
     driver: local

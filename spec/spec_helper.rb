@@ -4,13 +4,6 @@ ENV["BUNDLE_GEMFILE"] ||= File.expand_path("../Gemfile", __dir__)
 
 require "bundler/setup" if File.exist?(ENV["BUNDLE_GEMFILE"])
 
-# Rails is not an explicit dependency but if we are running with it for tests we need to make
-# sure ActiveSupport is loaded before the SuperSettings gem
-begin
-  require "active_support/all"
-rescue LoadError
-end
-
 begin
   require "simplecov"
   SimpleCov.start do
@@ -19,33 +12,86 @@ begin
 rescue LoadError
 end
 
+ENV["RAILS_ENV"] = "test"
+
 Bundler.require(:default, :test)
 
+require "dotenv/load"
+
+extensions = []
+
 require_relative "../lib/super_settings/storage/test_storage"
+SuperSettings::Setting.storage = SuperSettings::Storage::TestStorage
 
-if defined?(Rails)
-  ENV["RAILS_ENV"] ||= "test"
+if defined?(Rails) && !SuperSettings::Coerce.boolean(ENV["SKIP_RAILS"])
+  extensions << "rails"
 
-  db_file = File.expand_path("dummy/db/test.sqlite3", __dir__)
-  File.unlink(db_file) if File.exist?(db_file)
+  require_relative "../lib/super_settings/engine"
 
   require File.expand_path("dummy/config/environment", __dir__)
 
-  require "rspec-rails"
-  require "rspec/rails"
-
+  ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
   Dir.glob(File.expand_path("../db/migrate/*.rb", __dir__)).sort.each do |path|
     require(path)
     class_name = File.basename(path).sub(".rb", "").split("_", 2).last.camelcase
     class_name.constantize.migrate(:up)
   end
+  SuperSettings::Storage::ActiveRecordStorage::ApplicationRecord.connection.schema_cache.clear!
   SuperSettings::Storage::ActiveRecordStorage::Model.reset_column_information
+  SuperSettings::Storage::ActiveRecordStorage::HistoryModel.reset_column_information
 
-  SuperSettings::Setting.storage = SuperSettings::Storage::ActiveRecordStorage
-else
-  require "dotenv/load"
-  SuperSettings::Setting.storage = SuperSettings::Storage::TestStorage
+  require "rspec-rails"
+  require "rspec/rails"
 end
+
+if defined?(Redis)
+  if ENV["TEST_REDIS_URL"] == "default"
+    ENV["TEST_REDIS_URL"] = "redis://localhost:#{ENV.fetch("REDIS_PORT", "6379")}/1"
+  end
+  if ENV["TEST_REDIS_URL"]
+    extensions << "redis"
+    redis = Redis.new(url: ENV["TEST_REDIS_URL"])
+    if redis
+      SuperSettings::Storage::RedisStorage.redis = redis
+    end
+  end
+else
+  ENV["TEST_REDIS_URL"] = nil
+end
+
+if defined?(Aws)
+  if ENV["TEST_S3_URL"] == "default"
+    storage_url = "s3://accesskey:secretkey@region-1/settings/test_settings.json"
+    endpoint = "http://localhost:#{ENV.fetch("S3_PORT", "9000")}"
+    config = SuperSettings::Storage::S3Storage.configuration
+    config.endpoint = endpoint
+    config.url = storage_url
+    bucket = SuperSettings::Storage::S3Storage.send(:bucket)
+    bucket.create unless bucket.exists?
+    object = SuperSettings::Storage::S3Storage.s3_object
+    object.delete if object.exists?
+    extensions << "s3"
+  elsif ENV["TEST_S3_URL"]
+    SuperSettings::Storage::S3Storage.configuration.storage_url = ENV["TEST_S3_URL"]
+    extensions << "s3"
+  end
+else
+  ENV["TEST_S3_URL"] = nil
+end
+
+if defined?(Mongo)
+  if ENV["TEST_MONGODB_URL"] == "default"
+    ENV["TEST_MONGODB_URL"] = "mongodb://localhost:#{ENV.fetch("MONGODB_PORT", "27017")}/super_settings_test"
+  end
+  if ENV["TEST_MONGODB_URL"]
+    SuperSettings::Storage::MongoDBStorage.url = ENV["TEST_MONGODB_URL"]
+    extensions << "mongodb"
+  end
+else
+  ENV["TEST_MONGODB_URL"] = nil
+end
+
+puts "Testing with extensions: #{extensions.join(", ")}" unless extensions.empty?
 
 require "webmock/rspec"
 require "capybara/rspec"
@@ -94,30 +140,6 @@ Capybara.default_max_wait_time = 5
 
 WebMock.disable_net_connect!(allow_localhost: true)
 
-if ENV["TEST_REDIS_URL"] == "default"
-  ENV["TEST_REDIS_URL"] = "redis://localhost:#{ENV.fetch("REDIS_PORT", "6379")}/1"
-end
-if ENV["TEST_REDIS_URL"]
-  redis = Redis.new(url: ENV["TEST_REDIS_URL"])
-  if redis
-    SuperSettings::Storage::RedisStorage.redis = redis
-  end
-end
-
-if ENV["TEST_S3_URL"] == "default"
-  storage_url = "s3://accesskey:secretkey@region-1/settings/test_settings.json"
-  endpoint = "http://localhost:#{ENV.fetch("S3_PORT", "9000")}"
-  config = SuperSettings::Storage::S3Storage.configuration
-  config.endpoint = endpoint
-  config.url = storage_url
-  bucket = SuperSettings::Storage::S3Storage.send(:bucket)
-  bucket.create unless bucket.exists?
-  object = SuperSettings::Storage::S3Storage.s3_object
-  object.delete if object.exists?
-elsif ENV["TEST_S3_URL"]
-  SuperSettings::Storage::S3Storage.configuration.storage_url = ENV["TEST_S3_URL"]
-end
-
 RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
@@ -125,16 +147,12 @@ RSpec.configure do |config|
 
   config.before do
     if defined?(Rails)
-      SuperSettings::Storage::ActiveRecordStorage::Model.destroy_all
-      SuperSettings::Storage::ActiveRecordStorage::HistoryModel.destroy_all
       config.render_views = true
     end
 
-    if redis
-      SuperSettings::Storage::RedisStorage.destroy_all
+    if SuperSettings::Setting.storage.respond_to?(:destroy_all)
+      SuperSettings::Setting.storage.destroy_all
     end
-
-    SuperSettings::Storage::TestStorage.clear
 
     SuperSettings.clear_cache
 
