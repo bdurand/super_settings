@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "json"
-
 module SuperSettings
   module Storage
     # Implementation of the SuperSettings::Storage model for running unit tests.

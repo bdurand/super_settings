@@ -1,64 +1,51 @@
 # frozen_string_literal: true
 
-require "json"
-require "net/http"
-
 module SuperSettings
   module Storage
     # SuperSettings::Storage model that reads from a remote service running the SuperSettings REST API.
     # This storage engine is read only. It is intended to allow microservices to read settings from a
     # central application that exposes the SuperSettings::RestAPI.
-    class HttpStorage
+    #
+    # You must the the base_url class attribute to the base URL of a SuperSettings REST API endpoint.
+    # You can also set the timeout, headers, and query_params used in reqeusts to the API.
+    class HttpStorage < StorageAttributes
       include Storage
       include Transaction
 
       DEFAULT_HEADERS = {"Accept" => "application/json"}.freeze
       DEFAULT_TIMEOUT = 5.0
 
+      @base_url = nil
+      @timeout = nil
       @headers = {}
       @query_params = {}
+      @http_client = nil
+      @http_client_hash = nil
 
-      attr_reader :key, :raw_value, :description, :value_type, :updated_at, :created_at
-
-      class Error < StandardError
-      end
-
-      class NotFoundError < Error
-      end
-
-      class InvalidRecordError < Error
-        attr_reader :errors
-
-        def initialize(message, errors:)
-          super(message)
-          @errors = errors
-        end
-      end
-
-      class HistoryStorage
-        include SuperSettings::Attributes
-
-        attr_accessor :key, :value, :changed_by, :deleted
-
-        def initialize(*)
-          @key = nil
-          @value = nil
-          @changed_by = nil
-          @created_at = nil
-          @deleted = false
-          super
-        end
-
-        def created_at=(val)
-          @created_at = SuperSettings::Coerce.time(val)
-        end
-
-        def deleted?
-          !!@deleted
-        end
+      class HistoryStorage < HistoryAttributes
       end
 
       class << self
+        # Set the base URL for the SuperSettings REST API.
+        attr_accessor :base_url
+
+        # Set the timeout for requests to the SuperSettings REST API.
+        attr_accessor :timeout
+
+        # Add headers to this hash to add them to all requests to the SuperSettings REST API.
+        #
+        # @example
+        #
+        # SuperSettings::HttpStorage.headers["Authorization"] = "Bearer 12345"
+        attr_reader :headers
+
+        # Add query parameters to this hash to add them to all requests to the SuperSettings REST API.
+        #
+        # @example
+        #
+        # SuperSettings::HttpStorage.query_params["access_token"] = "12345"
+        attr_reader :query_params
+
         def all
           call_api(:get, "/settings")["settings"].collect do |attributes|
             new(attributes)
@@ -73,9 +60,9 @@ module SuperSettings
 
         def find_by_key(key)
           record = new(call_api(:get, "/setting", key: key))
-          record.send(:set_persisted!)
+          record.persisted = true
           record
-        rescue NotFoundError
+        rescue HttpClient::NotFoundError
           nil
         end
 
@@ -102,20 +89,12 @@ module SuperSettings
 
           begin
             call_api(:post, "/settings", settings: payload)
-          rescue InvalidRecordError
+          rescue HttpClient::InvalidRecordError
             return false
           end
 
           true
         end
-
-        attr_accessor :base_url
-
-        attr_accessor :timeout
-
-        attr_reader :headers
-
-        attr_reader :query_params
 
         protected
 
@@ -126,102 +105,21 @@ module SuperSettings
         private
 
         def call_api(method, path, params = {})
-          url_params = ((method == :get) ? query_params.merge(params) : query_params)
-          uri = api_uri(path, url_params)
-
-          body = nil
-          request_headers = DEFAULT_HEADERS.merge(headers)
-          if method == :post && !params&.empty?
-            body = params.to_json
-            request_headers["content-type"] = "application/json; charset=utf8-"
-          end
-
-          response = http_request(method: method, uri: uri, headers: request_headers, body: body)
-
-          begin
-            response.value # raises exception unless response is a success
-            JSON.parse(response.body)
-          rescue Net::ProtocolError
-            if [404, 410].include?(response.code.to_i)
-              raise NotFoundError.new("#{response.code} #{response.message}")
-            elsif response.code.to_i == 422
-              raise InvalidRecordError.new("#{response.code} #{response.message}", errors: JSON.parse(response.body)["errors"])
-            else
-              raise Error.new("#{response.code} #{response.message}")
-            end
-          rescue JSON::JSONError => e
-            raise Error.new(e.message)
+          if method == :post
+            http_client.post(path, params)
+          else
+            http_client.get(path, params)
           end
         end
 
-        def http_request(method:, uri:, headers: {}, body: nil, redirect_count: 0)
-          response = nil
-          http = Net::HTTP.new(uri.host, uri.port || uri.inferred_port)
-          begin
-            http.read_timeout = (timeout || DEFAULT_TIMEOUT)
-            http.open_timeout = (timeout || DEFAULT_TIMEOUT)
-            if uri.scheme == "https"
-              http.use_ssl = true
-              http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-            end
-
-            request = ((method == :post) ? Net::HTTP::Post.new(uri.request_uri) : Net::HTTP::Get.new(uri.request_uri))
-            set_headers(request, headers)
-            request.body = body if body
-
-            response = http.request(request)
-          ensure
-            begin
-              http.finish if http.started?
-            rescue IOError
-            end
+        def http_client
+          hash = [base_url, timeout, headers, query_params].hash
+          if @http_client.nil? || @http_client_hash != hash
+            @http_client = HttpClient.new(base_url, headers: headers, params: query_params, timeout: timeout)
+            @http_client_hash = hash
           end
-
-          if response.is_a?(Net::HTTPRedirection)
-            location = resp["location"]
-            if redirect_count < 5 && SuperSettings::Coerce.present?(location)
-              return http_request(method: :get, uri: URI(location), headers: headers, body: body, redirect_count: redirect_count + 1)
-            end
-          end
-
-          response
+          @http_client
         end
-
-        def api_uri(path, params)
-          uri = URI("#{base_url.chomp("/")}#{path}")
-          if params && !params.empty?
-            q = []
-            q << uri.query unless uri.query.to_s.empty?
-            params.each do |name, value|
-              q << "#{URI.encode_www_form_component(name.to_s)}=#{URI.encode_www_form_component(value.to_s)}"
-            end
-            uri.query = q.join("&")
-          end
-          uri
-        end
-
-        def set_headers(request, headers)
-          headers.each do |name, value|
-            name = name.to_s
-            values = Array(value)
-            request[name] = values[0].to_s
-            values[1, values.length].each do |val|
-              request.add_field(name, val.to_s)
-            end
-          end
-        end
-      end
-
-      def initialize(*)
-        @persisted = false
-        @key = nil
-        @raw_value = nil
-        @description = nil
-        @value_type = nil
-        @created_at = nil
-        @updated_at = nil
-        @deleted = false
-        super
       end
 
       def history(limit: nil, offset: 0)
@@ -244,49 +142,10 @@ module SuperSettings
         self
       end
 
-      def key=(value)
-        @key = (Coerce.blank?(value) ? nil : value.to_s)
-      end
-
-      def raw_value=(value)
-        @raw_value = (Coerce.blank?(value) ? nil : value.to_s)
-      end
       alias_method :value=, :raw_value=
       alias_method :value, :raw_value
 
-      def value_type=(value)
-        @value_type = (Coerce.blank?(value) ? nil : value.to_s)
-      end
-
-      def description=(value)
-        @description = (Coerce.blank?(value) ? nil : value.to_s)
-      end
-
-      def deleted=(value)
-        @deleted = Coerce.boolean(value)
-      end
-
-      def created_at=(value)
-        @created_at = SuperSettings::Coerce.time(value)
-      end
-
-      def updated_at=(value)
-        @updated_at = SuperSettings::Coerce.time(value)
-      end
-
-      def deleted?
-        !!@deleted
-      end
-
-      def persisted?
-        !!@persisted
-      end
-
       private
-
-      def set_persisted!
-        @persisted = true
-      end
 
       def call_api(method, path, params = {})
         self.class.send(:call_api, method, path, params)

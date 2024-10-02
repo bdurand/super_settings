@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "json"
+
 # These classes are required for the gem to function.
 require_relative "super_settings/attributes"
 require_relative "super_settings/coerce"
@@ -17,6 +19,7 @@ module SuperSettings
   autoload :RackApplication, "super_settings/rack_application"
   autoload :ControllerActions, "super_settings/controller_actions"
   autoload :HistoryItem, "super_settings/history_item"
+  autoload :HttpClient, "super_settings/http_client"
   autoload :VERSION, "super_settings/version"
 
   DEFAULT_REFRESH_INTERVAL = 5.0

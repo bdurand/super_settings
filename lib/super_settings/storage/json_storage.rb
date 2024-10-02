@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "json"
-
 module SuperSettings
   module Storage
     # This is an abstract storage class that provides support for storing settings in a JSON file.
