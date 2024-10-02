@@ -3,6 +3,7 @@
 source "https://rubygems.org"
 
 gem "rails", "~> 6.1.0"
+gem "rspec-rails", "~> 6.0"
 gem "sqlite3", "~> 1.4.0"
 gem "redis"
 gem "connection_pool"
@@ -21,6 +22,5 @@ gem "simplecov", "~> 0.22", require: false
 gem "nokogiri"
 gem "rake"
 gem "yard"
-gem "rspec-rails", "~> 6.0"
 
 gemspec path: "../"
