@@ -12,6 +12,7 @@ module SuperSettings
     autoload :RedisStorage, File.join(__dir__, "storage/redis_storage")
     autoload :JSONStorage, File.join(__dir__, "storage/json_storage")
     autoload :S3Storage, File.join(__dir__, "storage/s3_storage")
+    autoload :MongoDBStorage, File.join(__dir__, "storage/mongodb_storage")
 
     def self.included(base)
       base.extend(ClassMethods)
@@ -276,8 +277,6 @@ module SuperSettings
 end
 
 # :nocov:
-require_relative "storage/http_storage"
-require_relative "storage/redis_storage"
 if defined?(ActiveSupport) && ActiveSupport.respond_to?(:on_load)
   ActiveSupport.on_load(:active_record_base) do
     require_relative "storage/active_record_storage"

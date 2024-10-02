@@ -100,7 +100,8 @@ module SuperSettings
 
             settings = []
             redis.hmget(SETTINGS_KEY, *keys).each do |json|
-              settings << load_from_json(json) if json
+              setting = load_from_json(json) if json
+              settings << setting if setting && setting.updated_at > time
             end
             settings
           end

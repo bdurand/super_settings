@@ -77,7 +77,15 @@ module SuperSettings
           bucket.object(configuration.object)
         end
 
+        def destroy_all
+          s3_object.delete
+        end
+
         protected
+
+        def default_load_asynchronous?
+          true
+        end
 
         def json_payload
           object = s3_object

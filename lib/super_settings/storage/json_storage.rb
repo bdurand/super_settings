@@ -34,7 +34,7 @@ module SuperSettings
         end
 
         def updated_since(timestamp)
-          all.select { |setting| setting.updated_at >= timestamp }
+          all.select { |setting| setting.updated_at > timestamp }
         end
 
         def find_by_key(key)
