@@ -22,7 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Rails 4.2 support has been removed.
+- Rails 4.2, 5.0, and 5.1 support has been removed.
+- Removed support for Ruby 2.5.
 
 ## 1.0.2
 
