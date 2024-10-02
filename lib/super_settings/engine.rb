@@ -5,7 +5,7 @@ module SuperSettings
   # settings overriding behavior in the Configuration as well as eager loading the settings
   # into memory.
   class Engine < Rails::Engine
-    isolate_namespace ::SuperSettings
+    isolate_namespace "SuperSettings"
 
     initializer("SuperSettings") do
       Rails.configuration.middleware.unshift(SuperSettings::Context::RackMiddleware)
