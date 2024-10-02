@@ -4,7 +4,7 @@ Gem::Specification.new do |spec|
   spec.authors = ["Brian Durand"]
   spec.email = ["bbdurand@gmail.com"]
 
-  spec.summary = "Fast access runtime settings for applications with an included UI and API for administration."
+  spec.summary = "SuperSettings provides a scalable framework for managing dynamic runtime application settings with in-memory caching, strong typing, a built-in web UI, and support for multiple storage backends."
 
   spec.homepage = "https://github.com/bdurand/super_settings"
   spec.license = "MIT"
@@ -23,6 +23,7 @@ Gem::Specification.new do |spec|
     Gemfile
     Gemfile.lock
     Rakefile
+    docker-compose.yml
     config.ru
     assets/
     bin/

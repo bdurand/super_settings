@@ -23,7 +23,7 @@ module SuperSettings
       #     ...
       #   ]
       def index
-        settings = Setting.active.sort_by(&:key)
+        settings = Setting.active.reject(&:deleted?).sort_by(&:key)
         {settings: settings.collect(&:as_json)}
       end
 
@@ -46,7 +46,8 @@ module SuperSettings
       #     updated_at: iso8601 string
       #   }
       def show(key)
-        Setting.find_by_key(key)&.as_json
+        setting = Setting.find_by_key(key)
+        setting.as_json if setting && !setting.deleted?
       end
 
       # The update operation uses a transaction to atomically update all settings.
@@ -156,7 +157,7 @@ module SuperSettings
       #
       # @example
       #   GET /last_updated_at
-      #      #
+      #
       #   The response payload is:
       #   {
       #     last_updated_at: iso8601 string
@@ -188,7 +189,7 @@ module SuperSettings
       #   ]
       def updated_since(time)
         time = Coerce.time(time)
-        settings = Setting.updated_since(time)
+        settings = Setting.updated_since(time).reject(&:deleted?)
         {settings: settings.collect(&:as_json)}
       end
     end

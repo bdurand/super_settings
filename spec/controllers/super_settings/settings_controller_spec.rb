@@ -34,7 +34,7 @@ if defined?(SuperSettings::SettingsController)
     describe "show" do
       it "should have a REST endpoint" do
         request.headers["accept"] = "application/json"
-        get :show, **request_params(key: setting_1.key)
+        get :show, params: {key: setting_1.key}
         expect(response.status).to eq 200
         expect(response.content_type).to include "application/json"
         expect(JSON.parse(response.body)).to eq JSON.parse(setting_1.to_json)
@@ -44,7 +44,7 @@ if defined?(SuperSettings::SettingsController)
     describe "history" do
       it "should have a REST endpoint" do
         request.headers["accept"] = "application/json"
-        get :history, **request_params(key: setting_1.key)
+        get :history, params: {key: setting_1.key}
         expect(response.status).to eq 200
         expect(response.content_type).to include "application/json"
         expect(JSON.parse(response.body)).to eq({
@@ -63,7 +63,7 @@ if defined?(SuperSettings::SettingsController)
         setting_1.value = "4"
         setting_1.save!
         request.headers["accept"] = "application/json"
-        get :history, **request_params(key: setting_1.key, limit: 2, offset: 1)
+        get :history, params: {key: setting_1.key, limit: 2, offset: 1}
         expect(response.status).to eq 200
         expect(response.content_type).to include "application/json"
         expect(JSON.parse(response.body)).to eq({
@@ -152,7 +152,7 @@ if defined?(SuperSettings::SettingsController)
         setting_1.save!
         setting_2.updated_at = Time.now + 20
         setting_2.save!
-        get :updated_since, **request_params(time: Time.now + 10)
+        get :updated_since, params: {time: Time.now + 10}
         expect(response.status).to eq 200
         expect(response.content_type).to include "application/json"
         expect(JSON.parse(response.body)["settings"]).to match_array([JSON.parse(setting_1.to_json), JSON.parse(setting_2.to_json)])

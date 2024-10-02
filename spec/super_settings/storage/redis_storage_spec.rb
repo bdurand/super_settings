@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../../../spec_helper"
+require_relative "../../spec_helper"
 
 if ENV["TEST_REDIS_URL"]
   describe SuperSettings::Storage::RedisStorage do

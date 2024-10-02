@@ -54,7 +54,7 @@ module SuperSettings
           return nil unless attributes
           setting = new(attributes)
           setting.send(:set_persisted!)
-          setting
+          setting unless setting.deleted?
         end
 
         def last_updated_at

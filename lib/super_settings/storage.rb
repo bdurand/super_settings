@@ -4,12 +4,14 @@ module SuperSettings
   # Abstraction over how a setting is stored and retrieved from the storage engine. Models
   # must implement the methods module in this module that raise NotImplementedError.
   module Storage
+    autoload :StorageAttributes, File.join(__dir__, "storage/storage_attributes")
+    autoload :HistoryAttributes, File.join(__dir__, "storage/history_attributes")
+    autoload :Transaction, File.join(__dir__, "storage/transaction")
     autoload :ActiveRecordStorage, File.join(__dir__, "storage/active_record_storage")
     autoload :HttpStorage, File.join(__dir__, "storage/http_storage")
     autoload :RedisStorage, File.join(__dir__, "storage/redis_storage")
-
-    class RecordInvalid < StandardError
-    end
+    autoload :JSONStorage, File.join(__dir__, "storage/json_storage")
+    autoload :S3Storage, File.join(__dir__, "storage/s3_storage")
 
     def self.included(base)
       base.extend(ClassMethods)
@@ -155,6 +157,7 @@ module SuperSettings
     end
 
     # The description for the setting.
+    #
     # @return [String]
     def description
       # :nocov:
@@ -163,7 +166,7 @@ module SuperSettings
     end
 
     # Set the description for the setting.
-
+    #
     # @param val [String]
     # @return [void]
     def description=(val)

@@ -14,6 +14,8 @@ env:
   BUNDLE_PATH: vendor/bundle
   BUNDLE_JOBS: 3
   BUNDLE_RETRY: 3
+  TEST_REDIS_URL: default
+  TEST_S3_URL: default
 jobs:
   specs:
     name: ruby-${{ matrix.ruby }} ${{ matrix.appraisal }}
@@ -25,6 +27,18 @@ jobs:
           - 6379:6379
         options: >-
           --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      minio:
+        image: minio/minio:edge-cicd
+        ports:
+          - 9000:9000
+        env:
+          MINIO_ROOT_USER: accesskey
+          MINIO_ROOT_PASSWORD: secretkey
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -50,10 +64,6 @@ jobs:
             appraisal: "rails_5.1"
           - ruby: "2.5"
             appraisal: "rails_5.0"
-          - ruby: "2.5"
-            appraisal: "rails_4.2"
-            bundler: "1.17.3"
-            gemfile: gemfiles/rails_4.2.gemfile
     env:
       BUNDLE_GEMFILE: ${{ matrix.gemfile }}
     steps:
