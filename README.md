@@ -381,17 +381,25 @@ You can also bring up a local rack server with
 bundle exec rackup
 ```
 
-By default this will use Redis for storage using the default Redis URL. You can change the storage engine with the `SUPER_SETTINGS_STORAGE` environment variable.
+By default this will use Redis for storage using the default Redis URL. You can change the storage engine with the `STORAGE` environment variable.
+
+- `redis` - Use the Redis storage engine. The Redis URL can be set with the `REDIS_URL` environment variable.
+- `http` - Use the HTTP storage engine. The URL for the REST API can be set with the `REST_API_URL` environment variable.
+- `s3` - Use the S3 storage engine. The S3 URL can be set with the `S3_URL` environment variable.
+- `mongodb` - Use the MongoDB storage engine. The MongoDB URL can be set with the `MONGODB_URL` environment variable.
+
+You can bring up all of these storage engines locally with the included docker-compose configuration.
 
 ```bash
-SUPER_SETTINGS_STORAGE=redis://localhost:9500 bundle exec rackup
+docker-compose up
 ```
 
-Or you can use the HTTP storage engine to connect to the REST API running on the Rails server.
+This will work out of the box with the defaults for the storage engines when running the rack server.:
 
-```bash
-SUPER_SETTINGS_STORAGE=http://localhost:3000/settings bundle exec rackup
-```
+- `REDIS_URL` - `redis://localhost:6379/0`
+- `REST_API_URL` - `http://localhost:3000/settings` (this is the default URL for the Rails application)
+- `S3_URL` - `s3://accesskey:secretkey@region-1/settings/settings.json` (the S3 endpoint will be set to `http://localhost:9000`)
+- `MONGODB_URL` - `mongodb://localhost:27017/super_settings`
 
 Finally, you can run the application in dark mode by setting the `COLOR_SCHEME` environment variable.
 
