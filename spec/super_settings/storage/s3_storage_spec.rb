@@ -73,7 +73,32 @@ if ENV["TEST_S3_URL"]
           created_at: Time.now - 100
         )
         setting.save!
-        expect(SuperSettings::Storage::S3Storage.last_updated_at).to eq SuperSettings::Storage::S3Storage.s3_object.last_modified
+        settings_object = SuperSettings::Storage::S3Storage.send(:settings_object)
+        expect(SuperSettings::Storage::S3Storage.last_updated_at).to eq settings_object.last_modified
+      end
+    end
+
+    describe "history" do
+      it "should save and load settings and history" do
+        setting = SuperSettings::Storage::S3Storage.new(
+          key: "setting_1",
+          raw_value: "1",
+          description: "Setting 1",
+          value_type: "integer"
+        )
+        setting.create_history(changed_by: "test", created_at: Time.now - 2)
+        setting.save!
+
+        setting = SuperSettings::Storage::S3Storage.find_by_key("setting_1")
+        expect(setting.history.length).to eq 1
+        expect(setting.history.first.changed_by).to eq "test"
+
+        setting.create_history(changed_by: "test2", created_at: Time.now - 1)
+        setting.save!
+
+        setting = SuperSettings::Storage::S3Storage.find_by_key("setting_1")
+        expect(setting.history.length).to eq 2
+        expect(setting.history.collect(&:changed_by)).to eq ["test2", "test"]
       end
     end
   end

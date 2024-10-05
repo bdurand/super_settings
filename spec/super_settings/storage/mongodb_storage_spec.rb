@@ -84,5 +84,32 @@ if ENV["TEST_MONGODB_URL"]
         expect(SuperSettings::Storage::MongoDBStorage.last_updated_at).to eq t - 50
       end
     end
+
+    describe "history" do
+      it "should save and load settings and history" do
+        setting = SuperSettings::Storage::MongoDBStorage.new(
+          key: "setting_1",
+          raw_value: "1",
+          description: "Setting 1",
+          value_type: "integer"
+        )
+        setting.create_history(value: "1", changed_by: "test", created_at: Time.now - 3)
+        setting.save!
+
+        setting = SuperSettings::Storage::MongoDBStorage.find_by_key("setting_1")
+        expect(setting.history.length).to eq 1
+        expect(setting.history.first.changed_by).to eq "test"
+
+        setting.create_history(value: "2", changed_by: "test2", created_at: Time.now - 2, deleted: true)
+        setting.create_history(value: "3", changed_by: "test3", created_at: Time.now - 1)
+        setting.save!
+
+        setting = SuperSettings::Storage::MongoDBStorage.find_by_key("setting_1")
+        expect(setting.history.length).to eq 3
+        expect(setting.history.collect(&:changed_by)).to eq ["test3", "test2", "test"]
+        expect(setting.history.collect(&:value)).to eq ["3", "2", "1"]
+        expect(setting.history.collect(&:deleted?)).to eq [false, true, false]
+      end
+    end
   end
 end

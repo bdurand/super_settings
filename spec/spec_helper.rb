@@ -67,10 +67,8 @@ if defined?(Aws)
     config = SuperSettings::Storage::S3Storage.configuration
     config.endpoint = endpoint
     config.url = storage_url
-    bucket = SuperSettings::Storage::S3Storage.send(:bucket)
+    bucket = SuperSettings::Storage::S3Storage.send(:s3_bucket)
     bucket.create unless bucket.exists?
-    object = SuperSettings::Storage::S3Storage.s3_object
-    object.delete if object.exists?
     extensions << "s3"
   elsif ENV["TEST_S3_URL"]
     SuperSettings::Storage::S3Storage.configuration.storage_url = ENV["TEST_S3_URL"]

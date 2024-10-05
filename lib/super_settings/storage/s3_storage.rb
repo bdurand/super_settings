@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "zlib"
 require "aws-sdk-s3"
 
 module SuperSettings
@@ -8,6 +7,10 @@ module SuperSettings
     # Storage backend for storing the settings in an S3 object. This should work with any S3-compatible
     # storage service.
     class S3Storage < JSONStorage
+      SETTINGS_FILE = "settings.json"
+      HISTORY_FILE_SUFFIX = ".history.json"
+      DEFAULT_PATH = "super_settings"
+
       # Configuration for the S3 storage backend.
       #
       # * access_key_id - The AWS access key ID. Defaults to the SUPER_SETTINGS_AWS_ACCESS_KEY_ID
@@ -30,7 +33,8 @@ module SuperSettings
       #   s3://access_key_id:secret_access_key@region/bucket/object
       # ```
       class Configuration
-        attr_accessor :access_key_id, :secret_access_key, :region, :endpoint, :bucket, :object
+        attr_accessor :access_key_id, :secret_access_key, :region, :endpoint, :bucket
+        attr_reader :path
 
         def initialize
           @access_key_id ||= ENV.fetch("SUPER_SETTINGS_AWS_ACCESS_KEY_ID", ENV["AWS_ACCESS_KEY_ID"])
@@ -38,7 +42,7 @@ module SuperSettings
           @region ||= ENV.fetch("SUPER_SETTINGS_AWS_REGION", ENV["AWS_REGION"])
           @endpoint ||= ENV.fetch("SUPER_SETTINGS_AWS_ENDPOINT", ENV["AWS_ENDPOINT"])
           @bucket ||= ENV.fetch("SUPER_SETTINGS_S3_BUCKET", ENV["AWS_S3_BUCKET"])
-          @object ||= ENV.fetch("SUPER_SETTINGS_S3_OBJECT", "super_settings.json")
+          @path ||= ENV.fetch("SUPER_SETTINGS_S3_OBJECT", DEFAULT_PATH)
           self.url = ENV["SUPER_SETTINGS_S3_URL"] unless ENV["SUPER_SETTINGS_S3_URL"].to_s.empty?
         end
 
@@ -51,13 +55,17 @@ module SuperSettings
           self.access_key_id = uri.user if uri.user
           self.secret_access_key = uri.password if uri.password
           self.region = uri.host if uri.host
-          _, bucket, object = uri.path.split("/", 3) if uri.path
+          _, bucket, path = uri.path.split("/", 3) if uri.path
           self.bucket = bucket if bucket
-          self.object = object if object
+          self.path = path if path
+        end
+
+        def path=(value)
+          @path = "#{value}.chomp('/')/"
         end
 
         def hash
-          [self.class, access_key_id, secret_access_key, region, endpoint, bucket, object].hash
+          [self.class, access_key_id, secret_access_key, region, endpoint, bucket, path].hash
         end
       end
 
@@ -66,19 +74,19 @@ module SuperSettings
 
       class << self
         def last_updated_at
-          s3_object.last_modified
+          settings_object.last_modified
         end
 
         def configuration
           @config ||= Configuration.new
         end
 
-        def s3_object
-          bucket.object(configuration.object)
-        end
-
         def destroy_all
-          s3_object.delete
+          s3_bucket.objects(prefix: configuration.path).each do |object|
+            if object.key == file_path(SETTINGS_FILE) || object.key.end_with?(HISTORY_FILE_SUFFIX)
+              object.delete
+            end
+          end
         end
 
         protected
@@ -87,23 +95,26 @@ module SuperSettings
           true
         end
 
-        def json_payload
-          object = s3_object
+        def settings_json_payload
+          object = settings_object
           return nil unless object.exists?
 
-          json = s3_object.get.body.read
-          json = Zlib.gunzip(json) if object.content_encoding == "gzip"
-          json
+          object.get.body.read
         end
 
-        def save_json(json)
-          compressed_json = Zlib.gzip(json)
-          s3_object.put(body: compressed_json, content_encoding: "gzip")
+        def save_settings_json(json)
+          object = settings_object
+          object.put(body: json)
+        end
+
+        def save_history_json(key, json)
+          object = history_object(key)
+          object.put(body: json)
         end
 
         private
 
-        def bucket
+        def s3_bucket
           if configuration.hash != @bucket_hash
             @bucket_hash = configuration.hash
             options = {
@@ -119,6 +130,35 @@ module SuperSettings
           end
           @bucket
         end
+
+        def s3_object(filename)
+          s3_bucket.object(file_path(filename))
+        end
+
+        def file_path(filename)
+          "#{configuration.path}#{filename}"
+        end
+
+        def settings_object
+          s3_object(SETTINGS_FILE)
+        end
+
+        def history_object(key)
+          s3_object("#{key}#{HISTORY_FILE_SUFFIX}")
+        end
+
+        def history_json(key)
+          object = history_object(key)
+          return nil unless object.exists?
+
+          object.get.body.read
+        end
+      end
+
+      protected
+
+      def fetch_history_json
+        self.class.send(:history_json, key)
       end
     end
   end
