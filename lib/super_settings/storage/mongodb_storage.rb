@@ -14,8 +14,11 @@ module SuperSettings
       include Storage
       include Transaction
 
+      DEFAULT_COLLECTION_NAME = "super_settings"
+
       @mongodb = nil
       @url_hash = nil
+      @collection_name = DEFAULT_COLLECTION_NAME
       @mutex = Mutex.new
 
       class HistoryStorage < HistoryAttributes
@@ -32,6 +35,7 @@ module SuperSettings
 
       class << self
         attr_writer :url
+        attr_accessor :collection_name
 
         def mongodb
           unless @url_hash == @url.hash
@@ -47,11 +51,11 @@ module SuperSettings
         end
 
         def settings_collection
-          mongodb["settings"]
+          mongodb[collection_name]
         end
 
         def updated_since(time)
-          settings_collection.find(updated_at: {"$gt": time}).sort({updated_at: -1}).collect do |attributes|
+          settings_collection.find(updated_at: {"$gt": time}).projection(history: 0).sort({updated_at: -1}).collect do |attributes|
             record = new(attributes)
             record.persisted = true
             record
@@ -59,7 +63,7 @@ module SuperSettings
         end
 
         def all
-          settings_collection.find.collect do |attributes|
+          settings_collection.find.projection(history: 0).collect do |attributes|
             record = new(attributes)
             record.persisted = true
             record
@@ -71,12 +75,12 @@ module SuperSettings
             key: key,
             "$or": [{deleted: {"$exists": false}}, {deleted: {"$ne": true}}]
           }
-          record = settings_collection.find(query).first
+          record = settings_collection.find(query).projection(history: 0).first
           new(record) if record
         end
 
         def last_updated_at
-          last_updated_setting = settings_collection.find.sort(updated_at: -1).limit(1).first
+          last_updated_setting = settings_collection.find.projection(updated_at: 1).sort(updated_at: -1).limit(1).first
           last_updated_setting["updated_at"] if last_updated_setting
         end
 
@@ -100,12 +104,14 @@ module SuperSettings
 
         def upsert(setting)
           doc = setting.as_json
+          history = setting.new_history.collect(&:as_json)
           {
             update_one: {
               filter: {key: setting.key},
               update: {
-                "$set": doc.except(:key),
-                "$setOnInsert": {key: setting.key}
+                "$set": doc.except(:key, :history),
+                "$setOnInsert": {key: setting.key},
+                "$push": {history: {"$each": history}}
               },
               upsert: true
             }
@@ -113,8 +119,8 @@ module SuperSettings
         end
 
         def create_indexes!(client)
-          collection = client["settings"]
-          collection_exists = client.database.collection_names.include?("settings")
+          collection = client[collection_name]
+          collection_exists = client.database.collection_names.include?(collection.name)
           existing_indexes = (collection_exists ? collection.indexes.to_a : [])
 
           unique_key_index = {key: 1}
@@ -122,32 +128,69 @@ module SuperSettings
             collection.indexes.create_one(unique_key_index, unique: true)
           end
 
-          updated_at_desc_index = {updated_at: -1}
-          unless existing_indexes.any? { |index| index["key"] == updated_at_desc_index }
-            collection.indexes.create_one(updated_at_desc_index)
+          updated_at_index = {updated_at: -1}
+          unless existing_indexes.any? { |index| index["key"] == updated_at_index }
+            collection.indexes.create_one(updated_at_index)
+          end
+
+          history_created_at_desc_index = {key: 1, "history.created_at": -1}
+          unless existing_indexes.any? { |index| index["key"] == history_created_at_desc_index }
+            collection.indexes.create_one(history_created_at_desc_index)
           end
         end
       end
 
+      attr_reader :new_history
+
       def initialize(*)
-        @history = []
+        @new_history = []
         super
       end
 
       def history(limit: nil, offset: 0)
-        limit ||= @history.length
-        @history[offset, limit].collect do |record|
-          HistoryItem.new(key: key, value: record.value, changed_by: record.changed_by, created_at: record.created_at, deleted: record.deleted?)
+        pipeline = [
+          {
+            "$match": {key: key}
+          },
+          {
+            "$addFields": {
+              history: {
+                "$sortArray": {
+                  input: "$history",
+                  sortBy: {created_at: -1}
+                }
+              }
+            }
+          }
+        ]
+
+        if limit || offset > 0
+          pipeline << {
+            "$addFields": {
+              history: {
+                "$slice": ["$history", offset, (limit || {"$size": "$history"})]
+              }
+            }
+          }
+        end
+
+        pipeline << {
+          "$project": {
+            _id: 0,
+            history: 1
+          }
+        }
+
+        record = self.class.settings_collection.aggregate(pipeline).to_a.first
+        return [] unless record && record["history"].is_a?(Array)
+
+        record["history"].collect do |record|
+          HistoryItem.new(key: key, value: record["value"], changed_by: record["changed_by"], created_at: record["created_at"], deleted: record["deleted"])
         end
       end
 
       def create_history(changed_by:, created_at:, value: nil, deleted: false)
-        @history.sort! { |a, b| b.created_at <=> a.created_at }
-        new_history = HistoryStorage.new(key: key, value: value, changed_by: changed_by, created_at: created_at, deleted: deleted)
-        index = @history.bsearch_index { |element| new_history.created_at >= element.created_at }
-        index ||= @history.size
-        @history.insert(index, new_history)
-        new_history
+        @new_history << HistoryStorage.new(key: key, value: value, changed_by: changed_by, created_at: created_at, deleted: deleted)
       end
 
       def destroy
@@ -155,17 +198,15 @@ module SuperSettings
       end
 
       def as_json
-        attributes = {
+        {
           key: key,
           value: raw_value,
           value_type: value_type,
           description: description,
           created_at: created_at,
           updated_at: updated_at,
-          history: @history.collect(&:as_json)
+          deleted: deleted?
         }
-        attributes[:deleted] = true if deleted?
-        attributes
       end
     end
   end

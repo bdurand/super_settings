@@ -49,7 +49,7 @@ elsif storage == "s3"
   config.url = storage_url
 
   if create_bucket
-    bucket = SuperSettings::Storage::S3Storage.send(:bucket)
+    bucket = SuperSettings::Storage::S3Storage.send(:s3_bucket)
     bucket.create unless bucket.exists?
   end
 elsif storage == "mongodb"

@@ -6,22 +6,36 @@ class TestJsonStorage < SuperSettings::Storage::JSONStorage
   class << self
     def current_json(json)
       Thread.current[:test_json_storage_json] = json
+      Thread.current[:test_json_storage_history] = {}
       begin
         yield
       ensure
         Thread.current[:test_json_storage_json] = nil
+        Thread.current[:test_json_storage_history] = nil
       end
     end
 
     protected
 
-    def json_payload
+    def settings_json_payload
       Thread.current[:test_json_storage_json]
     end
 
-    def save_json(json)
+    def save_settings_json(json)
       Thread.current[:test_json_storage_json] = json
     end
+
+    def save_history_json(key, json)
+      all_history = Thread.current[:test_json_storage_history] ||= {}
+      all_history[key] = json
+    end
+  end
+
+  protected
+
+  def fetch_history_json
+    all_history = Thread.current[:test_json_storage_history] ||= {}
+    all_history[key]
   end
 end
 
@@ -120,7 +134,7 @@ describe SuperSettings::Storage::JSONStorage do
           new_setting.save!
         end
 
-        saved_settings = TestJsonStorage.parse(TestJsonStorage.send(:json_payload))
+        saved_settings = TestJsonStorage.parse_settings(TestJsonStorage.send(:settings_json_payload))
         expect(saved_settings.map(&:key)).to eq(["setting_1", "setting_2", "setting_3", "setting_4"])
         expect(saved_settings.map(&:raw_value)).to eq(["-1", "test", "3", "4"])
         expect(saved_settings.map(&:deleted?)).to eq([false, true, true, false])
@@ -129,9 +143,11 @@ describe SuperSettings::Storage::JSONStorage do
 
     describe "#create_history" do
       it "should return the history of a setting" do
-        setting_1.create_history(changed_by: "user_1", value: "1", created_at: Time.now - 100)
-        setting_1.create_history(changed_by: "user_2", value: "2", created_at: Time.now - 50)
         TestJsonStorage.current_json(json) do
+          Thread.current[:test_json_storage_history]["setting_1"] = JSON.dump([
+            {value: "1", changed_by: "user_1", created_at: Time.now - 100},
+            {value: "2", changed_by: "user_2", created_at: Time.now - 50}
+          ])
           setting = TestJsonStorage.find_by_key("setting_1")
           expect(setting.history.map(&:value)).to eq(["2", "1"])
           expect(setting.history.map(&:changed_by)).to eq(["user_2", "user_1"])
