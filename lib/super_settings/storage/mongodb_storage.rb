@@ -6,10 +6,13 @@ module SuperSettings
   module Storage
     # MongoDB implementation of the SuperSettings::Storage model.
     #
-    # You must define the connection URL to use by setting the `url` attribute on the class.
+    # You must define the connection URL to use by setting the `url` or `mongodb` attribute on the class.
     #
     # @example
     #   SuperSettings::Storage::MongoDBStorage.url = "mongodb://user:password@localhost:27017/super_settings"
+    #
+    # @example
+    #  SuperSettings::Storage::MongoDBStorage.mongodb = Mongo::Client.new("mongodb://user:password@localhost:27017/super_settings")
     class MongoDBStorage < StorageAttributes
       include Storage
       include Transaction
@@ -17,7 +20,8 @@ module SuperSettings
       DEFAULT_COLLECTION_NAME = "super_settings"
 
       @mongodb = nil
-      @url_hash = nil
+      @url = nil
+      @url_hash = @url.hash
       @collection_name = DEFAULT_COLLECTION_NAME
       @mutex = Mutex.new
 
@@ -34,11 +38,11 @@ module SuperSettings
       end
 
       class << self
-        attr_writer :url
+        attr_writer :url, :mongodb
         attr_accessor :collection_name
 
         def mongodb
-          unless @url_hash == @url.hash
+          if @mongodb.nil? || @url_hash != @url.hash
             @mutex.synchronize do
               unless @url_hash == @url.hash
                 @url_hash = @url.hash
