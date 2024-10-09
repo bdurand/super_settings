@@ -101,9 +101,7 @@ module SuperSettings
         end
 
         def time_at_milliseconds(time)
-          return nil if time.nil?
-
-          Time.at(time.to_i, time.usec / 1000, :millisecond, in: "UTC")
+          TimePrecision.new(time, :millisecond).time
         end
 
         protected

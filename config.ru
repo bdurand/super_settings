@@ -20,7 +20,6 @@ end
 SuperSettings.configuration.controller.color_scheme = ENV.fetch("COLOR_SCHEME", "light")
 
 app = TestApplication.new
-options = Rackup::Server::Options.new.parse!(ARGV)
 
 storage = ENV.fetch("STORAGE", "redis")
 if storage == "redis"
@@ -61,4 +60,4 @@ else
   exit 1
 end
 
-Rackup::Server.start(options.merge(app: app))
+run app

@@ -95,7 +95,7 @@ module SuperSettings
         end
 
         def updated_since(time)
-          min_score = microseconds(time.to_f)
+          min_score = microseconds(time)
           with_redis do |redis|
             keys = redis.zrangebyscore(UPDATED_KEY, min_score, "+inf")
             return [] if keys.empty?
@@ -148,17 +148,12 @@ module SuperSettings
           true
         end
 
-        def time_at_microseconds(timestamp)
-          return nil if timestamp.nil?
-
-          microseconds = ((microseconds(timestamp) % 1) * 1_000_000).round
-          Time.at(timestamp.to_i, microseconds, :microsecond, in: "UTC")
+        def time_at_microseconds(time)
+          TimePrecision.new(time, :microsecond).time
         end
 
         def microseconds(time)
-          return nil if time.nil?
-
-          (time.to_f + 0.0000001).floor(6)
+          TimePrecision.new(time, :microsecond).to_f
         end
 
         protected

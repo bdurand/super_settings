@@ -10,6 +10,7 @@ require_relative "super_settings/context"
 require_relative "super_settings/local_cache"
 require_relative "super_settings/setting"
 require_relative "super_settings/storage"
+require_relative "super_settings/time_precision"
 
 # This is the main interface to the access settings.
 module SuperSettings
