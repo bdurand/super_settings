@@ -40,7 +40,7 @@ module SuperSettings
         end
 
         def updated_since(time)
-          settings.values.select { |attributes| attributes[:updated_at].to_f >= time.to_f }.collect do |attributes|
+          settings.values.select { |attributes| attributes[:updated_at].to_f > time.to_f }.collect do |attributes|
             setting = new(attributes)
             setting.send(:set_persisted!)
             setting

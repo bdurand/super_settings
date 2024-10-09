@@ -74,7 +74,7 @@ module SuperSettings
 
       class << self
         def last_updated_at
-          settings_object.last_modified
+          all.collect(&:updated_at).compact.max
         end
 
         def configuration

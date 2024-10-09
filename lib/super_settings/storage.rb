@@ -91,6 +91,11 @@ module SuperSettings
       # Set to true to force loading setting asynchronously in a background thread.
       attr_writer :load_asynchronous
 
+      # Implementing classes can override this method to delete all settings. This is used
+      # for testing purposes.
+      def destroy_all
+      end
+
       protected
 
       # Implementing classes can override this method to indicate if it is safe to load the

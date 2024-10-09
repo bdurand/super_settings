@@ -47,14 +47,16 @@ module SuperSettings
           settings = existing.values.sort_by(&:key)
           changed_histories = {}
           changes.collect do |setting|
-            changed_histories[setting.key] = setting.history.sort_by(&:created_at).reverse.collect do |history_item|
+            history = (setting.new_history + setting.history).sort_by(&:created_at).reverse
+            changed_histories[setting.key] = history.collect do |history_item|
               {
                 value: history_item.value,
                 changed_by: history_item.changed_by,
-                created_at: history_item.created_at,
+                created_at: history_item.created_at&.iso8601(6),
                 deleted: history_item.deleted?
               }
             end
+            setting.new_history.clear
           end
 
           settings_json = JSON.dump(settings.collect(&:as_json))
@@ -124,24 +126,25 @@ module SuperSettings
       end
 
       def initialize(*)
-        @history = nil
+        @new_history = []
         super
       end
 
       def history(limit: nil, offset: 0)
-        init_history
-        limit ||= @history.length
-        @history[offset, limit].collect do |record|
+        history = fetch_history
+        limit ||= history.length
+        history[offset, limit].collect do |record|
           HistoryItem.new(key: key, value: record.value, changed_by: record.changed_by, created_at: record.created_at, deleted: record.deleted?)
         end
       end
 
       def create_history(changed_by:, created_at:, value: nil, deleted: false)
-        init_history
-        new_history = HistoryStorage.new(key: key, value: value, changed_by: changed_by, created_at: created_at, deleted: deleted)
-        @history.insert(0, new_history)
-        new_history
+        history = HistoryStorage.new(key: key, value: value, changed_by: changed_by, created_at: created_at, deleted: deleted)
+        @new_history.unshift(history)
+        history
       end
+
+      attr_reader :new_history
 
       def as_json
         {
@@ -149,8 +152,8 @@ module SuperSettings
           value: raw_value,
           value_type: value_type,
           description: description,
-          created_at: created_at,
-          updated_at: updated_at,
+          created_at: created_at&.iso8601(6),
+          updated_at: updated_at&.iso8601(6),
           deleted: deleted?
         }
       end
@@ -166,9 +169,7 @@ module SuperSettings
 
       private
 
-      def init_history
-        return if @history
-
+      def fetch_history
         json = fetch_history_json
         history_payload = Coerce.blank?(json) ? [] : JSON.parse(json)
 
@@ -182,7 +183,7 @@ module SuperSettings
           )
         end
 
-        @history = history_items.sort_by(&:created_at).reverse
+        history_items.sort_by(&:created_at).reverse
       end
     end
   end

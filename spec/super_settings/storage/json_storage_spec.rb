@@ -160,6 +160,7 @@ describe SuperSettings::Storage::JSONStorage do
         setting_1.create_history(changed_by: "user_1", value: "1", created_at: Time.now - 100)
         setting_1.create_history(changed_by: "user_2", value: "2", created_at: Time.now - 50)
         setting_1.create_history(changed_by: "user_3", value: "3", created_at: Time.now)
+        setting_1.save!
         expect(setting_1.history.map(&:class).uniq).to eq([SuperSettings::HistoryItem])
         expect(setting_1.history.map(&:value)).to eq(["3", "2", "1"])
         expect(setting_1.history(limit: 2).map(&:value)).to eq(["3", "2"])

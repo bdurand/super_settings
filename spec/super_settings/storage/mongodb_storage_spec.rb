@@ -2,7 +2,7 @@
 
 require_relative "../../spec_helper"
 
-if ENV["TEST_MONGODB_URL"]
+if EXTENSIONS[:mongodb]
   describe SuperSettings::Storage::MongoDBStorage do
     before do
       SuperSettings::Storage::MongoDBStorage.destroy_all

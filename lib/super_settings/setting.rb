@@ -109,6 +109,7 @@ module SuperSettings
       # @param time [Time]
       # @return [Array<Setting>]
       def updated_since(time)
+        time = SuperSettings::Coerce.time(time)
         storage.with_connection do
           storage.updated_since(time).collect { |record| new(record) }
         end
