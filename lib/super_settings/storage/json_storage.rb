@@ -19,6 +19,9 @@ module SuperSettings
       include Transaction
 
       class HistoryStorage < HistoryAttributes
+        def created_at=(val)
+          super(TimePrecision.new(val).time)
+        end
       end
 
       class << self
@@ -128,6 +131,14 @@ module SuperSettings
       def initialize(*)
         @new_history = []
         super
+      end
+
+      def created_at=(val)
+        super(TimePrecision.new(val).time)
+      end
+
+      def updated_at=(val)
+        super(TimePrecision.new(val).time)
       end
 
       def history(limit: nil, offset: 0)

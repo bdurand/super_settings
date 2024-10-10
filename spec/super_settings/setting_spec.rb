@@ -259,13 +259,16 @@ describe SuperSettings::Setting do
       describe "last_updated_at" do
         it "should get the last updated at timestamp for any record" do
           setting_1 = SuperSettings::Setting.create!(key: "test1", value: "foobar", updated_at: Time.now - 10)
+          setting_1 = SuperSettings::Setting.find_by_key(setting_1.key)
           expect(SuperSettings::Setting.last_updated_at).to be >= setting_1.updated_at
 
           setting_2 = SuperSettings::Setting.create!(key: "test2", value: "foobar", updated_at: Time.now - 5)
+          setting_2 = SuperSettings::Setting.find_by_key(setting_2.key)
           expect(setting_2.updated_at).to be >= setting_1.updated_at
           expect(SuperSettings::Setting.last_updated_at).to be >= setting_2.updated_at
 
           setting_1.update!(value: "new value")
+          setting_1 = SuperSettings::Setting.find_by_key(setting_1.key)
           expect(setting_1.updated_at).to be >= setting_2.updated_at
           expect(SuperSettings::Setting.last_updated_at).to be >= setting_1.updated_at
         end

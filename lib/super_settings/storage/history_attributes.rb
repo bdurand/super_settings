@@ -20,7 +20,7 @@ module SuperSettings
       end
 
       def created_at=(val)
-        @created_at = SuperSettings::Coerce.time(val)
+        @created_at = TimePrecision.new(val).time
       end
 
       def deleted?

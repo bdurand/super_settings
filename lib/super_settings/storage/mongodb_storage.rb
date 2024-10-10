@@ -59,7 +59,7 @@ module SuperSettings
         end
 
         def updated_since(time)
-          time = time_at_milliseconds(time)
+          time = TimePrecision.new(time, :millisecond).time
           settings_collection.find(updated_at: {"$gt": time}).projection(history: 0).sort({updated_at: -1}).collect do |attributes|
             record = new(attributes)
             record.persisted = true
@@ -98,10 +98,6 @@ module SuperSettings
           changes.each { |setting| setting.new_history.clear }
           settings_collection.bulk_write(upserts)
           true
-        end
-
-        def time_at_milliseconds(time)
-          TimePrecision.new(time, :millisecond).time
         end
 
         protected
@@ -200,18 +196,18 @@ module SuperSettings
       end
 
       def create_history(changed_by:, created_at:, value: nil, deleted: false)
-        created_at = self.class.time_at_milliseconds(created_at)
+        created_at = TimePrecision.new(created_at, :millisecond).time
         history = HistoryStorage.new(key: key, value: value, changed_by: changed_by, created_at: created_at, deleted: deleted)
         @new_history.unshift(history)
         history
       end
 
-      def created_at
-        self.class.time_at_milliseconds(super)
+      def created_at=(val)
+        super(TimePrecision.new(val, :millisecond).time)
       end
 
-      def updated_at
-        self.class.time_at_milliseconds(super)
+      def updated_at=(val)
+        super(TimePrecision.new(val, :millisecond).time)
       end
 
       def destroy
@@ -229,6 +225,14 @@ module SuperSettings
           deleted: deleted?
         }
       end
+    end
+
+    def created_at=(val)
+      super(TimePrecision.new(val, :millisecond).time)
+    end
+
+    def updated_at=(val)
+      super(TimePrecision.new(val, :millisecond).time)
     end
   end
 end

@@ -6,7 +6,7 @@ module SuperSettings
   class TimePrecision
     attr_reader :time
 
-    def initialize(time, precision)
+    def initialize(time, precision = :microsecond)
       raise ArgumentError.new("Invalid precision: #{precision}") unless valid_precision?(precision)
 
       @time = time_with_precision(time.to_f, precision) if time
