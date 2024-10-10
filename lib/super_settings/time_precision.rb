@@ -26,10 +26,10 @@ module SuperSettings
       usec = (timestamp % 1) * 1_000_000.0
       if precision == :millisecond
         milliseconds = (usec / 1000.0).round(3).floor
-        Time.at(timestamp.to_i, milliseconds, :millisecond, in: "UTC")
+        Time.at(timestamp.to_i, milliseconds, :millisecond).utc
       else
         microseconds = usec.round
-        Time.at(timestamp.to_i, microseconds, :microsecond, in: "UTC")
+        Time.at(timestamp.to_i, microseconds, :microsecond).utc
       end
     end
   end
