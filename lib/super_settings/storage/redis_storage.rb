@@ -70,13 +70,17 @@ module SuperSettings
           redis.lpush(self.class.redis_key(key), payload_json.to_json)
         end
 
+        def created_at
+          SuperSettings::Storage::RedisStorage.time_at_microseconds(super)
+        end
+
         private
 
         def payload_json
           payload = {
             value: value,
             changed_by: changed_by,
-            created_at: created_at.to_f
+            created_at: SuperSettings::Storage::RedisStorage.microseconds(created_at)
           }
           payload[:deleted] = true if deleted?
           payload
@@ -91,9 +95,8 @@ module SuperSettings
         end
 
         def updated_since(time)
-          time = SuperSettings::Coerce.time(time)
+          min_score = microseconds(time)
           with_redis do |redis|
-            min_score = time.to_f
             keys = redis.zrangebyscore(UPDATED_KEY, min_score, "+inf")
             return [] if keys.empty?
 
@@ -116,7 +119,7 @@ module SuperSettings
         def last_updated_at
           result = with_redis { |redis| redis.zrevrange(UPDATED_KEY, 0, 1, withscores: true).first }
           return nil unless result
-          Time.at(result[1])
+          time_at_microseconds(result[1])
         end
 
         def destroy_all
@@ -143,6 +146,14 @@ module SuperSettings
             end
           end
           true
+        end
+
+        def time_at_microseconds(time)
+          TimePrecision.new(time, :microsecond).time
+        end
+
+        def microseconds(time)
+          TimePrecision.new(time, :microsecond).to_f
         end
 
         protected
@@ -179,7 +190,7 @@ module SuperSettings
 
       def save_to_redis(redis)
         redis.hset(SETTINGS_KEY, key, payload_json)
-        redis.zadd(UPDATED_KEY, updated_at.to_f, key)
+        redis.zadd(UPDATED_KEY, self.class.microseconds(updated_at), key)
       end
 
       def destroy
@@ -192,6 +203,14 @@ module SuperSettings
         end
       end
 
+      def created_at
+        self.class.time_at_microseconds(super)
+      end
+
+      def updated_at
+        self.class.time_at_microseconds(super)
+      end
+
       private
 
       def payload_json
@@ -200,8 +219,8 @@ module SuperSettings
           raw_value: raw_value,
           value_type: value_type,
           description: description,
-          created_at: created_at.to_f,
-          updated_at: updated_at.to_f
+          created_at: self.class.microseconds(created_at),
+          updated_at: self.class.microseconds(updated_at)
         }
         payload[:deleted] = true if deleted?
         payload.to_json

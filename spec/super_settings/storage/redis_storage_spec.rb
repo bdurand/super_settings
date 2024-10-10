@@ -2,7 +2,7 @@
 
 require_relative "../../spec_helper"
 
-if ENV["TEST_REDIS_URL"]
+if EXTENSIONS[:redis]
   describe SuperSettings::Storage::RedisStorage do
     before do
       SuperSettings::Storage::RedisStorage.destroy_all

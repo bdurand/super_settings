@@ -2,7 +2,7 @@
 
 require_relative "../../spec_helper"
 
-if ENV["TEST_S3_URL"]
+if EXTENSIONS[:s3]
   describe SuperSettings::Storage::S3Storage do
     before do
       SuperSettings::Storage::S3Storage.destroy_all
@@ -64,17 +64,20 @@ if ENV["TEST_S3_URL"]
 
     describe ".last_updated_at" do
       it "should be the last modified time of the object" do
+        SuperSettings::Storage::S3Storage.new(
+          key: "setting_1",
+          raw_value: "1",
+          description: "Setting 1",
+          value_type: "integer"
+        ).save!
         setting = SuperSettings::Storage::S3Storage.new(
           key: "setting_1",
           raw_value: "1",
           description: "Setting 1",
-          value_type: "integer",
-          updated_at: Time.now - 100,
-          created_at: Time.now - 100
+          value_type: "integer"
         )
         setting.save!
-        settings_object = SuperSettings::Storage::S3Storage.send(:settings_object)
-        expect(SuperSettings::Storage::S3Storage.last_updated_at).to eq settings_object.last_modified
+        expect(SuperSettings::Storage::S3Storage.last_updated_at).to eq setting.updated_at
       end
     end
 

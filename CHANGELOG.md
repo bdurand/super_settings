@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Changing a key now works as expected. Previously, a new setting was created with the new key and the old setting was left unchanged. Now, the old setting is properly marked as deleted.
+- Consistently handle converting floating point number to timestamps in Redis storage.
 
 ### Removed
 

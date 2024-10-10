@@ -20,13 +20,13 @@ Bundler.require(:default, :test)
 
 require "dotenv/load"
 
-extensions = []
+EXTENSIONS = {}
 
 require_relative "../lib/super_settings/storage/test_storage"
 SuperSettings::Setting.storage = SuperSettings::Storage::TestStorage
 
 if defined?(Rails) && !SuperSettings::Coerce.boolean(ENV["SKIP_RAILS"])
-  extensions << "rails"
+  EXTENSIONS[:active_record] = SuperSettings::Storage::ActiveRecordStorage
 
   require_relative "../lib/super_settings/engine"
 
@@ -49,8 +49,9 @@ if defined?(Redis)
   if ENV["TEST_REDIS_URL"] == "default"
     ENV["TEST_REDIS_URL"] = "redis://localhost:#{ENV.fetch("REDIS_PORT", "6379")}/1"
   end
+
   if ENV["TEST_REDIS_URL"]
-    extensions << "redis"
+    EXTENSIONS[:redis] = SuperSettings::Storage::RedisStorage
     redis = Redis.new(url: ENV["TEST_REDIS_URL"])
     if redis
       SuperSettings::Storage::RedisStorage.redis = redis
@@ -69,10 +70,10 @@ if defined?(Aws)
     config.url = storage_url
     bucket = SuperSettings::Storage::S3Storage.send(:s3_bucket)
     bucket.create unless bucket.exists?
-    extensions << "s3"
+    EXTENSIONS[:s3] = SuperSettings::Storage::S3Storage
   elsif ENV["TEST_S3_URL"]
     SuperSettings::Storage::S3Storage.configuration.storage_url = ENV["TEST_S3_URL"]
-    extensions << "s3"
+    EXTENSIONS[:s3] = SuperSettings::Storage::S3Storage
   end
 else
   ENV["TEST_S3_URL"] = nil
@@ -82,15 +83,16 @@ if defined?(Mongo)
   if ENV["TEST_MONGODB_URL"] == "default"
     ENV["TEST_MONGODB_URL"] = "mongodb://localhost:#{ENV.fetch("MONGODB_PORT", "27017")}/super_settings_test"
   end
+
   if ENV["TEST_MONGODB_URL"]
     SuperSettings::Storage::MongoDBStorage.url = ENV["TEST_MONGODB_URL"]
-    extensions << "mongodb"
+    EXTENSIONS[:mongodb] = SuperSettings::Storage::MongoDBStorage
   end
 else
   ENV["TEST_MONGODB_URL"] = nil
 end
 
-puts "Testing with extensions: #{extensions.join(", ")}" unless extensions.empty?
+puts "Testing with extensions: #{EXTENSIONS.keys.join(", ")}" unless EXTENSIONS.empty?
 
 require "webmock/rspec"
 require "capybara/rspec"

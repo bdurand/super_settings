@@ -26,7 +26,7 @@ module SuperSettings
       @mutex = Mutex.new
 
       class HistoryStorage < HistoryAttributes
-        def as_json
+        def as_bson
           attributes = {
             value: value,
             changed_by: changed_by,
@@ -59,6 +59,7 @@ module SuperSettings
         end
 
         def updated_since(time)
+          time = TimePrecision.new(time, :millisecond).time
           settings_collection.find(updated_at: {"$gt": time}).projection(history: 0).sort({updated_at: -1}).collect do |attributes|
             record = new(attributes)
             record.persisted = true
@@ -77,7 +78,7 @@ module SuperSettings
         def find_by_key(key)
           query = {
             key: key,
-            "$or": [{deleted: {"$exists": false}}, {deleted: {"$ne": true}}]
+            deleted: false
           }
           record = settings_collection.find(query).projection(history: 0).first
           new(record) if record
@@ -94,6 +95,7 @@ module SuperSettings
 
         def save_all(changes)
           upserts = changes.collect { |setting| upsert(setting) }
+          changes.each { |setting| setting.new_history.clear }
           settings_collection.bulk_write(upserts)
           true
         end
@@ -107,8 +109,8 @@ module SuperSettings
         private
 
         def upsert(setting)
-          doc = setting.as_json
-          history = setting.new_history.collect(&:as_json)
+          doc = setting.as_bson
+          history = setting.new_history.collect(&:as_bson)
           {
             update_one: {
               filter: {key: setting.key},
@@ -194,17 +196,28 @@ module SuperSettings
       end
 
       def create_history(changed_by:, created_at:, value: nil, deleted: false)
-        @new_history << HistoryStorage.new(key: key, value: value, changed_by: changed_by, created_at: created_at, deleted: deleted)
+        created_at = TimePrecision.new(created_at, :millisecond).time
+        history = HistoryStorage.new(key: key, value: value, changed_by: changed_by, created_at: created_at, deleted: deleted)
+        @new_history.unshift(history)
+        history
+      end
+
+      def created_at=(val)
+        super(TimePrecision.new(val, :millisecond).time)
+      end
+
+      def updated_at=(val)
+        super(TimePrecision.new(val, :millisecond).time)
       end
 
       def destroy
         settings_collection.delete_one(key: key)
       end
 
-      def as_json
+      def as_bson
         {
           key: key,
-          value: raw_value,
+          raw_value: raw_value,
           value_type: value_type,
           description: description,
           created_at: created_at,
@@ -212,6 +225,14 @@ module SuperSettings
           deleted: deleted?
         }
       end
+    end
+
+    def created_at=(val)
+      super(TimePrecision.new(val, :millisecond).time)
+    end
+
+    def updated_at=(val)
+      super(TimePrecision.new(val, :millisecond).time)
     end
   end
 end

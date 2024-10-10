@@ -109,6 +109,7 @@ module SuperSettings
       # @param time [Time]
       # @return [Array<Setting>]
       def updated_since(time)
+        time = SuperSettings::Coerce.time(time)
         storage.with_connection do
           storage.updated_since(time).collect { |record| new(record) }
         end
@@ -382,7 +383,7 @@ module SuperSettings
     #
     # @param val [Time, DateTime]
     def created_at=(val)
-      val = Coerce.time(val)
+      val = TimePrecision.new(val).time
       will_change!(:created_at, val) unless created_at == val
       @record.created_at = val
     end
@@ -398,7 +399,7 @@ module SuperSettings
     #
     # @param val [Time, DateTime]
     def updated_at=(val)
-      val = Coerce.time(val)
+      val = TimePrecision.new(val).time
       will_change!(:updated_at, val) unless updated_at == val
       @record.updated_at = val
     end

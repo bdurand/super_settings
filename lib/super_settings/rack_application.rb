@@ -236,7 +236,7 @@ module SuperSettings
 
     def post_params(request)
       if request.content_type.to_s.match?(/\Aapplication\/json/i) && request.body
-        request.params.merge(JSON.parse(request.body.string))
+        request.params.merge(JSON.parse(request.body.read))
       else
         request.params
       end

@@ -2,7 +2,7 @@
 
 require_relative "../../spec_helper"
 
-if defined?(ActiveRecord)
+if EXTENSIONS[:active_record]
   describe SuperSettings::Storage::ActiveRecordStorage do
     before do
       SuperSettings::Storage::ActiveRecordStorage.destroy_all
