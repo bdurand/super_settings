@@ -5,7 +5,7 @@
     <div class="super-settings-sticky-top">
       <span class="js-settings-count" style="display:inline-block; margin-right:1rem;"></span>
 
-      <label for="filter" class="super-settings-sr-only">Filter</label>
+      <label for="super-settings-filter" class="super-settings-sr-only">Filter</label>
       <input type="text" name="filter" value="" placeholder="Filter Keys" size="20" class="super-settings-form-control" title="Filter Keys" id="super-settings-filter" style="margin-right:1rem;">
 
       <button type="button" class="super-settings-btn super-settings-btn-default" id="super-settings-add-setting"><%= icon_image(:plus, style: {"vertical-align": "text-top"}) %> Add Setting</button>
@@ -83,8 +83,8 @@
     </td>
 
     <td class="super-settings-controls">
-      <%= icon_button("info-circle", title: "Setting Info", color: "#0dcaf0", js_class: "js-show-history") %>
-      <%= icon_button("pencil-square", title: "Edit Setting", color: "#198754", js_class: "js-edit-setting") %>
+      <%= icon_button("info-circle", title: "Setting Info", color: "#0d7ff0", js_class: "js-show-history") %>
+      <%= icon_button("pencil-square", title: "Edit Setting", color: "#0da82d", js_class: "js-edit-setting") %>
       <%= icon_button("trash3", title: "Remove Setting", color: "#dc3545", js_class: "js-remove-setting") %>
       <%= icon_button("x-circle", title: "Cancel Changes", color: "#dc3545", js_class: "js-restore-setting", link_style: "display:none;") %>
     </td>
@@ -128,9 +128,9 @@
     </td>
 
     <td class="super-settings-controls">
-      <%= icon_button("info-circle", title: "Setting Info", color: "royalblue", js_class: "js-show-history") %>
-      <%= icon_button("pencil-square", title: "Edit Setting", color: "gray", js_class: "js-no-op", disabled: true) %>
-      <%= icon_button("x-circle", title: "Cancel Changes", color: "firebrick", js_class: "js-restore-setting") %>
+      <%= icon_button("info-circle", title: "Setting Info", color: "#0d7ff0", js_class: "js-show-history") %>
+      <%= icon_button("pencil-square", title: "Edit Setting", color: "#c0c0c0", js_class: "js-no-op", disabled: true) %>
+      <%= icon_button("x-circle", title: "Cancel Changes", color: "#dc3545", js_class: "js-restore-setting") %>
     </td>
   </tr>
 </template>

@@ -94,7 +94,7 @@ module SuperSettings
     def icon_button(icon, title:, color:, js_class:, url: nil, disabled: false, style: {}, link_style: nil)
       url = "#" if Coerce.blank?(url)
       image = icon_image(icon, alt: title, style: ICON_BUTTON_STYLE.merge(style).merge(color: color))
-      content_tag(:a, image, href: url, class: js_class, disabled: disabled, style: link_style)
+      content_tag(:a, image, href: url, class: js_class, disabled: disabled, style: link_style, title: title)
     end
 
     # Return the application name set by the configuration or a default value.
