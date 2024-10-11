@@ -64,13 +64,13 @@
 .super-settings-key {
   overflow-wrap: break-word;
   max-width: 30rem;
-  min-width: 15rem;
+  min-width: 8rem;
 }
 
 .super-settings-value {
   overflow-wrap: break-word;
   max-width: 30rem;
-  min-width: 15rem;
+  min-width: 8rem;
 }
 
 .super-settings-value-type {
