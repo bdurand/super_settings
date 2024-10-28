@@ -175,6 +175,8 @@ You can change the layout used by the Web UI. However, if you do this, you will 
 
 It is not required to use the bundled Web UI. You can implement your own UI using the `SuperSettings::Setting` model.
 
+You can link directly to editing a setting by passing `#edit=key` in the URL hash. This will open the Web UI with the setting with the key `key` selected for editing.
+
 #### REST API
 
 You can mount a REST API for exposing and managing the settings. This API is required for the Web UI and is mounted along with the Web UI. The REST interface is documented in the `SuperSettings::RestAPI` class.
