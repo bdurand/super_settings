@@ -24,19 +24,25 @@ Key features include:
 
 For projects that require a combination of runtime settings, environment variables, and YAML files, SuperSettings integrates seamlessly with [ultra_settings](https://github.com/bdurand/ultra_settings), creating a flexible and powerful configuration system.
 
-## Usage
+## Table Of Contents
 
-- [Getting Value](#getting-values)
-  - [Hashes](#hashes)
-  - [Defaults](#defaults)
-  - [Caching](#caching)
-- [Data Model](#data-model)
-  - [Storage Engines](#storage-engines)
-- [Web UI](#web-ui)
-  - [REST API](#rest-api)
-  - [Authentication](#authentication)
-- [Rails Engine](#rails-engine)
-  - [Configuration](#configuration)
+- [Usage](#usage)
+  - [Getting Value](#getting-values)
+    - [Hashes](#hashes)
+    - [Defaults](#defaults)
+    - [Caching](#caching)
+  - [Data Model](#data-model)
+    - [Storage Engines](#storage-engines)
+  - [Web UI](#web-ui)
+    - [REST API](#rest-api)
+    - [Authentication](#authentication)
+  - [Rails Engine](#rails-engine)
+    - [Configuration](#configuration)
+- [Installation](#installation)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Usage
 
 ### Getting Values
 
