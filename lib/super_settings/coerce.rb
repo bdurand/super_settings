@@ -7,14 +7,10 @@ module SuperSettings
   class Coerce
     # rubocop:disable Lint/BooleanSymbol
     FALSE_VALUES = Set.new([
-      false, 0,
       "0", :"0",
       "f", :f,
-      "F", :F,
       "false", :false,
-      "FALSE", :FALSE,
-      "off", :off,
-      "OFF", :OFF
+      "off", :off
     ]).freeze
     # rubocop:enable Lint/BooleanSymbol
 
@@ -29,7 +25,7 @@ module SuperSettings
         elsif blank?(value)
           nil
         else
-          !FALSE_VALUES.include?(value)
+          !FALSE_VALUES.include?(value.to_s.downcase)
         end
       end
 
