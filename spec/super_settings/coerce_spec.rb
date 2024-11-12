@@ -14,6 +14,7 @@ describe SuperSettings::Coerce do
       expect(SuperSettings::Coerce.boolean(:F)).to eq false
       expect(SuperSettings::Coerce.boolean(0)).to eq false
       expect(SuperSettings::Coerce.boolean("0")).to eq false
+      expect(SuperSettings::Coerce.boolean("False")).to eq false
     end
 
     it "should cast true values" do
@@ -26,6 +27,7 @@ describe SuperSettings::Coerce do
       expect(SuperSettings::Coerce.boolean(:T)).to eq true
       expect(SuperSettings::Coerce.boolean(1)).to eq true
       expect(SuperSettings::Coerce.boolean("1")).to eq true
+      expect(SuperSettings::Coerce.boolean("True")).to eq true
     end
 
     it "should cast blank to nil" do
