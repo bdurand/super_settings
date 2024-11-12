@@ -62,6 +62,8 @@ jobs:
           - ruby: "ruby"
             appraisal: "no_extensions"
           - ruby: "3.3"
+            appraisal: "rails_8.0"
+          - ruby: "3.2"
             appraisal: "rails_7.2"
           - ruby: "3.1"
             appraisal: "rails_7.0"

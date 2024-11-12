@@ -6,8 +6,16 @@ appraise "rails_latest" do
   remove_gem "rackup"
 end
 
+appraise "rails_8.0" do
+  gem "rails", "~> 8.0.0"
+  gem "rspec-rails", "~> 6.0"
+  gem "sqlite3", "~> 2.2"
+  gem "puma", "~> 6.0"
+  remove_gem "rackup"
+end
+
 appraise "rails_7.2" do
-  gem "rails", "~> 7.2"
+  gem "rails", "~> 7.2.0"
   gem "rspec-rails", "~> 6.0"
   gem "sqlite3", "~> 1.4.0"
   gem "puma", "~> 6.0"
