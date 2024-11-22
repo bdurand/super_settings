@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixed ActiveRecord code handling changing a setting key to one that had previously been used. The previous code relied on a foreign key constraint error to detect this condition, but Postgres does not handle this well since it invalidates the entire transaction. Now the code checks for the uniqueness of the key before attempting to save the setting.
+- Fixed ActiveRecord code handling changing a setting key to one that had previously been used. The previous code relied on a unique key constraint error to detect this condition, but Postgres does not handle this well since it invalidates the entire transaction. Now the code checks for the uniqueness of the key before attempting to save the setting.
 
 ## 2.0.2
 
