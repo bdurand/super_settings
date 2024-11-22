@@ -102,11 +102,7 @@ module SuperSettings
 
           @model.transaction do
             if @model.persisted?
-              @model.reload
-              unless @model.deleted?
-                @model.update!(deleted: true)
-                @model.history_items.create!(deleted: true, value: "[key moved to setting id #{duplicate.id}]", created_at: @model.updated_at)
-              end
+              @model.reload.update!(deleted: true)
             end
             duplicate.save!
           end
