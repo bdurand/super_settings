@@ -135,13 +135,14 @@ if defined?(SuperSettings::SettingsController)
     describe "last_updated_at" do
       it "should return the timestamp of the last updated setting" do
         request.headers["accept"] = "application/json"
-        time = Time.at(Time.now.to_f.round(6) + 10)
+        time_iso = Time.at(Time.now + 10).utc.iso8601(6)
+        time = Time.parse(time_iso)
         setting_1.updated_at = time
         setting_1.save!
         get :last_updated_at
         expect(response.status).to eq 200
         expect(response.content_type).to include "application/json"
-        expect(JSON.parse(response.body)).to eq({"last_updated_at" => time.utc.iso8601(6)})
+        expect(JSON.parse(response.body)).to eq({"last_updated_at" => time_iso})
       end
     end
 
