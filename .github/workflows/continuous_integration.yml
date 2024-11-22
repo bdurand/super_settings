@@ -97,7 +97,8 @@ jobs:
           cat gemfiles/${{ matrix.appraisal }}.gemfile
       - name: Install bundle
         run: |
-          bundle update
+          bundle install
+          cat gemfiles/${{ matrix.appraisal }}.gemfile.lock
       - name: Run specs
         env:
           FERRUM_PROCESS_TIMEOUT: "30"
