@@ -34,5 +34,14 @@ module SuperSettings
         changed_by
       end
     end
+
+    def as_json
+      {
+        value: value,
+        changed_by: changed_by,
+        created_at: created_at&.utc&.iso8601(6),
+        deleted: deleted?
+      }
+    end
   end
 end

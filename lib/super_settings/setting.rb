@@ -446,18 +446,17 @@ module SuperSettings
     #
     # @return [void]
     def save!
-      record_value_change
-
       unless valid?
         raise InvalidRecordError.new(errors.values.join("; "))
       end
 
       timestamp = Time.now
       self.created_at ||= timestamp
-      self.updated_at = timestamp unless updated_at && changed?(:updated_at)
+      self.updated_at = timestamp if updated_at.nil? || !changed?(:updated_at)
 
       self.class.storage.with_connection do
         self.class.storage.transaction do
+          record_value_change
           @record.save!
         end
 
@@ -525,8 +524,8 @@ module SuperSettings
         value: value,
         value_type: value_type,
         description: description,
-        created_at: created_at,
-        updated_at: updated_at
+        created_at: created_at&.utc&.iso8601(6),
+        updated_at: updated_at&.utc&.iso8601(6)
       }
       attributes[:deleted] = true if deleted?
       attributes
@@ -592,8 +591,16 @@ module SuperSettings
     # Update the histories association whenever the value or key is changed.
     def record_value_change
       return unless changed?(:raw_value) || changed?(:deleted) || changed?(:key)
+
       recorded_value = (deleted? ? nil : raw_value)
-      @record.create_history(value: recorded_value, deleted: deleted?, changed_by: changed_by, created_at: Time.now)
+      @record.class.create_history(key: key, value: recorded_value, deleted: deleted?, changed_by: changed_by, created_at: updated_at)
+
+      if changed?(:key)
+        key_was = @changes["key"][0]
+        if key_was
+          @record.class.create_history(key: key_was, changed_by: changed_by, created_at: updated_at, deleted: true)
+        end
+      end
     end
 
     def clear_changes

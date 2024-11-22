@@ -71,6 +71,10 @@ module SuperSettings
           SuperSettings::Coerce.time(value)
         end
 
+        def create_history(key:, changed_by:, created_at:, value: nil, deleted: false)
+          # No-op since history is maintained by the source system.
+        end
+
         def save_all(changes)
           payload = []
           changes.each do |setting|
@@ -130,10 +134,6 @@ module SuperSettings
         history["histories"].collect do |attributes|
           HistoryItem.new(key: key, value: attributes["value"], changed_by: attributes["changed_by"], created_at: attributes["created_at"], deleted: attributes["deleted"])
         end
-      end
-
-      def create_history(changed_by:, created_at:, value: nil, deleted: false)
-        # No-op since history is maintained by the source system.
       end
 
       def reload

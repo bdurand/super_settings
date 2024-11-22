@@ -52,6 +52,10 @@ module SuperSettings
           end
         end
 
+        def create_history(key:, changed_by:, created_at:, value: nil, deleted: false)
+          HistoryModel.create!(key: key, value: value, deleted: deleted, changed_by: changed_by, created_at: created_at)
+        end
+
         def with_connection(&block)
           Model.connection_pool.with_connection(&block)
         end
@@ -115,15 +119,6 @@ module SuperSettings
         finder = finder.limit(limit) if limit
         finder.collect do |record|
           HistoryItem.new(key: key, value: record.value, changed_by: record.changed_by, created_at: record.created_at, deleted: record.deleted?)
-        end
-      end
-
-      def create_history(changed_by:, created_at:, value: nil, deleted: false)
-        history_attributes = {value: value, deleted: deleted, changed_by: changed_by, created_at: created_at}
-        if @model.persisted?
-          @model.history_items.create!(history_attributes)
-        else
-          @model.history_items.build(history_attributes)
         end
       end
     end

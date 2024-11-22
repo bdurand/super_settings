@@ -36,6 +36,7 @@ module SuperSettings
       def time(value)
         value = nil if value.nil? || value.to_s.empty?
         return nil if value.nil?
+
         time = if value.is_a?(Numeric)
           Time.at(value)
         elsif value.respond_to?(:to_time)
@@ -52,6 +53,7 @@ module SuperSettings
       # @return [Boolean] true if the value is nil or empty.
       def blank?(value)
         return true if value.nil?
+
         if value.respond_to?(:empty?)
           value.empty?
         else

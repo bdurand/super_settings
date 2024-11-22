@@ -112,7 +112,7 @@ describe SuperSettings::RackApplication do
       expect(JSON.parse(body)).to eq({
         "key" => setting_1.key,
         "histories" => setting_1.history(limit: nil, offset: 0).collect do |history|
-          JSON.parse({value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}.to_json)
+          JSON.parse({value: history.value, changed_by: history.changed_by_display, created_at: history.created_at.utc.iso8601(6)}.to_json)
         end
       })
     end
@@ -127,14 +127,14 @@ describe SuperSettings::RackApplication do
 
   describe "last_updated_at" do
     it "should have a REST endoint" do
-      time = Time.at(Time.now + 10.to_i)
+      time = SuperSettings::TimePrecision.new(Time.now + 10).time
       setting_1.updated_at = time
       setting_1.save!
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/last_updated_at")
       expect(response[0]).to eq 200
       expect(response[1]).to match("content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache")
       body = response[2].first
-      expect(JSON.parse(body)).to eq({"last_updated_at" => time.utc.iso8601})
+      expect(JSON.parse(body)).to eq({"last_updated_at" => time.utc.iso8601(6)})
     end
 
     it "should return a forbidden response if access is denied" do

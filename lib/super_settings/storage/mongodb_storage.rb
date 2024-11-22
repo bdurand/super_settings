@@ -26,6 +26,26 @@ module SuperSettings
       @mutex = Mutex.new
 
       class HistoryStorage < HistoryAttributes
+        class << self
+          def create!(attributes)
+            record = new(attributes)
+            record.save!
+            record
+          end
+        end
+
+        def created_at=(value)
+          super(TimePrecision.new(value, :millisecond).time)
+        end
+
+        def save!
+          raise ArgumentError.new("Missing key") if Coerce.blank?(key)
+
+          MongoDBStorage.transaction do |changes|
+            changes << self
+          end
+        end
+
         def as_bson
           attributes = {
             value: value,
@@ -89,13 +109,16 @@ module SuperSettings
           last_updated_setting["updated_at"] if last_updated_setting
         end
 
+        def create_history(key:, changed_by:, created_at:, value: nil, deleted: false)
+          HistoryStorage.create!(key: key, value: value, changed_by: changed_by, created_at: created_at, deleted: deleted)
+        end
+
         def destroy_all
           settings_collection.delete_many({})
         end
 
         def save_all(changes)
           upserts = changes.collect { |setting| upsert(setting) }
-          changes.each { |setting| setting.new_history.clear }
           settings_collection.bulk_write(upserts)
           true
         end
@@ -108,17 +131,18 @@ module SuperSettings
 
         private
 
-        def upsert(setting)
-          doc = setting.as_bson
-          history = setting.new_history.collect(&:as_bson)
+        def upsert(record)
+          update = {"$setOnInsert": {key: record.key}}
+          if record.is_a?(MongoDBStorage::HistoryStorage)
+            update["$push"] = {history: record.as_bson}
+          else
+            update["$set"] = record.as_bson.except(:key)
+          end
+
           {
             update_one: {
-              filter: {key: setting.key},
-              update: {
-                "$set": doc.except(:key, :history),
-                "$setOnInsert": {key: setting.key},
-                "$push": {history: {"$each": history}}
-              },
+              filter: {key: record.key},
+              update: update,
               upsert: true
             }
           }
@@ -144,13 +168,6 @@ module SuperSettings
             collection.indexes.create_one(history_created_at_desc_index)
           end
         end
-      end
-
-      attr_reader :new_history
-
-      def initialize(*)
-        @new_history = []
-        super
       end
 
       def history(limit: nil, offset: 0)
@@ -193,13 +210,6 @@ module SuperSettings
         record["history"].collect do |record|
           HistoryItem.new(key: key, value: record["value"], changed_by: record["changed_by"], created_at: record["created_at"], deleted: record["deleted"])
         end
-      end
-
-      def create_history(changed_by:, created_at:, value: nil, deleted: false)
-        created_at = TimePrecision.new(created_at, :millisecond).time
-        history = HistoryStorage.new(key: key, value: value, changed_by: changed_by, created_at: created_at, deleted: deleted)
-        @new_history.unshift(history)
-        history
       end
 
       def created_at=(val)

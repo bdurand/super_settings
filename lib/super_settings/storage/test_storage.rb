@@ -59,6 +59,20 @@ module SuperSettings
           settings.values.collect { |attributes| attributes[:updated_at] }.max
         end
 
+        def create_history(key:, changed_by:, created_at:, value: nil, deleted: false)
+          history = @history[key]
+          unless history
+            history = []
+            @history[key] = history
+          end
+
+          created_at = SuperSettings::TimePrecision.new(created_at).time if created_at
+          item = {key: key, value: value, deleted: deleted, changed_by: changed_by, created_at: created_at}
+          history.unshift(item)
+
+          item
+        end
+
         protected
 
         def default_load_asynchronous?
@@ -83,11 +97,6 @@ module SuperSettings
         items[offset, limit || items.length].collect do |attributes|
           HistoryItem.new(attributes)
         end
-      end
-
-      def create_history(changed_by:, created_at:, value: nil, deleted: false)
-        item = {key: key, value: value, deleted: deleted, changed_by: changed_by, created_at: created_at}
-        self.class.history(key).unshift(item)
       end
 
       def save!
@@ -123,11 +132,15 @@ module SuperSettings
       end
 
       def created_at=(value)
-        @created_at = SuperSettings::Coerce.time(value)
+        time = SuperSettings::Coerce.time(value)
+        time = SuperSettings::TimePrecision.new(time).time if time
+        @created_at = time
       end
 
       def updated_at=(value)
-        @updated_at = SuperSettings::Coerce.time(value)
+        time = SuperSettings::Coerce.time(value)
+        time = SuperSettings::TimePrecision.new(time).time if time
+        @updated_at = time
       end
 
       def deleted?
