@@ -95,10 +95,11 @@ jobs:
           echo "using gemfile gemfiles/${{ matrix.appraisal }}.gemfile"
           bundle config set gemfile "gemfiles/${{ matrix.appraisal }}.gemfile"
           cat gemfiles/${{ matrix.appraisal }}.gemfile
+          cp -f gemfiles/${{ matrix.appraisal }}.gemfile Gemfile
       - name: Install bundle
         run: |
-          bundle install
-          cat gemfiles/${{ matrix.appraisal }}.gemfile.lock
+          bundle update
+          cat Gemfile.lock
       - name: Run specs
         env:
           FERRUM_PROCESS_TIMEOUT: "30"
