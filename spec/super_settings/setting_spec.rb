@@ -503,6 +503,21 @@ describe SuperSettings::Setting do
           expect(old_key.value).to eq "new old value"
           expect(old_key.deleted).to be(false)
         end
+
+        it "should undelete a setting if it already existed" do
+          setting = SuperSettings::Setting.create!(key: "test", value: "oldvalue", deleted: true)
+          success, settings = SuperSettings::Setting.bulk_update([
+            {
+              key: "test",
+              value: "foobar",
+              value_type: "string"
+            }
+          ])
+          expect(success).to eq true
+          new_setting = SuperSettings::Setting.find_by_key("test")
+          expect(new_setting.value).to eq "foobar"
+          expect(new_setting.deleted).to be(false)
+        end
       end
 
       describe "set" do
