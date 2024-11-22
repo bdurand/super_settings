@@ -98,10 +98,15 @@ module SuperSettings
           duplicate.raw_value = @model.raw_value
           duplicate.value_type = @model.value_type
           duplicate.description = @model.description
-          duplicate.deleted = false
+          duplicate.deleted = @model.deleted
+
           @model.transaction do
             if @model.persisted?
-              @model.reload.update!(deleted: true)
+              @model.reload
+              unless @model.deleted?
+                @model.update!(deleted: true)
+                @model.history_items.create!(deleted: true, value: "[key moved to setting id #{duplicate.id}]", created_at: @model.updated_at)
+              end
             end
             duplicate.save!
           end
