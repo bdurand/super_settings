@@ -126,7 +126,7 @@ describe SuperSettings::RestAPI do
 
   describe "last_updated_at" do
     it "should return the timestamp of the last updated setting" do
-      time = Time.at(Time.now + 10.to_i)
+      time = SuperSettings::TimePrecision.new(Time.now + 10).time
       setting_1.updated_at = time
       setting_1.save!
       response = SuperSettings::RestAPI.last_updated_at

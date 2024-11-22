@@ -127,7 +127,7 @@ describe SuperSettings::RackApplication do
 
   describe "last_updated_at" do
     it "should have a REST endoint" do
-      time = Time.at(Time.now + 10.to_i)
+      time = SuperSettings::TimePrecision.new(Time.now + 10).time
       setting_1.updated_at = time
       setting_1.save!
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/last_updated_at")
