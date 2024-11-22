@@ -89,13 +89,12 @@ module SuperSettings
       end
 
       def save!
-        begin
+        # Check if another record with the same key exists. If it does, then we need to update
+        # that record instead and delete the current one.
+        duplicate = @model.class.find_by(key: @model.key)
+        if duplicate.nil? || duplicate == @model
           @model.save!
-        rescue ActiveRecord::RecordNotUnique => e
-          # Gracefully handle duplicate key constraint on the database; in this case the existing
-          # record should be updated.
-          duplicate = @model.class.find_by(key: @model.key)
-          raise e if duplicate == @model
+        else
           duplicate.raw_value = @model.raw_value
           duplicate.value_type = @model.value_type
           duplicate.description = @model.description
