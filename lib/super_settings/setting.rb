@@ -452,7 +452,7 @@ module SuperSettings
 
       timestamp = Time.now
       self.created_at ||= timestamp
-      self.updated_at = timestamp unless updated_at && changed?(:updated_at)
+      self.updated_at = timestamp if updated_at.nil? || !changed?(:updated_at)
 
       self.class.storage.with_connection do
         self.class.storage.transaction do

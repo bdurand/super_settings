@@ -142,7 +142,8 @@ if defined?(SuperSettings::SettingsController)
         get :last_updated_at
         expect(response.status).to eq 200
         expect(response.content_type).to include "application/json"
-        expect(JSON.parse(response.body)).to eq({"last_updated_at" => time_iso})
+        payload = JSON.parse(response.body)
+        expect(Time.parse(payload["last_updated_at"])).to eq time
       end
     end
 
