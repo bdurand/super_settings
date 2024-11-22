@@ -135,7 +135,7 @@ if defined?(SuperSettings::SettingsController)
     describe "last_updated_at" do
       it "should return the timestamp of the last updated setting" do
         request.headers["accept"] = "application/json"
-        time = Time.at(Time.now + 10.to_i)
+        time = Time.at(Time.now.to_f.round(6) + 10)
         setting_1.updated_at = time
         setting_1.save!
         get :last_updated_at

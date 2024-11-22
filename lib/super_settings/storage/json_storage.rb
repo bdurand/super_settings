@@ -99,7 +99,14 @@ module SuperSettings
 
           changed_histories.each do |setting_key, setting_history|
             ordered_history = setting_history.sort_by { |history_item| history_item.created_at }.reverse
-            payload = ordered_history.collect(&:as_json)
+            payload = ordered_history.collect do |history_item|
+              {
+                value: history_item.value,
+                changed_by: history_item.changed_by,
+                created_at: history_item.created_at.iso8601(6),
+                deleted: history_item.deleted?
+              }
+            end
             history_json = JSON.dump(payload)
             save_history_json(setting_key, history_json)
           end
