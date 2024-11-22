@@ -66,7 +66,7 @@ module SuperSettings
             @history[key] = history
           end
 
-          created_at = SuperSettings::TimePrecision.new(created_at).time
+          created_at = SuperSettings::TimePrecision.new(created_at).time if created_at
           item = {key: key, value: value, deleted: deleted, changed_by: changed_by, created_at: created_at}
           history.unshift(item)
 
@@ -132,11 +132,15 @@ module SuperSettings
       end
 
       def created_at=(value)
-        @created_at = SuperSettings::TimePrecision.new(SuperSettings::Coerce.time(value)).time
+        time = SuperSettings::Coerce.time(value)
+        time = SuperSettings::TimePrecision.new(time).time if time
+        @created_at = time
       end
 
       def updated_at=(value)
-        @updated_at = SuperSettings::TimePrecision.new(SuperSettings::Coerce.time(value)).time
+        time = SuperSettings::Coerce.time(value)
+        time = SuperSettings::TimePrecision.new(time).time if time
+        @updated_at = time
       end
 
       def deleted?
