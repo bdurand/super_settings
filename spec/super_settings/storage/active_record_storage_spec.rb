@@ -113,9 +113,9 @@ if EXTENSIONS[:active_record]
       it "should fetch the setting history" do
         setting = SuperSettings::Storage::ActiveRecordStorage.new(key: "key", raw_value: "1")
         setting.save!
-        setting.create_history(value: "1", changed_by: "me", created_at: Time.now - 30)
-        setting.create_history(value: "2", changed_by: "you", created_at: Time.now - 20)
-        setting.create_history(deleted: true, changed_by: "Bob", created_at: Time.now - 10)
+        SuperSettings::Storage::ActiveRecordStorage.create_history(key: "key", value: "1", changed_by: "me", created_at: Time.now - 30)
+        SuperSettings::Storage::ActiveRecordStorage.create_history(key: "key", value: "2", changed_by: "you", created_at: Time.now - 20)
+        SuperSettings::Storage::ActiveRecordStorage.create_history(key: "key", deleted: true, changed_by: "Bob", created_at: Time.now - 10)
         histories = setting.history
         expect(histories.collect(&:value)).to eq [nil, "2", "1"]
         expect(histories.collect(&:deleted?)).to eq [true, false, false]

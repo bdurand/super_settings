@@ -53,8 +53,9 @@ module SuperSettings
       end
 
       def save!
-        self.updated_at ||= Time.now
-        self.created_at ||= updated_at
+        timestamp = Time.now
+        self.updated_at ||= timestamp if respond_to?(:updated_at)
+        self.created_at ||= (respond_to?(:updated_at) ? updated_at : timestamp)
 
         self.class.transaction do |changes|
           changes << self

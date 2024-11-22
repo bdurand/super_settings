@@ -19,8 +19,40 @@ module SuperSettings
       include Transaction
 
       class HistoryStorage < HistoryAttributes
+        class << self
+          def create!(attributes)
+            record = new(attributes)
+            record.save!
+            record
+          end
+        end
+
+        def initialize(*)
+          @storage = nil
+          super
+        end
+
+        attr_writer :storage
+
         def created_at=(val)
           super(TimePrecision.new(val).time)
+        end
+
+        def save!
+          raise ArgumentError.new("Missing key") if Coerce.blank?(key)
+
+          @storage.transaction do |changes|
+            changes << self
+          end
+        end
+
+        def as_json
+          {
+            value: value,
+            changed_by: changed_by,
+            created_at: created_at.iso8601(6),
+            deleted: deleted?
+          }
         end
       end
 
@@ -37,36 +69,47 @@ module SuperSettings
           active.detect { |setting| setting.key == key }
         end
 
+        def create_history(key:, changed_by:, created_at:, value: nil, deleted: false)
+          HistoryStorage.create!(key: key, value: value, changed_by: changed_by, created_at: created_at, deleted: deleted, storage: self)
+        end
+
         def save_all(changes)
           existing = {}
           parse_settings(settings_json_payload).each do |setting|
             existing[setting.key] = setting
           end
 
-          changes.each do |setting|
-            existing[setting.key] = setting
+          history_items = []
+          changes.each do |record|
+            if record.is_a?(HistoryStorage)
+              history_items << record
+            else
+              existing[record.key] = record
+            end
           end
 
           settings = existing.values.sort_by(&:key)
+
           changed_histories = {}
-          changes.collect do |setting|
-            history = (setting.new_history + setting.history).sort_by(&:created_at).reverse
-            changed_histories[setting.key] = history.collect do |history_item|
-              {
-                value: history_item.value,
-                changed_by: history_item.changed_by,
-                created_at: history_item.created_at&.iso8601(6),
-                deleted: history_item.deleted?
-              }
+          history_items.each do |history_item|
+            setting = existing[history_item.key]
+            next unless setting
+
+            history = changed_histories[history_item.key]
+            unless history
+              history = setting.history.dup
+              changed_histories[history_item.key] = history
             end
-            setting.new_history.clear
+            history.unshift(history_item)
           end
 
           settings_json = JSON.dump(settings.collect(&:as_json))
           save_settings_json(settings_json)
 
           changed_histories.each do |setting_key, setting_history|
-            history_json = JSON.dump(setting_history)
+            ordered_history = setting_history.sort_by { |history_item| history_item.created_at }.reverse
+            payload = ordered_history.collect(&:as_json)
+            history_json = JSON.dump(payload)
             save_history_json(setting_key, history_json)
           end
         end
@@ -128,11 +171,6 @@ module SuperSettings
         end
       end
 
-      def initialize(*)
-        @new_history = []
-        super
-      end
-
       def created_at=(val)
         super(TimePrecision.new(val).time)
       end
@@ -148,14 +186,6 @@ module SuperSettings
           HistoryItem.new(key: key, value: record.value, changed_by: record.changed_by, created_at: record.created_at, deleted: record.deleted?)
         end
       end
-
-      def create_history(changed_by:, created_at:, value: nil, deleted: false)
-        history = HistoryStorage.new(key: key, value: value, changed_by: changed_by, created_at: created_at, deleted: deleted)
-        @new_history.unshift(history)
-        history
-      end
-
-      attr_reader :new_history
 
       def as_json
         {

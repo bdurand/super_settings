@@ -116,6 +116,10 @@ module SuperSettings
           record unless record.deleted?
         end
 
+        def create_history(key:, changed_by:, created_at:, value: nil, deleted: false)
+          HistoryStorage.create!(key: key, value: value, deleted: deleted, changed_by: changed_by, created_at: created_at)
+        end
+
         def last_updated_at
           result = with_redis { |redis| redis.zrevrange(UPDATED_KEY, 0, 1, withscores: true).first }
           return nil unless result
@@ -182,10 +186,6 @@ module SuperSettings
         HistoryStorage.find_all_by_key(key: key, limit: limit, offset: offset).collect do |record|
           HistoryItem.new(key: key, value: record.value, changed_by: record.changed_by, created_at: record.created_at, deleted: record.deleted?)
         end
-      end
-
-      def create_history(changed_by:, created_at:, value: nil, deleted: false)
-        HistoryStorage.create!(key: key, value: value, deleted: deleted, changed_by: changed_by, created_at: created_at)
       end
 
       def save_to_redis(redis)

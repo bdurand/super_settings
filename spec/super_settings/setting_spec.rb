@@ -369,6 +369,19 @@ describe SuperSettings::Setting do
           histories = setting.history(limit: 10)
           expect(histories.collect(&:changed_by)).to eq ["John", nil, "Joe"]
         end
+
+        it "when a record key is changed to an existing key, the history on both records should be updated" do
+          SuperSettings::Setting.create!(key: "key", value: "value", changed_by: "Joe")
+          setting_1 = SuperSettings::Setting.create!(key: "other", value: "other value", changed_by: "Jim")
+          setting_1.update!(key: "key", changed_by: "Sally")
+          setting_2 = SuperSettings::Setting.create!(key: "other", value: "new value", changed_by: "Harold")
+
+          setting_1_history = setting_1.history.collect { |h| [h.key, h.value, h.deleted?, h.changed_by] }
+          setting_2_history = setting_2.history.collect { |h| [h.key, h.value, h.deleted?, h.changed_by] }
+
+          expect(setting_1_history).to eq [["key", "other value", false, "Sally"], ["key", "value", false, "Joe"]]
+          expect(setting_2_history).to eq [["other", "new value", false, "Harold"], ["other", nil, true, "Sally"], ["other", "other value", false, "Jim"]]
+        end
       end
 
       describe "bulk_update" do

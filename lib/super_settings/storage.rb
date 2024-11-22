@@ -67,6 +67,15 @@ module SuperSettings
         # :nocov:
       end
 
+      # Create a history item for the setting.
+      #
+      # @return [void]
+      def create_history(key:, changed_by:, created_at:, value: nil, deleted: false)
+        # :nocov:
+        raise NotImplementedError
+        # :nocov:
+      end
+
       # Implementing classes can override this method to setup a thread safe connection within a block.
       #
       # @return [void]
@@ -253,9 +262,7 @@ module SuperSettings
     #
     # @return [void]
     def create_history(changed_by:, created_at:, value: nil, deleted: false)
-      # :nocov:
-      raise NotImplementedError
-      # :nocov:
+      self.class.create_history(key: key, changed_by: changed_by, created_at: created_at, value: value, deleted: deleted)
     end
 
     # Persist the record to storage.

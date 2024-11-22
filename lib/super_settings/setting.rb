@@ -446,8 +446,6 @@ module SuperSettings
     #
     # @return [void]
     def save!
-      record_value_change
-
       unless valid?
         raise InvalidRecordError.new(errors.values.join("; "))
       end
@@ -458,6 +456,7 @@ module SuperSettings
 
       self.class.storage.with_connection do
         self.class.storage.transaction do
+          record_value_change
           @record.save!
         end
 
@@ -592,8 +591,16 @@ module SuperSettings
     # Update the histories association whenever the value or key is changed.
     def record_value_change
       return unless changed?(:raw_value) || changed?(:deleted) || changed?(:key)
+
       recorded_value = (deleted? ? nil : raw_value)
-      @record.create_history(value: recorded_value, deleted: deleted?, changed_by: changed_by, created_at: Time.now)
+      @record.class.create_history(key: key, value: recorded_value, deleted: deleted?, changed_by: changed_by, created_at: updated_at)
+
+      if changed?(:key)
+        key_was = @changes["key"][0]
+        if key_was
+          @record.class.create_history(key: key_was, changed_by: changed_by, created_at: updated_at, deleted: true)
+        end
+      end
     end
 
     def clear_changes

@@ -89,8 +89,8 @@ if EXTENSIONS[:s3]
           description: "Setting 1",
           value_type: "integer"
         )
-        setting.create_history(changed_by: "test", created_at: Time.now - 2)
         setting.save!
+        setting.create_history(changed_by: "test", created_at: Time.now - 2)
 
         setting = SuperSettings::Storage::S3Storage.find_by_key("setting_1")
         expect(setting.history.length).to eq 1
