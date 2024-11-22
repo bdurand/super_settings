@@ -52,7 +52,7 @@ describe SuperSettings::RestAPI do
       expect(response).to eq({
         key: setting_1.key,
         histories: setting_1.history(limit: nil, offset: 0).collect do |history|
-          {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}
+          {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at.utc.iso8601(6)}
         end
       })
     end
@@ -68,7 +68,7 @@ describe SuperSettings::RestAPI do
       expect(response).to eq({
         key: setting_1.key,
         histories: setting_1.history(limit: 2, offset: 1).collect do |history|
-          {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}
+          {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at.utc.iso8601(6)}
         end,
         previous_page_params: {key: "string", limit: 2, offset: 0},
         next_page_params: {key: "string", limit: 2, offset: 3}
@@ -130,7 +130,7 @@ describe SuperSettings::RestAPI do
       setting_1.updated_at = time
       setting_1.save!
       response = SuperSettings::RestAPI.last_updated_at
-      expect(response).to eq({last_updated_at: time.utc.iso8601})
+      expect(response).to eq({last_updated_at: time.utc.iso8601(6)})
     end
   end
 

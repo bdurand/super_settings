@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - More robust handling of history tracking when keys are deleted and then reused. Previously, the history was not fully recorded when a key was reused. Now the history on the old key is recorded as a delete and the history on the new key is recorded as being an update.
 
+## Changed
+
+- Times are now consistently encoded in UTC in ISO-8601 format with microseconds whenever they are serialized to JSON.
+
 ## 2.0.3
 
 ### Fixed

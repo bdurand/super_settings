@@ -524,8 +524,8 @@ module SuperSettings
         value: value,
         value_type: value_type,
         description: description,
-        created_at: created_at,
-        updated_at: updated_at
+        created_at: created_at&.utc&.iso8601(6),
+        updated_at: updated_at&.utc&.iso8601(6)
       }
       attributes[:deleted] = true if deleted?
       attributes

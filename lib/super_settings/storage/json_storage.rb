@@ -45,15 +45,6 @@ module SuperSettings
             changes << self
           end
         end
-
-        def as_json
-          {
-            value: value,
-            changed_by: changed_by,
-            created_at: created_at.iso8601(6),
-            deleted: deleted?
-          }
-        end
       end
 
       class << self

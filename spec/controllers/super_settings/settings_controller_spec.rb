@@ -50,7 +50,7 @@ if defined?(SuperSettings::SettingsController)
         expect(JSON.parse(response.body)).to eq({
           "key" => setting_1.key,
           "histories" => setting_1.history(limit: nil, offset: 0).collect do |history|
-            JSON.parse({value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}.to_json)
+            JSON.parse({value: history.value, changed_by: history.changed_by_display, created_at: history.created_at.utc.iso8601(6)}.to_json)
           end
         })
       end
@@ -69,7 +69,7 @@ if defined?(SuperSettings::SettingsController)
         expect(JSON.parse(response.body)).to eq({
           "key" => setting_1.key,
           "histories" => setting_1.history(limit: 2, offset: 1).collect do |history|
-            JSON.parse({value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}.to_json)
+            JSON.parse({value: history.value, changed_by: history.changed_by_display, created_at: history.created_at.utc.iso8601(6)}.to_json)
           end,
           "previous_page_params" => {"key" => "string", "limit" => 2, "offset" => 0},
           "next_page_params" => {"key" => "string", "limit" => 2, "offset" => 3}
@@ -141,7 +141,7 @@ if defined?(SuperSettings::SettingsController)
         get :last_updated_at
         expect(response.status).to eq 200
         expect(response.content_type).to include "application/json"
-        expect(JSON.parse(response.body)).to eq({"last_updated_at" => time.utc.iso8601})
+        expect(JSON.parse(response.body)).to eq({"last_updated_at" => time.utc.iso8601(6)})
       end
     end
 

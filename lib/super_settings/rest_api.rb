@@ -145,7 +145,7 @@ module SuperSettings
         end
 
         payload[:histories] = histories.collect do |history|
-          history_values = {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at}
+          history_values = {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at.utc.iso8601(6)}
           history_values[:deleted] = true if history.deleted?
           history_values
         end
@@ -163,7 +163,7 @@ module SuperSettings
       #     last_updated_at: iso8601 string
       #   }
       def last_updated_at
-        {last_updated_at: Setting.last_updated_at.utc.iso8601}
+        {last_updated_at: Setting.last_updated_at.utc.iso8601(6)}
       end
 
       # Return settings that have been updated since a specified timestamp.

@@ -302,8 +302,8 @@ describe SuperSettings::Setting do
             value: setting.value,
             value_type: setting.value_type,
             description: setting.description,
-            created_at: setting.created_at,
-            updated_at: setting.updated_at
+            created_at: setting.created_at.utc.iso8601(6),
+            updated_at: setting.updated_at.utc.iso8601(6)
           })
         end
       end
