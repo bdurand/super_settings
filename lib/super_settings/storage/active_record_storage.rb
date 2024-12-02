@@ -18,7 +18,7 @@ module SuperSettings
 
       class << self
         def all
-          if Model.table_exists?
+          if Model.available?
             Model.all.collect { |model| new(model) }
           else
             []
@@ -26,7 +26,7 @@ module SuperSettings
         end
 
         def active
-          if Model.table_exists?
+          if Model.available?
             Model.where(deleted: false).collect { |model| new(model) }
           else
             []
@@ -34,7 +34,7 @@ module SuperSettings
         end
 
         def updated_since(time)
-          if Model.table_exists?
+          if Model.available?
             Model.where("updated_at > ?", time).collect { |model| new(model) }
           else
             []
@@ -42,12 +42,12 @@ module SuperSettings
         end
 
         def find_by_key(key)
-          model = Model.where(deleted: false).find_by(key: key) if Model.table_exists?
+          model = Model.where(deleted: false).find_by(key: key) if Model.available?
           new(model) if model
         end
 
         def last_updated_at
-          if Model.table_exists?
+          if Model.available?
             Model.maximum(:updated_at)
           end
         end
