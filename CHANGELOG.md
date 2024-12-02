@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.1.1
+
+### Fixed
+
+- Added check to ensure that ActiveRecord has a connection to the database to avoid error when settings are checked before the database is connected or when the database doesn't yet exist.
+
 ## 2.1.0
 
 ## Fixed

@@ -12,6 +12,13 @@ module SuperSettings
         self.table_name = "super_settings"
 
         has_many :history_items, class_name: "SuperSettings::Storage::ActiveRecordStorage::HistoryModel", foreign_key: :key, primary_key: :key
+
+        class << self
+          # ActiveRecord storage is only available if the connection pool is connected and the table exists.
+          def available?
+            connection_pool&.connected? && table_exists?
+          end
+        end
       end
 
       class HistoryModel < ApplicationRecord
