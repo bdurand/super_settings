@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added check to ensure that ActiveRecord has a connection to the database to avoid error when settings are checked before the database is connected or when the database doesn't yet exist.
 
+### Added
+
+- Added `:null` storage engine that doesn't store settings at all. This is useful for testing or when the storage engine is no available in your continuous integration environment.
+
 ## 2.1.0
 
 ## Fixed

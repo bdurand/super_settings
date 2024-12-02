@@ -27,6 +27,10 @@ module SuperSettings
         @web_ui_enabled = true
         @color_scheme = false
         @changed_by_block = nil
+        @enhancement = nil
+        @application_name = nil
+        @application_logo = nil
+        @application_link = nil
       end
 
       def superclass
@@ -119,6 +123,7 @@ module SuperSettings
         @storage = :active_record
         @after_save_blocks = []
         @changed_by_display = nil
+        @cache = nil
       end
 
       # Specify the storage engine to use for persisting settings. The value can either be specified

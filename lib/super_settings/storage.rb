@@ -13,6 +13,7 @@ module SuperSettings
     autoload :JSONStorage, File.join(__dir__, "storage/json_storage")
     autoload :S3Storage, File.join(__dir__, "storage/s3_storage")
     autoload :MongoDBStorage, File.join(__dir__, "storage/mongodb_storage")
+    autoload :NullStorage, File.join(__dir__, "storage/null_storage")
 
     def self.included(base)
       base.extend(ClassMethods)
