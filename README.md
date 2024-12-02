@@ -393,12 +393,10 @@ bundle exec rackup
 
 By default this will use Redis for storage using the default Redis URL. You can change the storage engine with the `STORAGE` environment variable.
 
-- `active_record` - Use the ActiveRecord storage engine.
 - `redis` - Use the Redis storage engine. The Redis URL can be set with the `REDIS_URL` environment variable.
 - `http` - Use the HTTP storage engine. The URL for the REST API can be set with the `REST_API_URL` environment variable.
 - `s3` - Use the S3 storage engine. The S3 URL can be set with the `S3_URL` environment variable.
 - `mongodb` - Use the MongoDB storage engine. The MongoDB URL can be set with the `MONGODB_URL` environment variable.
-- `null` - Use the null storage engine. This storage engine does not store settings at all.
 
 You can bring up all of these storage engines locally with the included docker-compose configuration.
 
