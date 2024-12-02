@@ -154,6 +154,8 @@ This gem abstracts out the storage engine and can support multiple storage mecha
 * `SuperSettings::Storage::RedisStorage` - Stores the settings in a Redis database using the [redis](https://github.com/redis/redis-rb) gem.
 * `SuperSettings::Storage::HttpStorage` - Uses the SuperSettings REST API running on another server. This is useful in a microservices architecture so you can have a central settings server used by all the services.
 * `SuperSettings::Storage::S3Storage` - Stores the settings in JSON in an S3 object. This is useful for applications running on AWS that want to store settings in a central location since it does not require a dedicated database. It is possible to read the settings directly from S3 from another application.
+* `SuperSettings::Storage::MongoDBStorage` - Stores the settings in a MongoDB database using the [mongo](https://github.com/mongodb/mongo-ruby-driver) gem.
+* `SuperSettings::Storage::NullStorage` - Does not store settings at all. This is useful for testing or when the storage engine is not available in your continuous integration environment.
 
 Additional storage engines can be built by creating a class that includes `SuperSettings::Storage` and implements the unimplemented methods in that module.
 
@@ -391,10 +393,12 @@ bundle exec rackup
 
 By default this will use Redis for storage using the default Redis URL. You can change the storage engine with the `STORAGE` environment variable.
 
+- `active_record` - Use the ActiveRecord storage engine.
 - `redis` - Use the Redis storage engine. The Redis URL can be set with the `REDIS_URL` environment variable.
 - `http` - Use the HTTP storage engine. The URL for the REST API can be set with the `REST_API_URL` environment variable.
 - `s3` - Use the S3 storage engine. The S3 URL can be set with the `S3_URL` environment variable.
 - `mongodb` - Use the MongoDB storage engine. The MongoDB URL can be set with the `MONGODB_URL` environment variable.
+- `null` - Use the null storage engine. This storage engine does not store settings at all.
 
 You can bring up all of these storage engines locally with the included docker-compose configuration.
 
