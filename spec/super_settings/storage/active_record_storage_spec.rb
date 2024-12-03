@@ -124,5 +124,46 @@ if EXTENSIONS[:active_record]
         expect(setting.history(limit: 1, offset: 2).collect(&:value)).to eq ["1"]
       end
     end
+
+    context "when there is no database connection" do
+      before do
+        SuperSettings::Storage::ActiveRecordStorage.new(key: "setting_1", raw_value: "1").save!
+        allow(SuperSettings::Storage::ActiveRecordStorage::Model).to receive(:available?).and_return(false)
+      end
+
+      it "should not fetch a connection" do
+        value = nil
+        expect(SuperSettings::Storage::ActiveRecordStorage::Model.connection_pool).to_not receive(:with_connection)
+        SuperSettings::Storage::ActiveRecordStorage.with_connection { value = true }
+        expect(value).to be true
+      end
+
+      it "should not open a transaction" do
+        value = nil
+        expect(SuperSettings::Storage::ActiveRecordStorage::Model).to_not receive(:transaction)
+        SuperSettings::Storage::ActiveRecordStorage.transaction { value = true }
+        expect(value).to be true
+      end
+
+      it "should return an empty array for all" do
+        expect(SuperSettings::Storage::ActiveRecordStorage.all).to eq []
+      end
+
+      it "should return an empty array for active" do
+        expect(SuperSettings::Storage::ActiveRecordStorage.active).to eq []
+      end
+
+      it "should return an empty array for updated_since" do
+        expect(SuperSettings::Storage::ActiveRecordStorage.updated_since(Time.now)).to eq []
+      end
+
+      it "should return nil for find_by_key" do
+        expect(SuperSettings::Storage::ActiveRecordStorage.find_by_key("setting_1")).to eq nil
+      end
+
+      it "should return nil for last_updated_at" do
+        expect(SuperSettings::Storage::ActiveRecordStorage.last_updated_at).to eq nil
+      end
+    end
   end
 end
