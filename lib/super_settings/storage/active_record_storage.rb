@@ -57,15 +57,23 @@ module SuperSettings
         end
 
         def with_connection(&block)
-          Model.connection_pool.with_connection(&block)
+          if Model.available?
+            Model.connection_pool.with_connection(&block)
+          else
+            yield
+          end
         end
 
         def transaction(&block)
-          Model.transaction(&block)
+          if Model.available?
+            Model.transaction(&block)
+          else
+            yield
+          end
         end
 
         def destroy_all
-          ApplicationRecord.transaction do
+          Model.transaction do
             Model.delete_all
             HistoryModel.delete_all
           end
