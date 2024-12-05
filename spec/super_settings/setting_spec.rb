@@ -343,6 +343,44 @@ describe SuperSettings::Setting do
         end
       end
 
+      describe "value_changed?" do
+        it "should return true if the value has changed" do
+          setting = SuperSettings::Setting.create!(key: "test", value: "foobar")
+          expect(setting.value_changed?).to eq false
+          setting.value = "bizbaz"
+          expect(setting.value_changed?).to eq true
+        end
+
+        it "should return true if the key has changed" do
+          setting = SuperSettings::Setting.create!(key: "test", value: "foobar")
+          expect(setting.value_changed?).to eq false
+          setting.key = "newkey"
+          expect(setting.value_changed?).to eq true
+        end
+
+        it "should return true if the setting is deleted" do
+          setting = SuperSettings::Setting.create!(key: "test", value: "foobar")
+          expect(setting.value_changed?).to eq false
+          setting.deleted = true
+          expect(setting.value_changed?).to eq true
+        end
+
+        it "should return true if the setting is undeleted" do
+          setting = SuperSettings::Setting.create!(key: "test", value: "foobar", deleted: true)
+          expect(setting.value_changed?).to eq false
+          setting.deleted = false
+          expect(setting.value_changed?).to eq true
+        end
+
+        it "should return true if only the type or description is changed" do
+          setting = SuperSettings::Setting.create!(key: "test", value: "foobar")
+          setting.value_type = :integer
+          expect(setting.value_changed?).to eq false
+          setting.description = "test"
+          expect(setting.value_changed?).to eq false
+        end
+      end
+
       describe "histories" do
         it "should create a history record for each change in value" do
           setting = SuperSettings::Setting.create!(key: "test", value: "foobar")
