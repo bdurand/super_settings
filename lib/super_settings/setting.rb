@@ -164,7 +164,7 @@ module SuperSettings
         all_valid, settings = update_settings(params, changed_by)
         if all_valid
           storage.with_connection do
-            storage.transaction do
+            transaction do |_changes|
               settings.each do |setting|
                 setting.save!
               end
@@ -200,6 +200,38 @@ module SuperSettings
       # @api private
       def clear_last_updated_cache
         cache&.delete(Setting::LAST_UPDATED_CACHE_KEY)
+      end
+
+      # Wrap a block of code in a transaction.
+      #
+      # @api private
+      def transaction(&block)
+        changes = Thread.current[:super_settings_transaction]
+        return yield if changes
+
+        changes = []
+        Thread.current[:super_settings_transaction] = changes
+
+        begin
+          @storage.transaction(&block)
+
+          clear_last_updated_cache
+
+          changes.each do |setting|
+            setting.send(:call_after_save_callbacks)
+            setting.send(:clear_changes)
+          end
+        ensure
+          Thread.current[:super_settings_transaction] = nil
+        end
+      end
+
+      # Add a record to the current transaction.
+      #
+      # @api private
+      def add_record_to_transaction(record)
+        changes = Thread.current[:super_settings_transaction]
+        changes << record if changes
       end
 
       private
@@ -454,17 +486,13 @@ module SuperSettings
       self.created_at ||= timestamp
       self.updated_at = timestamp if updated_at.nil? || !changed?(:updated_at)
 
+      return if @changes.empty?
+
       self.class.storage.with_connection do
-        self.class.storage.transaction do
+        self.class.transaction do
           record_value_change
           @record.save!
-        end
-
-        begin
-          self.class.clear_last_updated_cache
-          call_after_save_callbacks
-        ensure
-          clear_changes
+          self.class.add_record_to_transaction(self)
         end
       end
       nil
