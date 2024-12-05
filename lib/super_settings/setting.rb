@@ -575,6 +575,14 @@ module SuperSettings
       @changes.dup
     end
 
+    # Return true if the value of the setting has changed. In addition to changing the value,
+    # this will be triggered if the key changed or if the setting was marked as deleted.
+    #
+    # @return [Boolean]
+    def value_changed?
+      (@changes.keys & %w[key raw_value deleted]).any?
+    end
+
     private
 
     # Coerce a value for the appropriate value type.
