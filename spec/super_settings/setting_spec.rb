@@ -320,6 +320,14 @@ describe SuperSettings::Setting do
           setting.save!
           expect(FakeLogger.instance.messages).to include({key: [nil, "foo"], value: [nil, "bar"]})
         end
+
+        it "should not call the after_save hooks if the record could not be saved" do
+          FakeLogger.instance.messages.clear
+          setting = SuperSettings::Setting.new(key: "foo", value: "bar")
+          setting.key = nil
+          expect { setting.save! }.to raise_error(SuperSettings::Setting::InvalidRecordError)
+          expect(FakeLogger.instance.messages).to eq []
+        end
       end
 
       describe "changes" do
