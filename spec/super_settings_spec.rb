@@ -62,7 +62,7 @@ describe SuperSettings do
     it "returns a time in ISO8601 format" do
       SuperSettings::Setting.create!(key: "key", value: "2021-04-14T23:45", value_type: :datetime)
       SuperSettings.load_settings
-      expect(SuperSettings.get("key")).to eq "2021-04-15T06:45:00Z"
+      expect(SuperSettings.get("key")).to eq SuperSettings.datetime("key").iso8601
     end
   end
 

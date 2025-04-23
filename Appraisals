@@ -43,6 +43,7 @@ appraise "rails_6.1" do
   gem "rspec-rails", "~> 6.0"
   gem "sqlite3", "~> 1.4.0"
   gem "puma", "~> 5.6"
+  gem "logger"
   remove_gem "rackup"
 end
 
@@ -51,6 +52,7 @@ appraise "rails_6.0" do
   gem "rspec-rails", "~> 5.1"
   gem "sqlite3", "~> 1.4.0"
   gem "puma", "~> 5.6"
+  gem "logger"
   remove_gem "rackup"
 end
 
