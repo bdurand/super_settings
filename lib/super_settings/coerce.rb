@@ -34,7 +34,7 @@ module SuperSettings
       # @param value [Object]
       # @return [Time]
       def time(value)
-        value = nil if value.nil? || value.to_s.empty?
+        value = nil if blank?(value)
         return nil if value.nil?
 
         time = if value.is_a?(Numeric)
@@ -48,6 +48,25 @@ module SuperSettings
           time = time.in_time_zone(Time.zone)
         end
         time
+      end
+
+      # Cast a value to a string.
+      #
+      # @param value [Object]
+      # @return [String]
+      def string(value)
+        value = nil if blank?(value)
+        return nil if value.nil?
+
+        if value.is_a?(String)
+          value
+        elsif value.is_a?(Array)
+          value.join("\n")
+        elsif value.respond_to?(:iso8601)
+          value.iso8601
+        else
+          value.to_s
+        end
       end
 
       # @return [Boolean] true if the value is nil or empty.

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.3.0
+
+### Changed
+
+- Calling `SuperSettings.get` on a setting stored as an array now returns the array as a multiline string rather than simply calling `to_s` on the array. So an array setting stored as `["foo", "bar"]` will now be returned as `"foo\nbar"` rather than `'["foo", "bar"]'`.
+- Calling `SuperSettings.get` on a setting stored as a datetime will now return the value as an ISO-8601 formatted string rather than simply calling `to_s` on the `Time` object.
+
 ## 2.2.1
 
 ### Added
