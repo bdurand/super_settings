@@ -62,4 +62,30 @@ describe SuperSettings::Coerce do
       expect(SuperSettings::Coerce.time("")).to eq nil
     end
   end
+
+  describe "string" do
+    it "should cast String values" do
+      expect(SuperSettings::Coerce.string("string")).to eq "string"
+    end
+
+    it "should cast blank to nil" do
+      expect(SuperSettings::Coerce.string(nil)).to eq nil
+      expect(SuperSettings::Coerce.string("")).to eq nil
+    end
+
+    it "should cast arrays to multiline strings" do
+      expect(SuperSettings::Coerce.string(["a", "b", "c"])).to eq "a\nb\nc"
+    end
+
+    it "should cast Time values to ISO8601 strings" do
+      time = Time.now
+      expect(SuperSettings::Coerce.string(time)).to eq time.iso8601
+    end
+
+    it "should cast other values to string" do
+      expect(SuperSettings::Coerce.string(1)).to eq "1"
+      expect(SuperSettings::Coerce.string(true)).to eq "true"
+      expect(SuperSettings::Coerce.string(false)).to eq "false"
+    end
+  end
 end

@@ -35,7 +35,10 @@ module SuperSettings
     # @return [String]
     def get(key, default = nil)
       val = context_setting(key)
-      val.nil? ? default : val.to_s
+      return val if val.is_a?(String)
+      return default if val.nil?
+
+      Coerce.string(val)
     end
 
     # Alias for {#get} to allow using the [] operator to get a setting value.

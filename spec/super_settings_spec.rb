@@ -52,6 +52,18 @@ describe SuperSettings do
       SuperSettings.load_settings
       expect(SuperSettings["key"]).to eq "foo"
     end
+
+    it "returns an array as a multi line string" do
+      SuperSettings::Setting.create!(key: "key", value: "foo\nbar", value_type: :array)
+      SuperSettings.load_settings
+      expect(SuperSettings.get("key")).to eq "foo\nbar"
+    end
+
+    it "returns a time in ISO8601 format" do
+      SuperSettings::Setting.create!(key: "key", value: "2021-04-14T23:45", value_type: :datetime)
+      SuperSettings.load_settings
+      expect(SuperSettings.get("key")).to eq "2021-04-15T06:45:00Z"
+    end
   end
 
   describe "integer" do
