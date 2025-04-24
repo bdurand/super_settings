@@ -34,7 +34,7 @@ module SuperSettings
               connection_pool.with_connection do
                 # Do nothing, just ensure that the connection is established.
               end
-            rescue ActiveRecord::ConnectionNotEstablished => e
+            rescue ActiveRecord::ConnectionNotEstablished
               # Ignore errors so the application doesn't break if the database is not available.
               # Otherwise things like build processes can fail.
             end
