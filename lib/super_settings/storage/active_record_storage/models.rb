@@ -16,7 +16,28 @@ module SuperSettings
         class << self
           # ActiveRecord storage is only available if the connection pool is connected and the table exists.
           def available?
+            attempt_connection!
             connection_pool&.connected? && table_exists?
+          end
+
+          private
+
+          @connection_attempted = false
+
+          def attempt_connection!
+            return if @connection_attempted
+
+            @connection_attempted = true
+            return if connection_pool.nil? || connection_pool.connected?
+
+            begin
+              connection_pool.with_connection do
+                # Do nothing, just ensure that the connection is established.
+              end
+            rescue ActiveRecord::ConnectionNotEstablished => e
+              # Ignore errors so the application doesn't break if the database is not available.
+              # Otherwise things like build processes can fail.
+            end
           end
         end
       end
