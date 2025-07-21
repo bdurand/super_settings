@@ -27,8 +27,17 @@
     --modal-control-color: #000;
     --success-color: green;
     --danger-color: firebrick;
-    --muted-color: #666;
+    --muted-color: #999;
     --unselected-color: #666;
+    --btn-hover-color: #e9e9e9;
+    --card-bg-color: #fff;
+
+    /* Icon Colors */
+    --icon-info-color: #0d7ff0;
+    --icon-edit-color: #0c8024;
+    --icon-delete-color: #dc3545;
+    --icon-cancel-color: #dc3545;
+    --icon-disabled-color: #c0c0c0;
   }
 <% end %>
 
@@ -37,7 +46,7 @@
 <% end %>
 <% if color_scheme == :system || color_scheme == :dark %>
   .super-settings {
-    --edit-bg-color: #8dc875;
+    --edit-bg-color: #58993e;
     --deleted-row-color: #e0b1b8;
     --deleted-row-bg-color: #7a3636;
     --history-key-color: #a7d6f4;
@@ -47,14 +56,24 @@
     --form-control-color: #eee;
     --form-control-bg-color: #666;
     --form-control-border-color: #555;
+    --btn-hover-color: #c0c0c0;
     --form-control-placeholder-color: #aaa;
     --modal-bg-color: #333;
     --modal-transparency: 0.75;
     --modal-control-color: #fff;
     --success-color: #00ff00;
     --danger-color: #ff0000;
-    --muted-color: #999;
+    --muted-color: #ccc;
     --unselected-color: #ccc;
+    --btn-bg-color: #d9d9d9;
+    --card-bg-color: #666;
+
+    /* Icon Colors */
+    --icon-info-color: #71b0f0;
+    --icon-edit-color: #7dde90;
+    --icon-delete-color: #eb8791;
+    --icon-cancel-color: #eb8791;
+    --icon-disabled-color: #aaa;
   }
 <% end %>
 <% if color_scheme == :system %>

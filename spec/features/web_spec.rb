@@ -11,7 +11,7 @@ describe "web UI", type: :feature, js: true do
   let!(:array_setting) { SuperSettings::Setting.create!(key: "key.array", value: ["one", "two", "three"], value_type: "array") }
 
   def find_setting_id(key)
-    find("tr[data-key=\"#{key}\"]")["data-id"]
+    find("[data-key=\"#{key}\"]")["data-id"]
   end
 
   def find_setting_field(id, name, visible: nil)
@@ -19,7 +19,7 @@ describe "web UI", type: :feature, js: true do
   end
 
   def within_setting_row(id, &block)
-    within("tr[data-id=#{id}]", &block)
+    within("[data-id=#{id}]", &block)
   end
 
   describe "showing settings" do
@@ -193,7 +193,7 @@ describe "web UI", type: :feature, js: true do
     it "should add a form field" do
       visit "/"
       click_on("Add Setting")
-      id = all("tr[data-id]").first["data-id"]
+      id = all("[data-id]").first["data-id"]
       within_setting_row(id) do
         key_field = find_setting_field(id, :key)
         expect(key_field[:type]).to eq "text"
@@ -213,11 +213,11 @@ describe "web UI", type: :feature, js: true do
     it "should cancel changes" do
       visit "/"
       click_on("Add Setting")
-      id = all("tr[data-id]").first["data-id"]
+      id = all("[data-id]").first["data-id"]
       within_setting_row(id) do
         find("a.js-restore-setting").click
       end
-      expect(all("tr[data-id=#{id}]").size).to eq 0
+      expect(all("[data-id=#{id}]").size).to eq 0
     end
   end
 
@@ -225,7 +225,7 @@ describe "web UI", type: :feature, js: true do
     it "should mark the setting to be removed" do
       visit "/"
       id = find_setting_id("key.string")
-      table_row = find("tr[data-id=#{id}]")
+      table_row = find("[data-id=#{id}]")
       expect(table_row["data-deleted"]).to eq nil
       table_row.find("a.js-remove-setting").click
       expect(table_row["data-deleted"]).to eq "true"
@@ -234,7 +234,7 @@ describe "web UI", type: :feature, js: true do
     it "should cancel changes" do
       visit "/"
       id = find_setting_id("key.string")
-      table_row = find("tr[data-id=#{id}]")
+      table_row = find("[data-id=#{id}]")
       table_row.find("a.js-remove-setting").click
       expect(table_row["data-deleted"]).to eq "true"
       table_row.find("a.js-restore-setting").click
@@ -256,7 +256,7 @@ describe "web UI", type: :feature, js: true do
     it "should save all changes at once" do
       visit "/"
       click_on("Add Setting")
-      new_id = all("tr[data-id]").first["data-id"]
+      new_id = all("[data-id]").first["data-id"]
       find_setting_field(new_id, :key).fill_in(with: "newkey")
       find_setting_field(new_id, :value).fill_in(with: "newvalue")
       find_setting_field(new_id, :description).fill_in(with: "new description")
@@ -327,11 +327,11 @@ describe "web UI", type: :feature, js: true do
         find("a.js-show-history").click
       end
       within("#super-settings-modal") do
-        expect(all("#super-settings-history tbody tr").size).to eq 25
+        expect(all("#super-settings-history .super-settings-history-item").size).to eq 25
         click_on("Older")
-        expect(all("#super-settings-history tbody tr").size).to eq 1
+        expect(all("#super-settings-history .super-settings-history-item").size).to eq 1
         click_on("Newer")
-        expect(all("#super-settings-history tbody tr").size).to eq 25
+        expect(all("#super-settings-history .super-settings-history-item").size).to eq 25
       end
     end
   end

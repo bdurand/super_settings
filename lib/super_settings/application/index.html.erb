@@ -21,32 +21,26 @@
       <strong class="js-flash" style="display:none; margin-left:3rem;"></strong>
     </div>
 
-    <table class="super-settings-table super-settings-table-striped" id="settings-table">
-      <thead>
-        <tr>
-          <th scope="col" class="super-settings-key">
-            Key
-            <button class="super-settings-sort-control super-settings-btn-no-chrome" data-field="key" data-order="asc" data-selected="true" title="Sort by key">
-              <%= icon_image("arrow-down-short", data: {order: :asc}, style: {display: "inline-block"}) %>
-              <%= icon_image("arrow-up-short", data: {order: :desc}, style: {display: "none"}) %>
-            </button>
-          </th>
-          <th scope="col" class="super-settings-value">Value</th>
-          <th scope="col" class="super-settings-value-type">Type</th>
-          <th scope="col" class="super-settings-description">Description</th>
-          <th scope="col" data-field="updated_at">
-            Modified
-            <button class="super-settings-sort-control super-settings-btn-no-chrome" data-field="updated_at" data-order="asc" title="Sort by modified time">
-              <%= icon_image("arrow-down-short", data: {order: :asc}, style: {display: "inline-block"}) %>
-              <%= icon_image("arrow-up-short", data: {order: :desc}, style: {display: "none"}) %>
-            </button>
-          </th>
-          <th scope="col" class="super-settings-controls"><span class="super-settings-sr-only">Controls</span></th>
-        </tr>
-      </thead>
-      <tbody translate="no">
-      </tbody>
-    </table>
+    <div class="super-settings-sort-controls">
+      <span class="super-settings-sort-label">Sort by:</span>
+      <button class="super-settings-sort-control super-settings-btn-no-chrome" data-field="key" data-order="asc" data-selected="true" title="Sort by key">
+        Key
+        <%= icon_image("arrow-down-short", data: {order: :asc}, style: {display: "inline-block"}) %>
+        <%= icon_image("arrow-up-short", data: {order: :desc}, style: {display: "none"}) %>
+      </button>
+      <span></span>
+      <span></span>
+      <span></span>
+      <button class="super-settings-sort-control super-settings-btn-no-chrome" data-field="updated_at" data-order="asc" title="Sort by modified time">
+        Modified
+        <%= icon_image("arrow-down-short", data: {order: :asc}, style: {display: "inline-block"}) %>
+        <%= icon_image("arrow-up-short", data: {order: :desc}, style: {display: "none"}) %>
+      </button>
+      <span></span>
+    </div>
+
+    <div class="super-settings-cards-container" id="settings-container" translate="no">
+    </div>
   </form>
 
   <div id="super-settings-modal" class="super-settings-modal js-close-modal" aria-hidden="true" aria-role="dialog">
@@ -58,81 +52,86 @@
   </div>
 </main>
 
-<template id="setting-row-template" style="display:none;">
-  <tr>
-    <td class="super-settings-key">
-      <div class="js-value-placeholder"></div>
-      <input type="hidden" value="" name="settings[{{id}}][key]" class="js-setting-key">
-      <input type="hidden" value="" name="settings[{{id}}][delete]" class="js-setting-deleted">
-    </td>
-
-    <td class="super-settings-value">
-      <div class="js-value-placeholder super-settings-max-height-text"></div>
-    </td>
-
-    <td class="super-settings-value-type">
-      <div class="js-value-placeholder"></div>
-    </td>
-
-    <td class="super-settings-description">
-      <div class="js-value-placeholder super-settings-max-height-text"></div>
-    </td>
-
-    <td class="super-settings-last-modified super-settings-text-nowrap">
-      <div class="js-value-placeholder"></div>
-    </td>
-
-    <td class="super-settings-controls">
-      <%= icon_button("info-circle", title: "Setting Info", color: "#0d7ff0", js_class: "js-show-history") %>
-      <%= icon_button("pencil-square", title: "Edit Setting", color: "#0c8024", js_class: "js-edit-setting") %>
-      <%= icon_button("trash3", title: "Remove Setting", color: "#dc3545", js_class: "js-remove-setting") %>
-      <%= icon_button("x-circle", title: "Cancel Changes", color: "#dc3545", js_class: "js-restore-setting", link_style: "display:none;") %>
-    </td>
-  </tr>
-</template>
-
-<template id="setting-row-edit-template" style="display:none;">
-  <tr data-edited="true" class="super-settings-edit-row">
-    <td class="super-settings-key">
-      <div>
-        <label for="settings_{{id}}_key" class="super-settings-sr-only">Key</label>
-        <input type="text" id="settings_{{id}}_key" name="settings[{{id}}][key]" value="" maxlength="190" class="super-settings-form-control js-setting-key" required>
+<template id="setting-card-template" style="display:none;">
+  <div class="super-settings-card">
+    <div class="super-settings-card-content">
+      <div class="super-settings-key super-settings-card-key">
+        <label class="super-settings-card-label">Key:</label>
+        <span class="js-value-placeholder"></span>
+        <input type="hidden" value="" name="settings[{{id}}][key]" class="js-setting-key">
+        <input type="hidden" value="" name="settings[{{id}}][delete]" class="js-setting-deleted">
       </div>
-    </td>
 
-    <td class="super-settings-value">
-      <div>
-        <label for="settings_{{id}}_value" class="super-settings-sr-only">Value</label>
+      <div class="super-settings-card-value">
+        <label class="super-settings-card-label">Value:</label>
+        <div class="js-value-placeholder super-settings-max-height-text"></div>
+      </div>
+
+      <div class="super-settings-card-type">
+        <label class="super-settings-card-label">Type:</label>
         <span class="js-value-placeholder"></span>
       </div>
-      <div class="super-settings-container super-settings-text-danger js-setting-errors" style="display:none;">
-      </div>
-    </td>
 
-    <td class="super-settings-value-type">
-      <div>
-        <label for="settings_{{id}}_value_type" class="super-settings-sr-only">Value Type</label>
+      <div class="super-settings-card-description">
+        <label class="super-settings-card-label">Description:</label>
+        <div class="js-value-placeholder super-settings-max-height-text"></div>
+      </div>
+
+      <div class="super-settings-card-modified">
+        <label class="super-settings-card-label">Modified:</label>
+        <span class="js-value-placeholder"></span>
+      </div>
+
+      <div class="super-settings-card-controls">
+        <%= icon_button("info-circle", title: "Setting Info", color: "var(--icon-info-color)", js_class: "js-show-history") %>
+        <%= icon_button("pencil-square", title: "Edit Setting", color: "var(--icon-edit-color)", js_class: "js-edit-setting") %>
+        <%= icon_button("trash3", title: "Remove Setting", color: "var(--icon-delete-color)", js_class: "js-remove-setting") %>
+        <%= icon_button("x-circle", title: "Cancel Changes", color: "var(--icon-cancel-color)", js_class: "js-restore-setting", link_style: "display:none;") %>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="setting-card-edit-template" style="display:none;">
+  <div class="super-settings-card super-settings-card-edit" data-edited="true">
+    <div class="super-settings-card-content">
+      <div class="super-settings-card-key">
+        <label for="settings_{{id}}_key" class="super-settings-card-label">Key:</label>
+        <input type="text" id="settings_{{id}}_key" name="settings[{{id}}][key]" value="" maxlength="190" class="super-settings-form-control js-setting-key" required placeholder="Setting key">
+      </div>
+
+      <div class="super-settings-card-value">
+        <label for="settings_{{id}}_value" class="super-settings-card-label">Value:</label>
+        <span class="js-value-placeholder"></span>
+        <div class="super-settings-container super-settings-text-danger js-setting-errors" style="display:none;">
+        </div>
+      </div>
+
+      <div class="super-settings-card-type">
+        <label for="settings_{{id}}_value_type" class="super-settings-card-label">Type:</label>
         <select name="settings[{{id}}][value_type]" class="super-settings-form-control js-setting-value-type" id="settings_{{id}}_value_type">
           <% SuperSettings::Setting::VALUE_TYPES.each do |value_type| %>
             <option value="<%= html_escape(value_type) %>"><%= html_escape(value_type) %></option>
           <% end %>
         </select>
       </div>
-    </td>
 
-    <td class="super-settings-description" colspan="2">
-      <div>
-        <label for="settings_{{id}}_description" class="super-settings-sr-only">Description</label>
-        <textarea id="settings_{{id}}_description" name="settings[{{id}}][description]" value="" class="super-settings-form-control" rows="4"></textarea>
+      <div class="super-settings-card-description">
+        <label for="settings_{{id}}_description" class="super-settings-card-label">Description:</label>
+        <textarea id="settings_{{id}}_description" name="settings[{{id}}][description]" value="" class="super-settings-form-control" rows="3" placeholder="Description of this setting"></textarea>
       </div>
-    </td>
 
-    <td class="super-settings-controls">
-      <%= icon_button("info-circle", title: "Setting Info", color: "#0d7ff0", js_class: "js-show-history") %>
-      <%= icon_button("pencil-square", title: "Edit Setting", color: "#c0c0c0", js_class: "js-no-op", disabled: true) %>
-      <%= icon_button("x-circle", title: "Cancel Changes", color: "#dc3545", js_class: "js-restore-setting") %>
-    </td>
-  </tr>
+      <div class="super-settings-card-modified">
+        <!-- Empty for edit mode -->
+      </div>
+
+      <div class="super-settings-card-controls">
+        <%= icon_button("info-circle", title: "Setting Info", color: "var(--icon-info-color)", js_class: "js-show-history") %>
+        <%= icon_button("pencil-square", title: "Edit Setting", color: "var(--icon-disabled-color)", js_class: "js-no-op", disabled: true) %>
+        <%= icon_button("x-circle", title: "Cancel Changes", color: "var(--icon-cancel-color)", js_class: "js-restore-setting") %>
+      </div>
+    </div>
+  </div>
 </template>
 
 <template id="setting-value-field-template" style="display:none;">
@@ -170,17 +169,15 @@
 
 <template id="setting-history-table" style="display:none">
   <h3>Setting History: <span class="super-settings-history-key"></span></h3>
-  <table class="super-settings-table super-settings-table-striped" id="super-settings-history">
-    <thead>
-      <tr>
-        <th scope="col" class="super-settings-text-nowrap">Time</th>
-        <th scope="col">Changed By</th>
-        <th scope="col">Value</th>
-      </tr>
-    </thead>
-    <tbody>
-    </tbody>
-  </table>
+  <div class="super-settings-history-container">
+    <div class="super-settings-history-header">
+      <div class="super-settings-history-time">Time</div>
+      <div class="super-settings-history-user">Changed By</div>
+      <div class="super-settings-history-value">Value</div>
+    </div>
+    <div class="super-settings-history-items" id="super-settings-history">
+    </div>
+  </div>
 </template>
 
 <%= javascript_tag %>
