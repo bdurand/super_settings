@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Incoming links to the web UI now support specifying the value type for the setting being edited by passing `type=value_type` in the URL hash. For example, `#edit=port&type=integer` will open the setting with the key `port` for editing as an integer.
 
+### Changed
+
+- Web UI significantly updated to be cleaner and more modern using responsive design instead of tables.
+
 ## 2.3.1
 
 ### Fixed
