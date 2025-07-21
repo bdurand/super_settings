@@ -179,8 +179,6 @@ bin/start_rails
 
 Then go to http://localhost:3000/settings in your browser.
 
-You can change the layout used by the Web UI. However, if you do this, you will be responsible for providing the CSS styles for the buttons, table rows, and form controls. The CSS class names used by the default layout are compatible with the class names defined in the [Bootstrap library](https://getbootstrap.com/).
-
 It is not required to use the bundled Web UI. You can implement your own UI using the `SuperSettings::Setting` model.
 
 You can link directly to editing a setting by passing `#edit=key` in the URL hash. This will open the Web UI with the setting with the key `key` selected for editing. You can also `type` in the URL hash to specify the value type for the setting. For example, `#edit=port&type=integer` will open the setting with the key `port` for editing as an integer.
