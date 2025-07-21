@@ -26,6 +26,10 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+.super-settings-cards-container .super-settings-card:nth-child(even) {
+  background-color: var(--alt-row-color);
+}
+
 .super-settings-card-edit {
   background-color: var(--edit-bg-color) !important;
   border-color: var(--primary-border-color);
@@ -196,11 +200,6 @@
     transition: all 0.2s ease-in-out;
   }
 
-  .super-settings-sort-control:hover {
-    background-color: var(--alt-row-color);
-    border-color: var(--table-border-color);
-  }
-
   .super-settings-sort-control[data-selected="true"] {
     background-color: var(--primary-color);
     color: var(--primary-contrast-color);
@@ -277,7 +276,7 @@
   align-items: start;
 }
 
-.super-settings-history-item:nth-of-type(odd) {
+.super-settings-history-item:nth-of-type(even) {
   background-color: var(--alt-row-color);
 }
 
