@@ -181,10 +181,12 @@ Then go to http://localhost:3000/settings in your browser.
 
 It is not required to use the bundled Web UI. You can implement your own UI using the `SuperSettings::Setting` model.
 
-You can link directly to editing a setting by passing `#edit=key` in the URL hash. This will open the Web UI with the setting with the key `key` selected for editing. You can also `type` in the URL hash to specify the value type for the setting. For example, `#edit=port&type=integer` will open the setting with the key `port` for editing as an integer.
+You can link directly to editing a setting by passing `#edit=key` in the URL hash. This will open the Web UI with the setting with the key `key` selected for editing.
+
+You can also add `type` and `description` as parameters in the URL hash to specify the values to pre-fill for the setting if it doesn't already exist. For example, `#edit=port&type=integer&description=Server+port+number` will open the setting with the key `port` for editing as an integer with the description filled in if it doesn't already exist. If the setting does exist, then the type and description will be ignored.
 
 ```html
-<a href="/settings#edit=port&type=integer">Edit Port Setting</a>
+<a href="/settings#edit=port&type=integer&description=Server+port+number">Edit Port Setting</a>
 ```
 
 #### REST API

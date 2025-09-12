@@ -50,6 +50,7 @@ module SuperSettings
         def find_by_key(key)
           attributes = settings[key]
           return nil unless attributes
+
           setting = new(attributes)
           setting.send(:set_persisted!)
           setting unless setting.deleted?

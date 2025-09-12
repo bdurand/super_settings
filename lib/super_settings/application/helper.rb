@@ -76,6 +76,10 @@ module SuperSettings
 
     # Render an image tag for one of the SVG images in the images directory. If the :color option
     # is specified, it will be applied to the SVG image.
+    #
+    # @param name [String] the name of the icon to render
+    # @param options [Hash] options for the icon (style, color, etc.)
+    # @return [String] the HTML for the icon
     def icon_image(name, options = {})
       svg = ICON_SVG[name.to_s]
       style = (options[:style] || {})
@@ -91,6 +95,16 @@ module SuperSettings
     end
 
     # Render an icon image as a link tag.
+    #
+    # @param icon [String] the name of the icon to render
+    # @param title [String] the title/tooltip for the button
+    # @param color [String] the color for the icon
+    # @param js_class [String] CSS class for JavaScript behavior
+    # @param url [String] the URL for the link (optional)
+    # @param disabled [Boolean] whether the button is disabled
+    # @param style [Hash] CSS styles for the icon
+    # @param link_style [String] CSS styles for the link
+    # @return [String] the HTML for the icon button
     def icon_button(icon, title:, color:, js_class:, url: nil, disabled: false, style: {}, link_style: nil)
       url = "#" if Coerce.blank?(url)
       image = icon_image(icon, alt: title, style: ICON_BUTTON_STYLE.merge(style).merge(color: color))

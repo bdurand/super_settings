@@ -60,6 +60,7 @@ module SuperSettings
       end
 
       return nil if value == NOT_DEFINED
+
       value
     end
 
@@ -105,11 +106,15 @@ module SuperSettings
     end
 
     # Load all the settings from the database into the cache.
+    #
+    # @param asynchronous [Boolean] whether to load settings in a background thread
+    # @return [void]
     def load_settings(asynchronous = false)
       return if @refreshing
 
       @lock.synchronize do
         return if @refreshing
+
         @refreshing = true
         @next_check_at = Time.now + @refresh_interval
       end
@@ -135,6 +140,9 @@ module SuperSettings
     end
 
     # Load only settings that have changed since the last load.
+    #
+    # @param asynchronous [Boolean] whether to refresh settings in a background thread
+    # @return [void]
     def refresh(asynchronous = false)
       last_refresh_time = @last_refreshed
       return if last_refresh_time.nil?
@@ -142,8 +150,10 @@ module SuperSettings
 
       @lock.synchronize do
         return if @refreshing
+
         @next_check_at = Time.now + @refresh_interval
         return if @cache.empty?
+
         @refreshing = true
       end
 
@@ -166,6 +176,8 @@ module SuperSettings
     end
 
     # Reset the cache to an unloaded state.
+    #
+    # @return [void]
     def reset
       @lock.synchronize do
         @cache = {}.freeze
@@ -189,6 +201,7 @@ module SuperSettings
     # @api private
     def update_setting(setting)
       return if Coerce.blank?(setting.key)
+
       @lock.synchronize do
         @cache = @cache.merge(setting.key => setting.value)
       end
@@ -199,6 +212,7 @@ module SuperSettings
     def wait_for_load
       loop do
         return unless @refreshing
+
         sleep(0.001)
       end
     end

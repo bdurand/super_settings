@@ -16,12 +16,14 @@ module SuperSettings
       #       key: string,
       #       value: object,
       #       value_type: string,
-      #       description string,
+      #       description: string,
       #       created_at: iso8601 string,
       #       updated_at: iso8601 string
       #     },
       #     ...
       #   ]
+      #
+      # @return [Hash] hash with settings array
       def index
         settings = Setting.active.reject(&:deleted?).sort_by(&:key)
         {settings: settings.collect(&:as_json)}
@@ -29,6 +31,7 @@ module SuperSettings
 
       # Get a setting by id.
       #
+      # @param key [String] setting key
       # @example
       #   GET /setting
       #
@@ -41,10 +44,12 @@ module SuperSettings
       #     key: string,
       #     value: object,
       #     value_type: string,
-      #     description string,
+      #     description: string,
       #     created_at: iso8601 string,
       #     updated_at: iso8601 string
       #   }
+      #
+      # @return [Hash, nil] setting hash or nil if not found
       def show(key)
         setting = Setting.find_by_key(key)
         setting.as_json if setting && !setting.deleted?
@@ -52,6 +57,8 @@ module SuperSettings
 
       # The update operation uses a transaction to atomically update all settings.
       #
+      # @param settings_params [Array] array of setting parameter hashes
+      # @param changed_by [String] identifier for who made the changes
       # @example
       #   POST /settings
       #
@@ -81,6 +88,8 @@ module SuperSettings
       #   or
       #
       #   {success: false, errors: {key => [string], ...}}
+      #
+      # @return [Hash] result hash with success status and any errors
       def update(settings_params, changed_by = nil)
         all_valid, settings = Setting.bulk_update(Array(settings_params), changed_by)
         if all_valid
@@ -98,6 +107,9 @@ module SuperSettings
 
       # Return the history of the setting.
       #
+      # @param key [String] setting key
+      # @param limit [Integer] number of history items to return
+      # @param offset [Integer] index to start fetching items from (most recent items are first)
       # @example
       #   GET /setting/history
       #
@@ -121,6 +133,8 @@ module SuperSettings
       #     previous_page_params: hash,
       #     next_page_params: hash
       #   }
+      #
+      # @return [Hash, nil] history hash or nil if setting not found
       def history(key, limit: nil, offset: 0)
         setting = Setting.find_by_key(key)
         return nil unless setting
@@ -162,12 +176,15 @@ module SuperSettings
       #   {
       #     last_updated_at: iso8601 string
       #   }
+      #
+      # @return [Hash] hash with the last updated timestamp
       def last_updated_at
         {last_updated_at: Setting.last_updated_at.utc.iso8601(6)}
       end
 
       # Return settings that have been updated since a specified timestamp.
       #
+      # @param time [Time, String] timestamp to check for updates since
       # @example
       #   GET /updated_since
       #
@@ -181,12 +198,14 @@ module SuperSettings
       #       key: string,
       #       value: object,
       #       value_type: string,
-      #       description string,
+      #       description: string,
       #       created_at: iso8601 string,
       #       updated_at: iso8601 string
       #     },
       #     ...
       #   ]
+      #
+      # @return [Hash] hash with settings array
       def updated_since(time)
         time = Coerce.time(time)
         settings = Setting.updated_since(time).reject(&:deleted?)

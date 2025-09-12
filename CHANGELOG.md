@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.4.1
+
+### Added
+
+- Incoming links to the web UI now support specifying a description for the setting being edited by passing `description=description_text` in the URL hash. For example, `#edit=port&type=integer&description=Port%20number%20for%20the%20server` will open the setting with the key `port` for editing as an integer and pre-fill the description field.
+
 ## 2.4.0
 
 ### Added

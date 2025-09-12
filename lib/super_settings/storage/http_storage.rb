@@ -35,15 +35,13 @@ module SuperSettings
         # Add headers to this hash to add them to all requests to the SuperSettings REST API.
         #
         # @example
-        #
-        # SuperSettings::HttpStorage.headers["Authorization"] = "Bearer 12345"
+        #   SuperSettings::HttpStorage.headers["Authorization"] = "Bearer 12345"
         attr_reader :headers
 
         # Add query parameters to this hash to add them to all requests to the SuperSettings REST API.
         #
         # @example
-        #
-        # SuperSettings::HttpStorage.query_params["access_token"] = "12345"
+        #   SuperSettings::HttpStorage.query_params["access_token"] = "12345"
         attr_reader :query_params
 
         def all
