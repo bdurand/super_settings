@@ -5,6 +5,7 @@ require "set"
 module SuperSettings
   # Utility functions for coercing values to other data types.
   class Coerce
+    # Set of values that should be considered false when converting to boolean.
     # rubocop:disable Lint/BooleanSymbol
     FALSE_VALUES = Set.new([
       "0", :"0",

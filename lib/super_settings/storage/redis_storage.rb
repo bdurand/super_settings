@@ -35,6 +35,7 @@ module SuperSettings
           def find_all_by_key(key:, offset: 0, limit: nil)
             end_index = (limit.nil? ? -1 : offset + limit - 1)
             return [] unless end_index >= -1
+
             payloads = RedisStorage.with_redis { |redis| redis.lrange("#{HISTORY_KEY_PREFIX}.#{key}", offset, end_index) }
             payloads.collect do |json|
               record = new(JSON.parse(json))
@@ -112,6 +113,7 @@ module SuperSettings
         def find_by_key(key)
           json = with_redis { |redis| redis.hget(SETTINGS_KEY, key) }
           return nil unless json
+
           record = load_from_json(json)
           record unless record.deleted?
         end
@@ -123,6 +125,7 @@ module SuperSettings
         def last_updated_at
           result = with_redis { |redis| redis.zrevrange(UPDATED_KEY, 0, 1, withscores: true).first }
           return nil unless result
+
           time_at_microseconds(result[1])
         end
 

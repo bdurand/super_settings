@@ -11,7 +11,7 @@ module SuperSettings
   #
   # You are also responsible for implementing any CSRF protection if your authentication method
   # uses stateful requests (i.e. cookies or Basic auth where browser automatically include the
-  # credentials on every reqeust). There are other gems available that can be integrated into
+  # credentials on every request). There are other gems available that can be integrated into
   # your middleware stack to provide this feature. If you need to inject meta elements into
   # the page, you can do so with the +add_to_head+ method.
   class RackApplication
@@ -225,8 +225,10 @@ module SuperSettings
     def check_authorization(request, write_required: false)
       user = current_user(request)
       return json_response(401, error: "Authentiation required") unless authenticated?(user)
+
       allowed = (write_required ? allow_write?(user) : allow_read?(user))
       return json_response(403, error: "Access denied") unless allowed
+
       yield(user)
     end
 

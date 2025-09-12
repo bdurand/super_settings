@@ -23,6 +23,7 @@ module SuperSettings
   autoload :HttpClient, "super_settings/http_client"
   autoload :VERSION, "super_settings/version"
 
+  # Default number of seconds between cache refresh checks.
   DEFAULT_REFRESH_INTERVAL = 5.0
 
   @local_cache = LocalCache.new(refresh_interval: DEFAULT_REFRESH_INTERVAL)
@@ -41,7 +42,7 @@ module SuperSettings
       Coerce.string(val)
     end
 
-    # Alias for {#get} to allow using the [] operator to get a setting value.
+    # Alias for {.get} to allow using the [] operator to get a setting value.
     #
     # @param key [String, Symbol]
     # @return [String]
@@ -107,6 +108,7 @@ module SuperSettings
       val = context_setting(key)
       val = default if val.nil?
       return nil if val.nil?
+
       Array(val).collect { |v| v&.to_s }
     end
 

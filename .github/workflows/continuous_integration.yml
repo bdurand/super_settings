@@ -4,9 +4,9 @@ on:
     branches:
       - main
       - actions-*
-    tags:
-      - v*
   pull_request:
+    branches-ignore:
+      - actions-*
   workflow_dispatch:
 
 env:
@@ -59,6 +59,7 @@ jobs:
         include:
           - ruby: "ruby"
             standardrb: true
+            yard: true
           - ruby: "ruby"
             appraisal: "no_extensions"
           - ruby: "3.3"
@@ -102,4 +103,7 @@ jobs:
         run:  bundle exec rake spec
       - name: Run standardrb
         if:   matrix.standardrb == true
-        run:  bundle exec rake standard
+        run:  bundle exec standardrb
+      - name: yard
+        if: matrix.yard
+        run:  bundle exec yard --fail-on-warning

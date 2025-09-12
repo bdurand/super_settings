@@ -29,7 +29,7 @@ module SuperSettings
 
     # Render the web UI application HTML.
     #
-    # @return [void]
+    # @return [String] the rendered HTML
     def render
       template = ERB.new(File.read(File.expand_path(File.join("application", "index.html.erb"), __dir__)))
       html = template.result(binding)

@@ -9,6 +9,7 @@ module SuperSettings
   # ships with storage engines for ActiveRecord, Redis, and HTTP (microservice). See the SuperSettings::Storage
   # class for more details.
   class Setting
+    # Cache key used for storing the last updated timestamp.
     LAST_UPDATED_CACHE_KEY = "SuperSettings.last_updated_at"
 
     STRING = "string"
@@ -266,6 +267,7 @@ module SuperSettings
           setting = changed[key] || Setting.find_by_key(key)
           unless setting
             next if Coerce.present?(setting_params["delete"])
+
             setting = Setting.new(key: setting_params["key"])
           end
 
@@ -545,6 +547,7 @@ module SuperSettings
 
     # Serialize to a hash that is used for rendering JSON responses.
     #
+    # @param options [Hash] options for JSON serialization (unused but maintained for compatibility)
     # @return [Hash]
     def as_json(options = nil)
       attributes = {
@@ -561,6 +564,7 @@ module SuperSettings
 
     # Serialize to a JSON string.
     #
+    # @param options [Hash] options to pass to JSON generation
     # @return [String]
     def to_json(options = nil)
       as_json.to_json(options)
