@@ -17,7 +17,7 @@ module SuperSettings
           # ActiveRecord storage is only available if the connection pool is connected and the table exists.
           def available?
             attempt_connection!
-            connection_pool&.connected? && table_exists?
+            connection_pool.with_connection { table_exists? }
           end
 
           private
