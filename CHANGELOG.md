@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 2.4.2
 
-### Fxied
+### Fixed
 
 - Model.availability? can return false when connection pool connection exists for active record storage
 
