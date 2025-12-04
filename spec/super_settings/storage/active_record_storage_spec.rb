@@ -125,6 +125,34 @@ if EXTENSIONS[:active_record]
       end
     end
 
+    describe "available?" do
+      context "when there is a database connection" do
+        before do
+          SuperSettings::Storage::ActiveRecordStorage.new(key: "setting_1", raw_value: "1").save!
+        end
+        it "should return true when the table exists" do
+          expect(SuperSettings::Storage::ActiveRecordStorage::Model.available?).to eq true
+        end
+      end
+
+      context "when there is no database connection" do
+        it "should return false when there is no database" do
+          allow(SuperSettings::Storage::ActiveRecordStorage::Model).to receive(:table_exists?).and_raise(ActiveRecord::NoDatabaseError)
+          expect(SuperSettings::Storage::ActiveRecordStorage::Model.available?).to eq false
+        end
+
+        it "should return false when the connection is not established" do
+          allow(SuperSettings::Storage::ActiveRecordStorage::Model).to receive(:table_exists?).and_raise(ActiveRecord::ConnectionNotEstablished)
+          expect(SuperSettings::Storage::ActiveRecordStorage::Model.available?).to eq false
+        end
+
+        it "should return false when the table does not exist" do
+          allow(SuperSettings::Storage::ActiveRecordStorage::Model).to receive(:table_exists?).and_return(false)
+          expect(SuperSettings::Storage::ActiveRecordStorage::Model.available?).to eq false
+        end
+      end
+    end
+
     context "when there is no database connection" do
       before do
         SuperSettings::Storage::ActiveRecordStorage.new(key: "setting_1", raw_value: "1").save!
