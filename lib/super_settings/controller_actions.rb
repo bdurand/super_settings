@@ -23,6 +23,12 @@ module SuperSettings
       render html: html.html_safe, layout: true
     end
 
+    # Render the edit form for a single setting.
+    def edit
+      html = SuperSettings::Application.new.render_edit
+      render html: html.html_safe, layout: true
+    end
+
     # API endpoint for getting active settings. See SuperSettings::RestAPI for details.
     def index
       render json: SuperSettings::RestAPI.index

@@ -4,6 +4,7 @@ SuperSettings::Engine.routes.draw do
   controller :settings do
     if SuperSettings.configuration.controller.web_ui_enabled?
       get "/", action: :root, as: :root
+      get "/setting/edit", action: :edit
     end
     get "/settings", action: :index
     post "/settings", action: :update

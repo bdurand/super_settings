@@ -21,6 +21,14 @@ if defined?(SuperSettings::SettingsController)
       end
     end
 
+    describe "edit" do
+      it "should show the single setting edit form" do
+        get :edit
+        expect(response.status).to eq 200
+        expect(response.content_type).to include "text/html"
+      end
+    end
+
     describe "index" do
       it "should have a REST endoint" do
         request.headers["accept"] = "application/json"

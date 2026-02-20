@@ -62,6 +62,31 @@ describe SuperSettings::RackApplication do
     end
   end
 
+  describe "edit" do
+    it "should return the edit form HTML page" do
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/setting/edit")
+      expect(response[0]).to eq 200
+      expect(response[1]).to match("content-type" => "text/html; charset=utf-8", "cache-control" => "no-cache")
+    end
+
+    it "should return a forbidden response if access is denied" do
+      allow(middleware).to receive(:current_user).and_return(:user)
+      allow(middleware).to receive(:allow_write?).with(:user).and_return(false)
+      allow(SuperSettings).to receive(:authentication_url).and_return(nil)
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/setting/edit")
+      expect(response[0]).to eq 403
+    end
+
+    it "should return a redirect if access is denied and a login URL is defined" do
+      allow(middleware).to receive(:current_user).and_return(:user)
+      allow(middleware).to receive(:authenticated?).with(:user).and_return(false)
+      allow(SuperSettings).to receive(:authentication_url).and_return("https://example.com/login")
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/setting/edit")
+      expect(response[0]).to eq 302
+      expect(response[1]["location"]).to eq "https://example.com/login"
+    end
+  end
+
   describe "index" do
     it "should have a REST endoint" do
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/settings")

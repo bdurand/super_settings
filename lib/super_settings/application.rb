@@ -38,6 +38,17 @@ module SuperSettings
       html
     end
 
+    # Render the edit form HTML for a single setting.
+    #
+    # @return [String] the rendered HTML
+    def render_edit
+      template = ERB.new(File.read(File.expand_path(File.join("application", "edit.html.erb"), __dir__)))
+      html = template.result(binding)
+      html = render_layout { html } if @layout
+      html = html.html_safe if html.respond_to?(:html_safe)
+      html
+    end
+
     private
 
     def render_layout
