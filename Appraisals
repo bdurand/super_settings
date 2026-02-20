@@ -6,6 +6,14 @@ appraise "rails_latest" do
   remove_gem "rackup"
 end
 
+appraise "rails_8.1" do
+  gem "rails", "~> 8.1.0"
+  gem "rspec-rails", "~> 6.0"
+  gem "sqlite3", "~> 2.9"
+  gem "puma", "~> 7.0"
+  remove_gem "rackup"
+end
+
 appraise "rails_8.0" do
   gem "rails", "~> 8.0.0"
   gem "rspec-rails", "~> 6.0"
@@ -70,4 +78,5 @@ appraise "no_extensions" do
   remove_gem "connection_pool"
   remove_gem "aws-sdk-s3"
   remove_gem "mongo"
+  gem "logger"
 end

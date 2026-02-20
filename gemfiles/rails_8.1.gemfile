@@ -2,10 +2,15 @@
 
 source "https://rubygems.org"
 
-gem "sqlite3", require: false
-gem "puma"
+gem "rails", "~> 8.1.0"
+gem "rspec-rails", "~> 6.0"
+gem "sqlite3", "~> 2.9"
+gem "redis"
+gem "connection_pool"
+gem "aws-sdk-s3"
+gem "mongo"
+gem "puma", "~> 7.0"
 gem "rack"
-gem "rackup"
 gem "rspec", "~> 3.12"
 gem "capybara"
 gem "cuprite"
@@ -17,6 +22,5 @@ gem "simplecov", "~> 0.22", require: false
 gem "nokogiri"
 gem "rake"
 gem "yard"
-gem "logger"
 
 gemspec path: "../"

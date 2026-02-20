@@ -62,6 +62,8 @@ jobs:
             yard: true
           - ruby: "ruby"
             appraisal: "no_extensions"
+          - ruby: "4.0"
+            appraisal: "rails_8.1"
           - ruby: "3.3"
             appraisal: "rails_8.0"
           - ruby: "3.2"
