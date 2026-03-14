@@ -234,7 +234,10 @@ module SuperSettings
         return json_response(403, error: "Access denied")
       end
 
-      yield(user)
+      response = yield(user)
+      read_only = !allow_write?(user) || !!request.env["super_settings.read_only"]
+      response[1]["SuperSettings-Authorization"] = read_only ? "read-only" : "read-write"
+      response
     end
 
     def json_response(status, payload)
