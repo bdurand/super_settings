@@ -137,6 +137,8 @@ module SuperSettings
       elsif request.get?
         if (path == "/" || path == "") && web_ui_enabled?
           return handle_root_request(request)
+        elsif path == "/api.js"
+          return handle_api_js_request(request)
         elsif path == "/settings"
           return handle_index_request(request)
         elsif path == "/setting/history"
@@ -164,6 +166,13 @@ module SuperSettings
     def handle_head_request(request)
       check_authorization(request) do |user|
         [200, {}, []]
+      end
+    end
+
+    def handle_api_js_request(request)
+      check_authorization(request) do |user|
+        js = File.read(File.expand_path(File.join("application", "api.js"), __dir__))
+        [200, {"content-type" => "application/javascript; charset=utf-8", "cache-control" => "no-cache"}, [js]]
       end
     end
 
