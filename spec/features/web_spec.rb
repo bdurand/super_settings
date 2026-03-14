@@ -335,4 +335,32 @@ describe "web UI", type: :feature, js: true do
       end
     end
   end
+
+  describe "read-only mode" do
+    around do |example|
+      original_app = Capybara.app
+      read_only_wrapper = lambda do |env|
+        env["super_settings.read_only"] = true
+        original_app.call(env)
+      end
+      Capybara.app = read_only_wrapper
+      example.run
+    ensure
+      Capybara.app = original_app
+    end
+
+    it "should hide edit controls in read-only mode" do
+      visit "/"
+      expect(page).to have_content("key.string")
+      expect(page).to have_content("key.integer")
+
+      expect(page).to_not have_selector("#super-settings-add-setting", visible: true)
+      expect(page).to_not have_selector("#super-settings-save-settings", visible: true)
+      expect(page).to_not have_selector("#super-settings-discard-changes", visible: true)
+      expect(page).to_not have_selector("a.js-edit-setting", visible: true)
+      expect(page).to_not have_selector("a.js-remove-setting", visible: true)
+
+      expect(page).to have_selector("a.js-show-history", visible: true)
+    end
+  end
 end

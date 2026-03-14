@@ -513,3 +513,12 @@ select.super-settings-form-control:not([size]):not([multiple]) {
 .super-settings-btn-primary:disabled {
   opacity: 0.5;
 }
+
+/* Read-only mode: hide all edit controls */
+.super-settings[data-read-only="true"] #super-settings-add-setting,
+.super-settings[data-read-only="true"] #super-settings-save-settings,
+.super-settings[data-read-only="true"] #super-settings-discard-changes,
+.super-settings[data-read-only="true"] .js-edit-setting,
+.super-settings[data-read-only="true"] .js-remove-setting {
+  display: none !important;
+}

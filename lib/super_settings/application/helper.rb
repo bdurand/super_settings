@@ -169,5 +169,12 @@ module SuperSettings
     def color_scheme
       @color_scheme if defined?(@color_scheme)
     end
+
+    # Whether the application is in read-only mode.
+    #
+    # @return [Boolean]
+    def read_only?
+      !!@read_only
+    end
   end
 end

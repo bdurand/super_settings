@@ -13,7 +13,8 @@ module SuperSettings
     # @param api_base_url [String] the base URL for the REST API.
     # @param color_scheme [Symbol] whether to use dark mode for the application UI. If +nil+, the user's system
     #                              preference will be used.
-    def initialize(layout: nil, add_to_head: nil, api_base_url: nil, color_scheme: nil)
+    # @param read_only [Boolean] whether to render the application in read-only mode (edit controls hidden).
+    def initialize(layout: nil, add_to_head: nil, api_base_url: nil, color_scheme: nil, read_only: false)
       if layout
         layout = File.expand_path(File.join("application", "layout.html.erb"), __dir__) if layout == :default
         @layout = ERB.new(File.read(layout)) if layout
@@ -25,6 +26,7 @@ module SuperSettings
 
       @api_base_url = api_base_url
       @color_scheme = color_scheme&.to_sym
+      @read_only = !!read_only
     end
 
     # Render the web UI application HTML.

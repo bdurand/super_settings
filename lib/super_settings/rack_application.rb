@@ -158,8 +158,9 @@ module SuperSettings
     end
 
     def handle_root_request(request)
-      response = check_authorization(request, write_required: true) do |user|
-        [200, {"content-type" => "text/html; charset=utf-8", "cache-control" => "no-cache"}, [Application.new(layout: :default, add_to_head: add_to_head(request), color_scheme: SuperSettings.configuration.controller.color_scheme).render]]
+      response = check_authorization(request) do |user|
+        read_only = !allow_write?(user) || !!request.env["super_settings.read_only"]
+        [200, {"content-type" => "text/html; charset=utf-8", "cache-control" => "no-cache"}, [Application.new(layout: :default, add_to_head: add_to_head(request), color_scheme: SuperSettings.configuration.controller.color_scheme, read_only: read_only).render]]
       end
 
       if [401, 403].include?(response.first)
@@ -228,6 +229,10 @@ module SuperSettings
 
       allowed = (write_required ? allow_write?(user) : allow_read?(user))
       return json_response(403, error: "Access denied") unless allowed
+
+      if write_required && request.env["super_settings.read_only"]
+        return json_response(403, error: "Access denied")
+      end
 
       yield(user)
     end

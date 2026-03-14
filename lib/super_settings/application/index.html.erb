@@ -1,6 +1,6 @@
 <%= style_tag %>
 
-<main class="super-settings" data-api-base-url="<%= html_escape(api_base_url) %>">
+<main class="super-settings" data-api-base-url="<%= html_escape(api_base_url) %>"<%= ' data-read-only="true"' if read_only? %>>
   <form class="super-settings-form-inline" style="display:block;" onsubmit="return false">
     <div class="super-settings-sticky-top">
       <span class="js-settings-count" style="display:inline-block; margin-right:1rem;"></span>

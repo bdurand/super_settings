@@ -44,9 +44,30 @@ describe SuperSettings::RackApplication do
       expect(response[1]).to match("content-type" => "text/html; charset=utf-8", "cache-control" => "no-cache")
     end
 
-    it "should return a forbidden response if access is denied" do
+    it "should render in read-only mode when allow_write? returns false" do
       allow(middleware).to receive(:current_user).and_return(:user)
       allow(middleware).to receive(:allow_write?).with(:user).and_return(false)
+      allow(SuperSettings).to receive(:authentication_url).and_return(nil)
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix")
+      expect(response[0]).to eq 200
+      expect(response[2].first).to include('data-read-only="true"')
+    end
+
+    it "should render in read-only mode when the env flag is set" do
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix", "super_settings.read_only" => true)
+      expect(response[0]).to eq 200
+      expect(response[2].first).to include('data-read-only="true"')
+    end
+
+    it "should not include read-only attribute when user has write access" do
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix")
+      expect(response[0]).to eq 200
+      expect(response[2].first).to_not match(/<main[^>]*data-read-only/)
+    end
+
+    it "should return a forbidden response if read access is denied" do
+      allow(middleware).to receive(:current_user).and_return(:user)
+      allow(middleware).to receive(:allow_read?).with(:user).and_return(false)
       allow(SuperSettings).to receive(:authentication_url).and_return(nil)
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix")
       expect(response[0]).to eq 403
@@ -229,6 +250,13 @@ describe SuperSettings::RackApplication do
       allow(middleware).to receive(:allow_write?).with(:user).and_return(false)
       response = middleware.call("REQUEST_METHOD" => "POST", "SCRIPT_NAME" => "/prefix/settings")
       expect(response[0]).to eq 403
+    end
+
+    it "should return a forbidden response when the env flag is set to read-only" do
+      request_body = {settings: [{key: "string", value: "new value", value_type: "string"}]}.to_json
+      response = middleware.call("REQUEST_METHOD" => "POST", "SCRIPT_NAME" => "/prefix/settings", "CONTENT_TYPE" => "application/json", "rack.input" => StringIO.new(request_body), "super_settings.read_only" => true)
+      expect(response[0]).to eq 403
+      expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "foobar"
     end
   end
 end
