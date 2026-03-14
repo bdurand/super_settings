@@ -130,7 +130,11 @@ module SuperSettings
     def handle_request(env)
       request = Rack::Request.new(env)
       path = request.path[@path_prefix.length, request.path.length]
-      if request.get?
+      if request.head?
+        if path == "/" || path == ""
+          return handle_head_request(request)
+        end
+      elsif request.get?
         if (path == "/" || path == "") && web_ui_enabled?
           return handle_root_request(request)
         elsif path == "/settings"
@@ -154,6 +158,12 @@ module SuperSettings
         @app.call(env)
       else
         [404, {"content-type" => "text/plain"}, ["Not found"]]
+      end
+    end
+
+    def handle_head_request(request)
+      check_authorization(request) do |user|
+        [200, {}, []]
       end
     end
 

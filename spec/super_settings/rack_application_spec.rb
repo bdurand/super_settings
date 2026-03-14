@@ -208,6 +208,42 @@ describe SuperSettings::RackApplication do
     end
   end
 
+  describe "HEAD request" do
+    it "should return the authorization header with an empty body" do
+      response = middleware.call("REQUEST_METHOD" => "HEAD", "SCRIPT_NAME" => "/prefix")
+      expect(response[0]).to eq 200
+      expect(response[1]["SuperSettings-Authorization"]).to eq "read-write"
+      expect(response[2]).to eq []
+    end
+
+    it "should return read-only authorization header when allow_write? returns false" do
+      allow(middleware).to receive(:current_user).and_return(:user)
+      allow(middleware).to receive(:allow_write?).with(:user).and_return(false)
+      response = middleware.call("REQUEST_METHOD" => "HEAD", "SCRIPT_NAME" => "/prefix")
+      expect(response[0]).to eq 200
+      expect(response[1]["SuperSettings-Authorization"]).to eq "read-only"
+    end
+
+    it "should return read-only authorization header when the env flag is set" do
+      response = middleware.call("REQUEST_METHOD" => "HEAD", "SCRIPT_NAME" => "/prefix", "super_settings.read_only" => true)
+      expect(response[0]).to eq 200
+      expect(response[1]["SuperSettings-Authorization"]).to eq "read-only"
+    end
+
+    it "should return a forbidden response if access is denied" do
+      allow(middleware).to receive(:current_user).and_return(:user)
+      allow(middleware).to receive(:allow_read?).with(:user).and_return(false)
+      response = middleware.call("REQUEST_METHOD" => "HEAD", "SCRIPT_NAME" => "/prefix")
+      expect(response[0]).to eq 403
+    end
+
+    it "should return an unauthorized response if not authenticated" do
+      allow(middleware).to receive(:current_user).and_return(nil)
+      response = middleware.call("REQUEST_METHOD" => "HEAD", "SCRIPT_NAME" => "/prefix")
+      expect(response[0]).to eq 401
+    end
+  end
+
   describe "update" do
     it "should have a REST endoint" do
       request_body = {
