@@ -37,18 +37,6 @@ module SuperSettings
       HTML
     end
 
-    # Render the edit.js and api.js files as an inline <script> tag for the edit form.
-    def edit_javascript_tag
-      <<~HTML
-        <script>
-          #{File.read(File.join(__dir__, "edit.js"))}
-          #{File.read(File.join(__dir__, "api.js"))}
-          #{"SuperSettingsAPI.authenticationUrl = '#{SuperSettings.authentication_url.gsub("'", "\\'")}';" if SuperSettings.authentication_url}
-          #{SuperSettings.web_ui_javascript}
-        </script>
-      HTML
-    end
-
     # Render the styles.css as an inline <style> tag.
     def style_tag
       <<~HTML

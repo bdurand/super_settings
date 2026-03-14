@@ -6,9 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 2.5.0
 
-### Added
-
-- Added support for getting a setting editor form for a specific setting in the web UI by passing `#edit=key` in the URL hash. For example, `#edit=port` will open the setting with the key `port` for editing.
+### TODO
 
 ## 2.4.3
 

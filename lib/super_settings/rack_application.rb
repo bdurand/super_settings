@@ -133,8 +133,6 @@ module SuperSettings
       if request.get?
         if (path == "/" || path == "") && web_ui_enabled?
           return handle_root_request(request)
-        elsif path == "/setting/edit" && web_ui_enabled?
-          return handle_edit_request(request)
         elsif path == "/settings"
           return handle_index_request(request)
         elsif path == "/setting/history"
@@ -162,20 +160,6 @@ module SuperSettings
     def handle_root_request(request)
       response = check_authorization(request, write_required: true) do |user|
         [200, {"content-type" => "text/html; charset=utf-8", "cache-control" => "no-cache"}, [Application.new(layout: :default, add_to_head: add_to_head(request), color_scheme: SuperSettings.configuration.controller.color_scheme).render]]
-      end
-
-      if [401, 403].include?(response.first)
-        if SuperSettings.authentication_url
-          response = [302, {"location" => SuperSettings.authentication_url}, []]
-        end
-      end
-
-      response
-    end
-
-    def handle_edit_request(request)
-      response = check_authorization(request, write_required: true) do |user|
-        [200, {"content-type" => "text/html; charset=utf-8", "cache-control" => "no-cache"}, [Application.new(layout: :default, add_to_head: add_to_head(request), color_scheme: SuperSettings.configuration.controller.color_scheme).render_edit]]
       end
 
       if [401, 403].include?(response.first)
