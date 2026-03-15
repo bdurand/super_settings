@@ -184,8 +184,9 @@ module SuperSettings
         read_only = !allow_write?(user) || !!request.env["super_settings.read_only"]
         locale = resolve_locale(request)
         headers = {"content-type" => "text/html; charset=utf-8", "cache-control" => "no-cache"}
-        if request.respond_to?(:params) && SuperSettings::I18n.available_locales.include?(request.params["lang"])
-          headers["set-cookie"] = "super_settings_locale=#{request.params["lang"]}; path=/; SameSite=Lax"
+        lang = request.GET["lang"] if request.respond_to?(:GET)
+        if lang && SuperSettings::I18n.available_locales.include?(lang)
+          headers["set-cookie"] = "super_settings_locale=#{lang}; path=/; SameSite=Lax"
         end
         [200, headers, [Application.new(layout: :default, add_to_head: add_to_head(request), color_scheme: SuperSettings.configuration.controller.color_scheme, read_only: read_only, locale: locale).render]]
       end
