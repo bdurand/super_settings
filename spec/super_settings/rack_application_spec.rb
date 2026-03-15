@@ -65,27 +65,6 @@ describe SuperSettings::RackApplication do
       expect(response[2].first).to_not match(/<main[^>]*data-read-only/)
     end
 
-    it "should include read-write authorization header when user has write access" do
-      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix")
-      expect(response[0]).to eq 200
-      expect(response[1]["SuperSettings-Authorization"]).to eq "read-write"
-    end
-
-    it "should include read-only authorization header when allow_write? returns false" do
-      allow(middleware).to receive(:current_user).and_return(:user)
-      allow(middleware).to receive(:allow_write?).with(:user).and_return(false)
-      allow(SuperSettings).to receive(:authentication_url).and_return(nil)
-      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix")
-      expect(response[0]).to eq 200
-      expect(response[1]["SuperSettings-Authorization"]).to eq "read-only"
-    end
-
-    it "should include read-only authorization header when the env flag is set" do
-      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix", "super_settings.read_only" => true)
-      expect(response[0]).to eq 200
-      expect(response[1]["SuperSettings-Authorization"]).to eq "read-only"
-    end
-
     it "should return a forbidden response if read access is denied" do
       allow(middleware).to receive(:current_user).and_return(:user)
       allow(middleware).to receive(:allow_read?).with(:user).and_return(false)
@@ -101,6 +80,48 @@ describe SuperSettings::RackApplication do
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix")
       expect(response[0]).to eq 302
       expect(response[1]["location"]).to eq "https://example.com/login"
+    end
+  end
+
+  describe "authorized" do
+    it "should return authorized with read-write permission" do
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/authorized")
+      expect(response[0]).to eq 200
+      expect(response[1]).to include("content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache")
+      expect(response[1]["super-settings-permission"]).to eq "read-write"
+      body = JSON.parse(response[2].first)
+      expect(body).to eq({"authorized" => true, "permission" => "read-write"})
+    end
+
+    it "should return authorized with read-only permission when allow_write? returns false" do
+      allow(middleware).to receive(:current_user).and_return(:user)
+      allow(middleware).to receive(:allow_write?).with(:user).and_return(false)
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/authorized")
+      expect(response[0]).to eq 200
+      expect(response[1]["super-settings-permission"]).to eq "read-only"
+      body = JSON.parse(response[2].first)
+      expect(body).to eq({"authorized" => true, "permission" => "read-only"})
+    end
+
+    it "should return authorized with read-only permission when the env flag is set" do
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/authorized", "super_settings.read_only" => true)
+      expect(response[0]).to eq 200
+      expect(response[1]["super-settings-permission"]).to eq "read-only"
+      body = JSON.parse(response[2].first)
+      expect(body).to eq({"authorized" => true, "permission" => "read-only"})
+    end
+
+    it "should return an unauthorized response if the user is not authenticated" do
+      allow(middleware).to receive(:current_user).and_return(nil)
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/authorized")
+      expect(response[0]).to eq 401
+    end
+
+    it "should return a forbidden response if read access is denied" do
+      allow(middleware).to receive(:current_user).and_return(:user)
+      allow(middleware).to receive(:allow_read?).with(:user).and_return(false)
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/authorized")
+      expect(response[0]).to eq 403
     end
   end
 
@@ -208,42 +229,6 @@ describe SuperSettings::RackApplication do
     end
   end
 
-  describe "HEAD request" do
-    it "should return the authorization header with an empty body" do
-      response = middleware.call("REQUEST_METHOD" => "HEAD", "SCRIPT_NAME" => "/prefix")
-      expect(response[0]).to eq 200
-      expect(response[1]["SuperSettings-Authorization"]).to eq "read-write"
-      expect(response[2]).to eq []
-    end
-
-    it "should return read-only authorization header when allow_write? returns false" do
-      allow(middleware).to receive(:current_user).and_return(:user)
-      allow(middleware).to receive(:allow_write?).with(:user).and_return(false)
-      response = middleware.call("REQUEST_METHOD" => "HEAD", "SCRIPT_NAME" => "/prefix")
-      expect(response[0]).to eq 200
-      expect(response[1]["SuperSettings-Authorization"]).to eq "read-only"
-    end
-
-    it "should return read-only authorization header when the env flag is set" do
-      response = middleware.call("REQUEST_METHOD" => "HEAD", "SCRIPT_NAME" => "/prefix", "super_settings.read_only" => true)
-      expect(response[0]).to eq 200
-      expect(response[1]["SuperSettings-Authorization"]).to eq "read-only"
-    end
-
-    it "should return a forbidden response if access is denied" do
-      allow(middleware).to receive(:current_user).and_return(:user)
-      allow(middleware).to receive(:allow_read?).with(:user).and_return(false)
-      response = middleware.call("REQUEST_METHOD" => "HEAD", "SCRIPT_NAME" => "/prefix")
-      expect(response[0]).to eq 403
-    end
-
-    it "should return an unauthorized response if not authenticated" do
-      allow(middleware).to receive(:current_user).and_return(nil)
-      response = middleware.call("REQUEST_METHOD" => "HEAD", "SCRIPT_NAME" => "/prefix")
-      expect(response[0]).to eq 401
-    end
-  end
-
   describe "update" do
     it "should have a REST endoint" do
       request_body = {
@@ -268,7 +253,7 @@ describe SuperSettings::RackApplication do
       expect(response[0]).to eq 200
       expect(response[1]).to include("content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache")
       body = response[2].first
-      expect(JSON.parse(body)).to eq({"success" => true})
+      expect(JSON.parse(body)).to eq({"success" => true, "values" => {"string" => "new value", "integer" => nil, "newkey" => 44}})
       expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "new value"
       expect(SuperSettings::Setting.all.detect { |s| s.key == setting_2.key }.deleted?).to eq true
       expect(SuperSettings::Setting.find_by_key("newkey").value).to eq 44

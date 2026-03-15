@@ -9,6 +9,8 @@ module SuperSettings
       cache[File.basename(file, ".svg")] = svg
     end.freeze
 
+    GEAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>'
+
     ICON_BUTTON_STYLE = {
       cursor: "pointer",
       width: "1.35rem",
@@ -119,14 +121,25 @@ module SuperSettings
     # Render the header for the web pages using values set in the configuration.
     def application_header
       config = SuperSettings.configuration.controller
-      content = html_escape("#{application_name} Settings")
-      if Coerce.present?(config.application_logo)
-        content = tag(:img, src: config.application_logo, alt: "") + content
-      end
-      if config.application_link
-        content_tag(:a, content, href: config.application_link)
+
+      # Build the mark (icon area)
+      mark_content = if Coerce.present?(config.application_logo)
+        tag(:img, src: config.application_logo, alt: "")
       else
-        content
+        GEAR_SVG
+      end
+      mark = content_tag(:div, mark_content, class: "super-settings-page-header-mark", "aria-hidden": "true")
+
+      # Build title and subtitle
+      title = content_tag(:h1, html_escape("SuperSettings"), class: "super-settings-page-header-title")
+      subtitle = content_tag(:p, html_escape("#{application_name} Settings"), class: "super-settings-page-header-subtitle")
+      text = content_tag(:div, title + subtitle, class: "")
+
+      brand_content = mark + text
+      if config.application_link
+        content_tag(:a, brand_content, href: config.application_link, class: "super-settings-page-header-brand")
+      else
+        content_tag(:div, brand_content, class: "super-settings-page-header-brand")
       end
     end
 

@@ -94,7 +94,8 @@ describe SuperSettings::RestAPI do
           value_type: "integer"
         }
       ])
-      expect(response).to eq({success: true})
+      expect(response[:success]).to eq(true)
+      expect(response[:values]).to eq({"string" => "new value", "integer" => nil, "newkey" => 44})
       expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "new value"
       expect(SuperSettings::Setting.all.detect { |s| s.key == setting_2.key }.deleted?).to eq true
       expect(SuperSettings::Setting.find_by_key("newkey").value).to eq 44
