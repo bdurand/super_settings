@@ -277,7 +277,7 @@ module SuperSettings
       available = SuperSettings::I18n.available_locales
 
       # 1. Explicit query parameter
-      lang = request.params["lang"] if request.respond_to?(:params)
+      lang = request.GET["lang"] if request.respond_to?(:GET)
       return lang if lang && available.include?(lang)
 
       # 2. Cookie
