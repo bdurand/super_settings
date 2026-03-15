@@ -23,7 +23,7 @@ Bundler.require(:default, :test)
 
 require "dotenv/load"
 
-EXTENSIONS = {}
+EXTENSIONS = {} unless defined?(EXTENSIONS)
 
 require_relative "../lib/super_settings/storage/test_storage"
 SuperSettings::Setting.storage = SuperSettings::Storage::TestStorage
