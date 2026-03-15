@@ -301,4 +301,53 @@ describe SuperSettings::RackApplication do
       expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "foobar"
     end
   end
+
+  describe "locale resolution" do
+    it "sets the locale from the lang query parameter" do
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix", "QUERY_STRING" => "lang=es")
+      body = response[2].first
+      expect(body).to include('lang="es"')
+    end
+
+    it "sets the locale from the super_settings_locale cookie" do
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix", "HTTP_COOKIE" => "super_settings_locale=fr")
+      body = response[2].first
+      expect(body).to include('lang="fr"')
+    end
+
+    it "sets the locale from the Accept-Language header" do
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix", "HTTP_ACCEPT_LANGUAGE" => "de-DE,de;q=0.9,en;q=0.8")
+      body = response[2].first
+      expect(body).to include('lang="de"')
+    end
+
+    it "prefers query parameter over cookie and header" do
+      response = middleware.call(
+        "REQUEST_METHOD" => "GET",
+        "SCRIPT_NAME" => "/prefix",
+        "QUERY_STRING" => "lang=ja",
+        "HTTP_COOKIE" => "super_settings_locale=fr",
+        "HTTP_ACCEPT_LANGUAGE" => "de"
+      )
+      body = response[2].first
+      expect(body).to include('lang="ja"')
+    end
+
+    it "prefers cookie over Accept-Language header" do
+      response = middleware.call(
+        "REQUEST_METHOD" => "GET",
+        "SCRIPT_NAME" => "/prefix",
+        "HTTP_COOKIE" => "super_settings_locale=ko",
+        "HTTP_ACCEPT_LANGUAGE" => "de"
+      )
+      body = response[2].first
+      expect(body).to include('lang="ko"')
+    end
+
+    it "falls back to default locale when no locale is specified" do
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix")
+      body = response[2].first
+      expect(body).to include('lang="en"')
+    end
+  end
 end

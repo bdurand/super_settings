@@ -27,10 +27,33 @@ module SuperSettings
       display: "inline-block"
     }.freeze
 
+    # Look up a translation key for the current locale.
+    #
+    # @param key [String] dotted translation key
+    # @return [String]
+    def t(key)
+      SuperSettings::I18n.t(key, locale: @locale || SuperSettings::I18n::DEFAULT_LOCALE)
+    end
+
+    # Return the text direction (+"ltr"+ or +"rtl"+) for the current locale.
+    #
+    # @return [String]
+    def text_direction
+      SuperSettings::I18n.text_direction(@locale || SuperSettings::I18n::DEFAULT_LOCALE)
+    end
+
+    # Return the full translations hash as JSON for inlining into the page.
+    #
+    # @return [String] JSON string
+    def translations_json
+      SuperSettings::I18n.translations_for(@locale || SuperSettings::I18n::DEFAULT_LOCALE).to_json
+    end
+
     # Render the scripts.js file as an inline <script> tag.
     def javascript_tag
       <<~HTML
         <script>
+          window.__superSettingsI18n = #{translations_json};
           #{File.read(File.join(__dir__, "scripts.js"))}
           #{File.read(File.join(__dir__, "api.js"))}
           #{"SuperSettingsAPI.authenticationUrl = '#{SuperSettings.authentication_url.gsub("'", "\\'")}';" if SuperSettings.authentication_url}
@@ -84,7 +107,7 @@ module SuperSettings
     # @return [String] the HTML for the icon
     def icon_image(name, options = {})
       svg = ICON_SVG[name.to_s]
-      style = (options[:style] || {})
+      style = options[:style] || {}
       css = DEFAULT_ICON_STYLE.merge(style).map { |name, value| "#{name}: #{value}" }.join("; ")
       options = options.merge(style: css, class: "super-settings-icon")
       if options[:data].is_a?(Hash)
@@ -131,8 +154,8 @@ module SuperSettings
       mark = content_tag(:div, mark_content, class: "super-settings-page-header-mark", "aria-hidden": "true")
 
       # Build title and subtitle
-      title = content_tag(:h1, html_escape("SuperSettings"), class: "super-settings-page-header-title")
-      subtitle = content_tag(:p, html_escape("#{application_name} Settings"), class: "super-settings-page-header-subtitle")
+      title = content_tag(:h1, html_escape(t("page.brand_title")), class: "super-settings-page-header-title")
+      subtitle = content_tag(:p, html_escape("#{application_name} #{t("page.title_suffix")}"), class: "super-settings-page-header-subtitle")
       text = content_tag(:div, title + subtitle, class: "")
 
       brand_content = mark + text

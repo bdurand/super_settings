@@ -191,7 +191,7 @@ module SuperSettings
           pipeline << {
             "$addFields": {
               history: {
-                "$slice": ["$history", offset, (limit || {"$size": "$history"})]
+                "$slice": ["$history", offset, limit || {"$size": "$history"}]
               }
             }
           }

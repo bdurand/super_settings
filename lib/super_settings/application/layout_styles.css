@@ -99,8 +99,203 @@ a:visited {
   color: var(--link-color);
 }
 
+/* ══════════════════════════════════════════
+   FOOTER
+   ══════════════════════════════════════════ */
+
+.super-settings-page-footer {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px 24px 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ══════════════════════════════════════════
+   LANGUAGE MENU (in footer)
+   ══════════════════════════════════════════ */
+
+.super-settings-language-menu {
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+}
+
+.super-settings-language-menu > summary {
+  list-style: none;
+}
+
+.super-settings-language-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.super-settings-language-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #ccc);
+  background: #fff;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+  max-width: 180px;
+  white-space: nowrap;
+}
+
+.super-settings-language-trigger:hover {
+  border-color: var(--link-color);
+  color: var(--link-color);
+}
+
+.super-settings-language-trigger:focus-visible {
+  outline: 2px solid var(--link-color);
+  outline-offset: 2px;
+}
+
+.super-settings-language-trigger-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.super-settings-language-trigger-icon svg {
+  width: 13px;
+  height: 13px;
+}
+
+.super-settings-language-trigger-current {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.super-settings-language-trigger-caret {
+  width: 12px;
+  height: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  opacity: 0.5;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.super-settings-language-trigger-caret svg {
+  width: 100%;
+  height: 100%;
+}
+
+.super-settings-language-menu[open] .super-settings-language-trigger {
+  border-color: var(--link-color);
+  color: var(--link-color);
+}
+
+.super-settings-language-menu[open] .super-settings-language-trigger-caret {
+  opacity: 0.8;
+  transform: rotate(180deg);
+}
+
+.super-settings-language-popup {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  min-width: 160px;
+  max-height: 260px;
+  margin: 0;
+  padding: 4px;
+  background: var(--background-color, #fff);
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  overflow-y: auto;
+}
+
+.super-settings-language-popup li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.super-settings-language-menu[open] .super-settings-language-popup {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.super-settings-language-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-color);
+  cursor: pointer;
+  text-align: start;
+  transition: background 0.1s ease;
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.super-settings-language-option-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.75rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.super-settings-language-option:hover,
+.super-settings-language-option:focus-visible {
+  background: var(--border-color, #eee);
+}
+
+.super-settings-language-option-check {
+  width: 12px;
+  height: 12px;
+  color: var(--link-color);
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.super-settings-language-option-check svg {
+  width: 100%;
+  height: 100%;
+}
+
+.super-settings-language-option.is-active {
+  background: color-mix(in srgb, var(--link-color) 10%, transparent);
+}
+
+.super-settings-language-option.is-active .super-settings-language-option-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
 @media (max-width: 640px) {
   .super-settings-page-header-inner {
     padding: 16px 24px;
+  }
+  .super-settings-page-footer {
+    padding: 0 24px 16px 24px;
   }
 }
