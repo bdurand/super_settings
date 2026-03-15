@@ -219,6 +219,55 @@ SuperSettings.web_ui_javascript = "SuperSettingsAPI.headers['Authorization'] = w
 
 You can also specify the URL for a login page with `SuperSettings.authentication_url`. Browsers will be redirected to this URL if a request requiring authentication is received.
 
+#### Read-Only Access
+
+You can grant users read-only access to the settings UI. In read-only mode, the web UI will display all settings and their history normally, but the Add, Edit, Delete, Save, and Discard buttons will be hidden. Write API endpoints (`POST /settings`) will return a 403 status.
+
+**Rails applications** can use the `super_settings_read_only!` helper method. Call it in a `before_action` to restrict the current request to read-only access:
+
+```ruby
+SuperSettings.configure do |config|
+  config.controller.enhance do
+    before_action do
+      redirect_to login_url if current_user.nil?
+
+      super_settings_read_only! unless current_user.admin?
+    end
+  end
+end
+```
+
+You can also check the current state with `super_settings_read_only?`.
+
+**Rack applications** can override the `allow_write?` method on `SuperSettings::RackApplication`. When `allow_write?` returns `false`, the web UI will render in read-only mode and POST requests will be rejected:
+
+```ruby
+app = SuperSettings::RackApplication.new do
+  def current_user(request)
+    # ...
+  end
+
+  def allow_write?(user)
+    user.admin?
+  end
+end
+```
+
+**Middleware-based approach:** You can also set the `super_settings.read_only` key in the Rack environment from any middleware. This works with both the Rails engine and the Rack application:
+
+```ruby
+class ReadOnlySettingsMiddleware
+  def initialize(app)
+    @app = app
+  end
+
+  def call(env)
+    env["super_settings.read_only"] = true unless admin_user?(env)
+    @app.call(env)
+  end
+end
+```
+
 ### Rails Engine
 
 The gem ships with a Rails engine that provides easy integration with a Rails application.

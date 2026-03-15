@@ -6,7 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 2.5.0
 
-### TODO
+### Added
+
+- Added ability to authorize requests with read only permissions. When read only permissions are enabled, users can view settings in the web UI but cannot edit them. API requests that attempt to modify settings will be rejected with a 403 Forbidden response.
 
 ## 2.4.3
 

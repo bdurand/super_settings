@@ -19,7 +19,7 @@ module SuperSettings
 
     # Render the HTML application for managing settings.
     def root
-      html = SuperSettings::Application.new.render
+      html = SuperSettings::Application.new(read_only: super_settings_read_only?).render
       render html: html.html_safe, layout: true
     end
 
@@ -40,6 +40,10 @@ module SuperSettings
 
     # API endpoint for updating settings. See SuperSettings::RestAPI for details.
     def update
+      if super_settings_read_only?
+        render json: {error: "Access denied"}, status: 403
+        return
+      end
       changed_by = SuperSettings.configuration.controller.changed_by(self)
       result = SuperSettings::RestAPI.update(params[:settings], changed_by)
       if result[:success]
@@ -70,6 +74,18 @@ module SuperSettings
     end
 
     protected
+
+    # Mark the current request as read-only. When read-only, the web UI will hide edit
+    # controls and write API endpoints will return 403. Call this in a +before_action+ to
+    # restrict a user to read-only access.
+    def super_settings_read_only!
+      request.env["super_settings.read_only"] = true
+    end
+
+    # Return true if the current request has been marked as read-only.
+    def super_settings_read_only?
+      !!request.env["super_settings.read_only"]
+    end
 
     # Return true if CSRF protection needs to be enabled for the request.
     # By default it is only enabled on stateful requests that include Basic authorization

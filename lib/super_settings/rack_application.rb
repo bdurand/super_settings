@@ -130,9 +130,15 @@ module SuperSettings
     def handle_request(env)
       request = Rack::Request.new(env)
       path = request.path[@path_prefix.length, request.path.length]
-      if request.get?
+      if request.head?
+        if path == "/" || path == ""
+          return handle_head_request(request)
+        end
+      elsif request.get?
         if (path == "/" || path == "") && web_ui_enabled?
           return handle_root_request(request)
+        elsif path == "/api.js"
+          return handle_api_js_request(request)
         elsif path == "/settings"
           return handle_index_request(request)
         elsif path == "/setting/history"
@@ -157,9 +163,23 @@ module SuperSettings
       end
     end
 
+    def handle_head_request(request)
+      check_authorization(request) do |user|
+        [200, {}, []]
+      end
+    end
+
+    def handle_api_js_request(request)
+      check_authorization(request) do |user|
+        js = File.read(File.expand_path(File.join("application", "api.js"), __dir__))
+        [200, {"content-type" => "application/javascript; charset=utf-8", "cache-control" => "no-cache"}, [js]]
+      end
+    end
+
     def handle_root_request(request)
-      response = check_authorization(request, write_required: true) do |user|
-        [200, {"content-type" => "text/html; charset=utf-8", "cache-control" => "no-cache"}, [Application.new(layout: :default, add_to_head: add_to_head(request), color_scheme: SuperSettings.configuration.controller.color_scheme).render]]
+      response = check_authorization(request) do |user|
+        read_only = !allow_write?(user) || !!request.env["super_settings.read_only"]
+        [200, {"content-type" => "text/html; charset=utf-8", "cache-control" => "no-cache"}, [Application.new(layout: :default, add_to_head: add_to_head(request), color_scheme: SuperSettings.configuration.controller.color_scheme, read_only: read_only).render]]
       end
 
       if [401, 403].include?(response.first)
@@ -229,7 +249,14 @@ module SuperSettings
       allowed = (write_required ? allow_write?(user) : allow_read?(user))
       return json_response(403, error: "Access denied") unless allowed
 
-      yield(user)
+      if write_required && request.env["super_settings.read_only"]
+        return json_response(403, error: "Access denied")
+      end
+
+      response = yield(user)
+      read_only = !allow_write?(user) || !!request.env["super_settings.read_only"]
+      response[1]["SuperSettings-Authorization"] = read_only ? "read-only" : "read-write"
+      response
     end
 
     def json_response(status, payload)
