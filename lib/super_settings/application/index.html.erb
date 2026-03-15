@@ -5,34 +5,34 @@
     <div class="super-settings-sticky-top">
       <span class="js-settings-count" style="display:inline-block; margin-right:1rem;"></span>
 
-      <label for="super-settings-filter" class="super-settings-sr-only">Filter</label>
-      <input type="text" name="filter" value="" placeholder="Filter Keys" size="20" class="super-settings-form-control" title="Filter Keys" id="super-settings-filter" style="margin-right:1rem;" autocomplete="off" autocapitalize="off">
+      <label for="super-settings-filter" class="super-settings-sr-only"><%= t("filter.label") %></label>
+      <input type="text" name="filter" value="" placeholder="<%= t("filter.placeholder") %>" size="20" class="super-settings-form-control" title="<%= t("filter.placeholder") %>" id="super-settings-filter" style="margin-right:1rem;" autocomplete="off" autocapitalize="off">
 
-      <button type="button" class="super-settings-btn super-settings-btn-default" id="super-settings-add-setting"><%= icon_image(:plus, style: {"vertical-align": "text-top"}) %> Add Setting</button>
+      <button type="button" class="super-settings-btn super-settings-btn-default" id="super-settings-add-setting"><%= icon_image(:plus, style: {"vertical-align": "text-top"}) %> <%= t("button.add_setting") %></button>
 
       <button type="button" class="super-settings-btn super-settings-btn-default" id="super-settings-discard-changes" disabled>
-        Discard Changes
+        <%= t("button.discard_changes") %>
       </button>
 
       <button type="button" class="super-settings-btn super-settings-btn-primary" id="super-settings-save-settings" disabled>
-        Save <span class="count"></span> Changes
+        <%= t("button.save") %> <span class="count"></span> <%= t("button.save_changes") %>
       </button>
 
       <strong class="js-flash" style="display:none; margin-left:3rem;"></strong>
     </div>
 
-    <div class="super-settings-sort-controls">
-      <span class="super-settings-sort-label">Sort by:</span>
-      <button class="super-settings-sort-control super-settings-btn-no-chrome" data-field="key" data-order="asc" data-selected="true" title="Sort by key">
-        Key
+    <div class="super-settings-sort-controls" style="display:none;">
+      <span class="super-settings-sort-label"><%= t("sort.label") %></span>
+      <button class="super-settings-sort-control super-settings-btn-no-chrome" data-field="key" data-order="asc" data-selected="true" title="<%= t("sort.key") %>">
+        <%= t("sort.key") %>
         <%= icon_image("arrow-down-short", data: {order: :asc}, style: {display: "inline-block"}) %>
         <%= icon_image("arrow-up-short", data: {order: :desc}, style: {display: "none"}) %>
       </button>
       <span></span>
       <span></span>
       <span></span>
-      <button class="super-settings-sort-control super-settings-btn-no-chrome" data-field="updated_at" data-order="asc" title="Sort by modified time">
-        Modified
+      <button class="super-settings-sort-control super-settings-btn-no-chrome" data-field="updated_at" data-order="asc" title="<%= t("sort.modified") %>">
+        <%= t("sort.modified") %>
         <%= icon_image("arrow-down-short", data: {order: :asc}, style: {display: "inline-block"}) %>
         <%= icon_image("arrow-up-short", data: {order: :desc}, style: {display: "none"}) %>
       </button>
@@ -45,7 +45,7 @@
 
   <div id="super-settings-modal" class="super-settings-modal js-close-modal" aria-hidden="true" role="dialog">
     <div class="super-settings-modal-dialog">
-      <button type="button" title="Close Dialog" class="super-settings-modal-close super-settings-btn-no-chrome js-close-modal">&times;</button>
+      <button type="button" title="<%= t("modal.close") %>" class="super-settings-modal-close super-settings-btn-no-chrome js-close-modal">&times;</button>
       <div class="super-settings-modal-content">
       </div>
     </div>
@@ -56,37 +56,37 @@
   <div class="super-settings-card">
     <div class="super-settings-card-content">
       <div class="super-settings-key super-settings-card-key">
-        <label class="super-settings-card-label">Key:</label>
+        <label class="super-settings-card-label"><%= t("card.key") %></label>
         <span class="js-value-placeholder"></span>
         <input type="hidden" value="" name="settings[{{id}}][key]" class="js-setting-key">
         <input type="hidden" value="" name="settings[{{id}}][delete]" class="js-setting-deleted">
       </div>
 
       <div class="super-settings-card-value">
-        <label class="super-settings-card-label">Value:</label>
+        <label class="super-settings-card-label"><%= t("card.value") %></label>
         <div class="js-value-placeholder super-settings-max-height-text"></div>
       </div>
 
       <div class="super-settings-card-type">
-        <label class="super-settings-card-label">Type:</label>
+        <label class="super-settings-card-label"><%= t("card.type") %></label>
         <span class="js-value-placeholder"></span>
       </div>
 
       <div class="super-settings-card-description">
-        <label class="super-settings-card-label">Description:</label>
+        <label class="super-settings-card-label"><%= t("card.description") %></label>
         <div class="js-value-placeholder super-settings-max-height-text"></div>
       </div>
 
       <div class="super-settings-card-modified">
-        <label class="super-settings-card-label">Modified:</label>
+        <label class="super-settings-card-label"><%= t("card.modified") %></label>
         <span class="js-value-placeholder"></span>
       </div>
 
       <div class="super-settings-card-controls">
-        <%= icon_button("info-circle", title: "Setting Info", color: "var(--icon-info-color)", js_class: "js-show-history") %>
-        <%= icon_button("pencil-square", title: "Edit Setting", color: "var(--icon-edit-color)", js_class: "js-edit-setting") %>
-        <%= icon_button("trash3", title: "Remove Setting", color: "var(--icon-delete-color)", js_class: "js-remove-setting") %>
-        <%= icon_button("x-circle", title: "Cancel Changes", color: "var(--icon-cancel-color)", js_class: "js-restore-setting", link_style: "display:none;") %>
+        <%= icon_button("info-circle", title: t("card.info_title"), color: "var(--icon-info-color)", js_class: "js-show-history") %>
+        <%= icon_button("pencil-square", title: t("card.edit_title"), color: "var(--icon-edit-color)", js_class: "js-edit-setting") %>
+        <%= icon_button("trash3", title: t("card.remove_title"), color: "var(--icon-delete-color)", js_class: "js-remove-setting") %>
+        <%= icon_button("x-circle", title: t("card.cancel_title"), color: "var(--icon-cancel-color)", js_class: "js-restore-setting", link_style: "display:none;") %>
       </div>
     </div>
   </div>
@@ -96,19 +96,19 @@
   <div class="super-settings-card super-settings-card-edit" data-edited="true">
     <div class="super-settings-card-content">
       <div class="super-settings-card-key">
-        <label for="settings_{{id}}_key" class="super-settings-card-label">Key:</label>
-        <input type="text" id="settings_{{id}}_key" name="settings[{{id}}][key]" value="" maxlength="190" class="super-settings-form-control js-setting-key" required placeholder="Setting key" autocomplete="off" autocapitalize="off">
+        <label for="settings_{{id}}_key" class="super-settings-card-label"><%= t("card.key") %></label>
+        <input type="text" id="settings_{{id}}_key" name="settings[{{id}}][key]" value="" maxlength="190" class="super-settings-form-control js-setting-key" required placeholder="<%= t("edit.key_placeholder") %>" autocomplete="off" autocapitalize="off">
       </div>
 
       <div class="super-settings-card-value">
-        <label for="settings_{{id}}_value" class="super-settings-card-label">Value:</label>
+        <label for="settings_{{id}}_value" class="super-settings-card-label"><%= t("card.value") %></label>
         <span class="js-value-placeholder"></span>
         <div class="super-settings-container super-settings-text-danger js-setting-errors" style="display:none;">
         </div>
       </div>
 
       <div class="super-settings-card-type">
-        <label for="settings_{{id}}_value_type" class="super-settings-card-label">Type:</label>
+        <label for="settings_{{id}}_value_type" class="super-settings-card-label"><%= t("card.type") %></label>
         <select name="settings[{{id}}][value_type]" class="super-settings-form-control js-setting-value-type" id="settings_{{id}}_value_type">
           <% SuperSettings::Setting::VALUE_TYPES.each do |value_type| %>
             <option value="<%= html_escape(value_type) %>"><%= html_escape(value_type) %></option>
@@ -117,8 +117,8 @@
       </div>
 
       <div class="super-settings-card-description">
-        <label for="settings_{{id}}_description" class="super-settings-card-label">Description:</label>
-        <textarea id="settings_{{id}}_description" name="settings[{{id}}][description]" value="" class="super-settings-form-control" rows="3" placeholder="Description of this setting" autocomplete="off"></textarea>
+        <label for="settings_{{id}}_description" class="super-settings-card-label"><%= t("card.description") %></label>
+        <textarea id="settings_{{id}}_description" name="settings[{{id}}][description]" value="" class="super-settings-form-control" rows="3" placeholder="<%= t("edit.description_placeholder") %>" autocomplete="off"></textarea>
       </div>
 
       <div class="super-settings-card-modified">
@@ -126,9 +126,9 @@
       </div>
 
       <div class="super-settings-card-controls">
-        <%= icon_button("info-circle", title: "Setting Info", color: "var(--icon-info-color)", js_class: "js-show-history") %>
-        <%= icon_button("pencil-square", title: "Edit Setting", color: "var(--icon-disabled-color)", js_class: "js-no-op", disabled: true) %>
-        <%= icon_button("x-circle", title: "Cancel Changes", color: "var(--icon-cancel-color)", js_class: "js-restore-setting") %>
+        <%= icon_button("info-circle", title: t("card.info_title"), color: "var(--icon-info-color)", js_class: "js-show-history") %>
+        <%= icon_button("pencil-square", title: t("card.edit_title"), color: "var(--icon-disabled-color)", js_class: "js-no-op", disabled: true) %>
+        <%= icon_button("x-circle", title: t("card.cancel_title"), color: "var(--icon-cancel-color)", js_class: "js-restore-setting") %>
       </div>
     </div>
   </div>
@@ -152,28 +152,28 @@
     <label for="settings_{{id}}_value_time" class="super-settings-sr-only">Time</label>
     <input type="time" id="settings_{{id}}_value_time" name="_settings[{{id}}][time]" value="" class="super-settings-form-control js-time-input" aria-label="Time" autocomplete="off">
     <input type="hidden" name="settings[{{id}}][value]" value="" class="js-setting-value">
-    <small class="super-settings-text-muted">Time Zone: <span class="timezone"></span></small>
+    <small class="super-settings-text-muted"><%= t("edit.timezone_label") %> <span class="timezone"></span></small>
   </span>
 </template>
 
 <template id="setting-value-field-boolean-template" style="display:none;">
   <span class="super-settings-form-check">
     <input type="checkbox" id="settings_{{id}}_value" name="settings[{{id}}][value]" value="true" class="js-setting-value">
-    <label for="settings_{{id}}_value">Enabled</label>
+    <label for="settings_{{id}}_value"><%= t("edit.enabled") %></label>
   </span>
 </template>
 
 <template id="setting-value-field-array-template" style="display:none;">
-  <textarea id="settings_{{id}}_value" name="settings[{{id}}][value]" value="" class="super-settings-form-control js-setting-value" rows="8" placeholder="one entry per line" autocomplete="off" autocapitalize="off"></textarea>
+  <textarea id="settings_{{id}}_value" name="settings[{{id}}][value]" value="" class="super-settings-form-control js-setting-value" rows="8" placeholder="<%= t("edit.array_placeholder") %>" autocomplete="off" autocapitalize="off"></textarea>
 </template>
 
 <template id="setting-history-table" style="display:none">
-  <h3>Setting History: <span class="super-settings-history-key"></span></h3>
+  <h3><%= t("history.title") %> <span class="super-settings-history-key"></span></h3>
   <div class="super-settings-history-container">
     <div class="super-settings-history-header">
-      <div class="super-settings-history-time">Time</div>
-      <div class="super-settings-history-user">Changed By</div>
-      <div class="super-settings-history-value">Value</div>
+      <div class="super-settings-history-time"><%= t("history.time") %></div>
+      <div class="super-settings-history-user"><%= t("history.changed_by") %></div>
+      <div class="super-settings-history-value"><%= t("history.value") %></div>
     </div>
     <div class="super-settings-history-items">
     </div>

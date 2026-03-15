@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "i18n"
 require_relative "application/helper"
 
 module SuperSettings
@@ -14,7 +15,8 @@ module SuperSettings
     # @param color_scheme [Symbol] whether to use dark mode for the application UI. If +nil+, the user's system
     #                              preference will be used.
     # @param read_only [Boolean] whether to render the application in read-only mode (edit controls hidden).
-    def initialize(layout: nil, add_to_head: nil, api_base_url: nil, color_scheme: nil, read_only: false)
+    # @param locale [String] the locale code for translations (default: "en").
+    def initialize(layout: nil, add_to_head: nil, api_base_url: nil, color_scheme: nil, read_only: false, locale: nil)
       if layout
         layout = File.expand_path(File.join("application", "layout.html.erb"), __dir__) if layout == :default
         @layout = ERB.new(File.read(layout)) if layout
@@ -27,6 +29,7 @@ module SuperSettings
       @api_base_url = api_base_url
       @color_scheme = color_scheme&.to_sym
       @read_only = !!read_only
+      @locale = locale || SuperSettings::I18n::DEFAULT_LOCALE
     end
 
     # Render the web UI application HTML.

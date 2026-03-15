@@ -1,0 +1,55 @@
+{
+  "page.title_suffix": "Settings",
+  "page.brand_title": "SuperSettings",
+
+  "filter.label": "Filter",
+  "filter.placeholder": "Filter Keys",
+
+  "button.add_setting": "Add Setting",
+  "button.discard_changes": "Discard Changes",
+  "button.save": "Save",
+  "button.save_changes": "Changes",
+
+  "sort.label": "Sort by:",
+  "sort.key": "Key",
+  "sort.modified": "Modified",
+
+  "modal.close": "Close Dialog",
+
+  "card.key": "Key:",
+  "card.value": "Value:",
+  "card.type": "Type:",
+  "card.description": "Description:",
+  "card.modified": "Modified:",
+  "card.info_title": "Setting Info",
+  "card.edit_title": "Edit Setting",
+  "card.remove_title": "Remove Setting",
+  "card.cancel_title": "Cancel Changes",
+
+  "edit.key_placeholder": "Setting key",
+  "edit.description_placeholder": "Description of this setting",
+  "edit.enabled": "Enabled",
+  "edit.array_placeholder": "one entry per line",
+  "edit.timezone_label": "Time Zone:",
+
+  "history.title": "Setting History:",
+  "history.time": "Time",
+  "history.changed_by": "Changed By",
+  "history.value": "Value",
+  "history.deleted": "deleted",
+  "history.newer": "Newer",
+  "history.older": "Older",
+
+  "count.setting": "Setting",
+  "count.settings": "Settings",
+  "prompt.unsaved": "Are you sure you want to leave?",
+  "flash.saved": "Settings saved",
+  "flash.save_failed": "Failed to save settings",
+
+  "error.generic": "Sorry, an error occurred. Refresh the page and try again.",
+
+  "language.label": "Language",
+  "language.name": "English",
+
+  "dir": "ltr"
+}
