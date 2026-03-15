@@ -62,15 +62,6 @@ appraise "rails_6.0" do
   remove_gem "rackup"
 end
 
-appraise "rails_5.2" do
-  gem "rails", "~> 5.2.0"
-  gem "rspec-rails", "~> 5.1"
-  gem "sqlite3", "~> 1.3.0"
-  gem "puma", "~> 5.6"
-  gem "redis", "~> 4.0"
-  remove_gem "rackup"
-end
-
 appraise "no_extensions" do
   remove_gem "rails"
   remove_gem "rspec-rails"

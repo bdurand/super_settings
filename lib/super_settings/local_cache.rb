@@ -120,16 +120,14 @@ module SuperSettings
       end
 
       load_block = lambda do
-        begin
-          values = {}
-          start_time = Time.now
-          Setting.active.each do |setting|
-            values[setting.key] = setting.value.freeze
-          end
-          set_cache_values(start_time) { values }
-        ensure
-          @refreshing = false
+        values = {}
+        start_time = Time.now
+        Setting.active.each do |setting|
+          values[setting.key] = setting.value.freeze
         end
+        set_cache_values(start_time) { values }
+      ensure
+        @refreshing = false
       end
 
       if asynchronous
@@ -158,14 +156,12 @@ module SuperSettings
       end
 
       refresh_block = lambda do
-        begin
-          last_db_update = Setting.last_updated_at
-          if last_db_update.nil? || last_db_update >= last_refresh_time - 1
-            merge_load(last_refresh_time)
-          end
-        ensure
-          @refreshing = false
+        last_db_update = Setting.last_updated_at
+        if last_db_update.nil? || last_db_update >= last_refresh_time - 1
+          merge_load(last_refresh_time)
         end
+      ensure
+        @refreshing = false
       end
 
       if asynchronous

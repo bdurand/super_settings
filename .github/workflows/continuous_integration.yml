@@ -76,8 +76,6 @@ jobs:
             appraisal: "rails_6.1"
           - ruby: "2.7"
             appraisal: "rails_6.0"
-          - ruby: "2.6"
-            appraisal: "rails_5.2"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
