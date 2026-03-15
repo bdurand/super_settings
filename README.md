@@ -229,7 +229,7 @@ You can grant users read-only access to the settings UI. In read-only mode, the 
 SuperSettings.configure do |config|
   config.controller.enhance do
     before_action do
-      redirect_to login_url, status: 401 if current_user.nil?
+      redirect_to login_url if current_user.nil?
 
       super_settings_read_only! unless current_user.admin?
     end
