@@ -1,11 +1,6 @@
-ruby_version: 2.6
+ruby_version: "2.7"
 
 format: progress
 
 ignore:
-  - '**/*':
-    - Style/RedundantBegin
-    - Style/RedundantParentheses
-  - 'spec/**/*':
-    - Lint/UselessAssignment
   - 'spec/dummy/db/schema.rb'

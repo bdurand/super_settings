@@ -107,7 +107,7 @@ module SuperSettings
     # @return [String] the HTML for the icon
     def icon_image(name, options = {})
       svg = ICON_SVG[name.to_s]
-      style = (options[:style] || {})
+      style = options[:style] || {}
       css = DEFAULT_ICON_STYLE.merge(style).map { |name, value| "#{name}: #{value}" }.join("; ")
       options = options.merge(style: css, class: "super-settings-icon")
       if options[:data].is_a?(Hash)

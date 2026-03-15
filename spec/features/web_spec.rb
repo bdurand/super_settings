@@ -175,7 +175,6 @@ describe "web UI", type: :feature, js: true do
     it "should cancel changes" do
       visit "/"
       id = find_setting_id("key.string")
-      value_type_descriptor = "select[name=\"settings[#{id}][value_type]\"]"
       within_setting_row(id) do
         find("a.js-edit-setting").click
         find_setting_field(id, :key).fill_in(with: "newkey")
