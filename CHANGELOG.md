@@ -8,7 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Updated web UI to match the web UI from the ultra_settings gem.
 - Added ability to authorize requests with read only permissions. When read only permissions are enabled, users can view settings in the web UI but cannot edit them. API requests that attempt to modify settings will be rejected with a 403 Forbidden response.
+- Added internationalization (i18n) support for the web UI with translations for 29 languages. The locale is resolved from a `lang` query parameter, a `super_settings_locale` cookie, or the `Accept-Language` header.
+- Added `/authorized` API endpoint that returns the current user's permission level (`read-only` or `read-write`).
+- Added `/api.js` endpoint for serving the JavaScript API client separately.
+
+### Changed
+
+- Minimum Ruby version is now 2.7.
 
 ## 2.4.3
 
