@@ -327,11 +327,11 @@ describe "web UI", type: :feature, js: true do
         find("a.js-show-history").click
       end
       within("#super-settings-modal") do
-        expect(all("#super-settings-history .super-settings-history-item").size).to eq 25
+        expect(all(".super-settings-history-item").size).to eq 25
         click_on("Older")
-        expect(all("#super-settings-history .super-settings-history-item").size).to eq 1
+        expect(all(".super-settings-history-item").size).to eq 1
         click_on("Newer")
-        expect(all("#super-settings-history .super-settings-history-item").size).to eq 25
+        expect(all(".super-settings-history-item").size).to eq 25
       end
     end
   end

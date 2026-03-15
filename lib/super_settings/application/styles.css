@@ -1,6 +1,6 @@
 .super-settings-container {
-  padding-left: 15px;
-  padding-right: 15px;
+  padding-left: 24px;
+  padding-right: 24px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -9,25 +9,22 @@
 .super-settings-cards-container {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 10px;
   padding: 1rem 0;
 }
 
 .super-settings-card {
-  border: 2px solid var(--table-border-color);
-  border-radius: 0.5rem;
-  background-color: var(--card-bg-color);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.2s ease-in-out;
+  border: 1px solid var(--border-card, var(--table-border-color));
+  border-radius: 10px;
+  background-color: var(--bg-card, var(--card-bg-color));
+  box-shadow: var(--shadow-card, 0 1px 3px rgba(0, 0, 0, 0.04));
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
   width: 100%;
+  overflow: hidden;
 }
 
 .super-settings-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.super-settings-cards-container .super-settings-card:nth-child(even) {
-  background-color: var(--alt-row-color);
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.1));
 }
 
 .super-settings-card-edit {
@@ -57,7 +54,7 @@
     grid-template-columns: 2fr 2fr 1fr 3fr 1fr 1fr;
     gap: 1rem;
     align-items: start;
-    padding: 1rem;
+    padding: 14px 18px;
   }
 
   .super-settings-card-key {
@@ -91,7 +88,7 @@
 /* Mobile layout - stacked */
 @media (max-width: 767px) {
   .super-settings-card-content {
-    padding: 1rem;
+    padding: 14px 18px;
   }
 
   .super-settings-card-key {
@@ -133,12 +130,12 @@
 
 .super-settings-card-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--muted-color);
+  color: var(--text-tertiary, var(--muted-color));
   margin-bottom: 0.25rem;
   text-transform: uppercase;
-  letter-spacing: 0.025em;
+  letter-spacing: 0.05em;
 }
 
 /* Sort Controls */
@@ -148,7 +145,7 @@
     grid-template-columns: 2fr 2fr 1fr 3fr 1fr 1fr;
     gap: 1rem;
     align-items: center;
-    padding: 0.125rem 1rem 0.125rem 1rem;
+    padding: 0.125rem 18px 0.125rem 18px;
     background-color: transparent;
     border: none;
     margin-bottom: 0.25rem;
@@ -161,15 +158,18 @@
   .super-settings-sort-controls .super-settings-sort-control {
     padding: 0.125rem 0;
     margin: 0;
-    margin-top: 1rem; /* Align with card content that has labels */
+    margin-top: 1rem;
     text-align: left;
     font-weight: 600;
-    color: var(--form-control-color);
+    font-size: 0.75rem;
+    color: var(--text-tertiary, var(--form-control-color));
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   .super-settings-sort-controls > span {
     font-weight: 600;
-    color: var(--form-control-color);
+    color: var(--text-tertiary, var(--form-control-color));
   }
 }
 
@@ -178,16 +178,25 @@
   .super-settings-sort-controls {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
     margin-bottom: 0.5rem;
-    padding: 0.25rem 1rem;
+    padding: 0.25rem 0;
     background-color: transparent;
     border: none;
   }
 
+  .super-settings-sort-controls > span:empty {
+    display: none;
+  }
+
   .super-settings-sort-label {
     font-weight: 600;
-    color: var(--form-control-color);
+    font-size: 0.75rem;
+    color: var(--text-tertiary, var(--form-control-color));
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-right: 0.25rem;
   }
 
   .super-settings-sort-control {
@@ -195,15 +204,16 @@
     align-items: center;
     gap: 0.25rem;
     padding: 0.25rem 0.5rem;
-    border: 1px solid transparent;
-    border-radius: 0.25rem;
-    transition: all 0.2s ease-in-out;
+    border: none;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-tertiary, var(--form-control-color));
   }
 
   .super-settings-sort-control[data-selected="true"] {
-    background-color: var(--primary-color);
-    color: var(--primary-contrast-color);
-    border-color: var(--primary-border-color);
+    color: var(--primary-color);
   }
 }
 
@@ -228,7 +238,7 @@
 }
 
 .super-settings-sort-control {
-  color: var(--unselected-color);
+  color: var(--text-tertiary, var(--unselected-color));
 }
 
 .super-settings-sort-control svg {
@@ -244,6 +254,7 @@
 .super-settings-history-key {
   font-weight: normal;
   color: var(--history-key-color);
+  font-family: var(--font-mono, "SF Mono", Menlo, Consolas, monospace);
 }
 
 /* History Display Layout */
@@ -258,8 +269,11 @@
   gap: 1rem;
   padding: 0.75rem;
   font-weight: 600;
-  border-bottom: 2px solid var(--table-border-color);
-  background-color: var(--table-header-bg-color);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary, inherit);
+  border-bottom: 1px solid var(--border-card, var(--table-border-color));
 }
 
 .super-settings-history-items {
@@ -272,8 +286,9 @@
   grid-template-columns: 2fr 2fr 3fr;
   gap: 1rem;
   padding: 0.75rem;
-  border-bottom: 1px solid var(--table-border-color);
+  border-bottom: 1px solid var(--border-light, var(--table-border-color));
   align-items: start;
+  font-size: 0.875rem;
 }
 
 .super-settings-history-item:nth-of-type(even) {
@@ -290,6 +305,8 @@
 
 .super-settings-history-value {
   word-break: break-word;
+  font-family: var(--font-mono, "SF Mono", Menlo, Consolas, monospace);
+  font-size: 0.8125rem;
 }
 
 /* Mobile responsive layout for history */
@@ -302,13 +319,13 @@
     display: block;
     padding: 1rem;
     margin-bottom: 0.5rem;
-    border: 1px solid var(--table-border-color);
-    border-radius: 0.5rem;
-    background-color: var(--form-control-bg-color);
+    border: 1px solid var(--border-card, var(--table-border-color));
+    border-radius: 10px;
+    background-color: var(--bg-card, var(--form-control-bg-color));
   }
 
   .super-settings-history-item:nth-of-type(odd) {
-    background-color: var(--form-control-bg-color);
+    background-color: var(--bg-card, var(--form-control-bg-color));
   }
 
   .super-settings-history-time,
@@ -326,43 +343,56 @@
 .super-settings-modal {
   z-index: 1000000000000;
   display: none;
-  padding-top: 5rem;
   position: fixed;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   overflow: auto;
-  background-color: rgba(0, 0, 0, var(--modal-transparency));
+  background-color: rgba(30, 37, 48, var(--modal-transparency, 0.5));
 }
 
 .super-settings-modal-dialog {
-  margin: auto;
-  background-color: var(--modal-bg-color);
+  margin: 5rem auto;
+  background-color: var(--bg-card, var(--modal-bg-color));
   position: relative;
   outline: 0;
-  padding: 2em;
-  box-shadow: 3px 3px 7px 3px rgba(0, 0, 0, 0.6);
-  border-radius: 4px;
+  padding: 24px;
+  box-shadow: var(--shadow-lg, 0 20px 48px rgba(0, 0, 0, 0.12));
+  border-radius: 10px;
+  border: 1px solid var(--border-card, transparent);
   width: 80%;
-  height: 80%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .super-settings-modal-content {
-  height: 100%;
+  flex: 1;
   overflow: auto;
 }
 
 .super-settings-modal-close {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: absolute;
-  top: 0;
-  right: 0;
-  border: 0;
-  padding: 1ex;
-  color: var(--modal-control-color);
-  font-size: 1.5rem;
-  font-weight: 500;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-light, #e2e5ea);
+  border-radius: 7px;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-tertiary, var(--modal-control-color));
+  font-size: 1.25rem;
+  font-weight: 400;
+  transition: all 0.1s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.super-settings-modal-close:hover {
+  background: var(--bg-code, #f0f2f5);
+  color: var(--text-secondary, var(--modal-control-color));
 }
 
 /* Screen Reader and Accessibility */
@@ -385,8 +415,13 @@
 .super-settings-sticky-top {
   position: sticky;
   top: 0;
-  padding: 1rem;
-  background-color: var(--table-header-bg-color);
+  padding: 16px 0 12px;
+  background-color: var(--bg-page, var(--table-header-bg-color));
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .super-settings-align-center {
@@ -402,34 +437,48 @@
 }
 
 .super-settings-text-muted {
-  color: var(--muted-color) !important;
+  color: var(--text-tertiary, var(--muted-color)) !important;
 }
 
 /* Form Controls */
 
 .super-settings-form-control {
-  font-family: inherit;
+  font-family: var(--font-ui, system-ui, -apple-system, sans-serif);
   margin: 0;
   overflow: visible;
   display: block;
   width: 100%;
-  padding: .375rem .75rem;
-  font-size: 1rem;
+  padding: 8px 12px;
+  font-size: 0.875rem;
   line-height: 1.5;
-  color: var(--form-control-color);
-  background-color: var(--form-control-bg-color);
+  color: var(--text-primary, var(--form-control-color));
+  background-color: var(--bg-card, var(--form-control-bg-color));
   background-clip: padding-box;
-  border: 1px solid var(--form-control-border-color);
-  border-radius: .25rem;
-  transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+  border: 1px solid var(--border-card, var(--form-control-border-color));
+  border-radius: 8px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: var(--shadow-card, none);
+  outline: none;
+}
+
+.super-settings-form-control:focus {
+  border-color: var(--accent, var(--primary-color));
+  box-shadow: 0 0 0 2px var(--accent-glow, rgba(13, 148, 136, 0.12));
 }
 
 .super-settings-form-control::placeholder {
-  color: var(--form-control-placeholder-color);
+  color: var(--text-tertiary, var(--form-control-placeholder-color));
 }
 
 select.super-settings-form-control:not([size]):not([multiple]) {
   height: calc(2.25rem + 2px);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  padding-inline-end: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239ca3af'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
 }
 
 .super-settings-form-check {
@@ -462,32 +511,36 @@ select.super-settings-form-control:not([size]):not([multiple]) {
 .super-settings-card-edit .super-settings-card-description textarea {
   width: 100%;
   box-sizing: border-box;
-  min-width: 0; /* Allow shrinking in grid */
+  min-width: 0;
 }
 
 /* Buttons */
 
 .super-settings-btn {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   vertical-align: middle;
-  padding: 0.375rem 0.75rem;
-  border-radius: 0.375rem;
-  color: var(--form-control-color);
-  border: 1px solid var(--form-control-border-color);
-  background-color: var(--form-control-bg-color);
+  padding: 8px 14px;
+  border-radius: 8px;
+  color: var(--text-primary, var(--form-control-color));
+  border: 1px solid var(--border-card, var(--form-control-border-color));
+  background-color: var(--bg-card, var(--form-control-bg-color));
   text-decoration: none;
   text-align: center;
-  font-family: Arial, sans-serif;
-  font-size: 1rem;
-  font-weight: 400;
+  font-family: var(--font-ui, system-ui, -apple-system, sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 500;
   line-height: 1.5;
   user-select: none;
   cursor: pointer;
-  transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-card, none);
 }
 
 .super-settings-btn:hover:not(:disabled) {
   background-color: var(--btn-hover-color);
+  border-color: var(--accent, var(--primary-color));
 }
 
 .super-settings-btn:active {
@@ -496,7 +549,7 @@ select.super-settings-form-control:not([size]):not([multiple]) {
 }
 
 .super-settings-btn:disabled {
-  opacity: 0.8;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -521,4 +574,16 @@ select.super-settings-form-control:not([size]):not([multiple]) {
 .super-settings[data-read-only="true"] .js-edit-setting,
 .super-settings[data-read-only="true"] .js-remove-setting {
   display: none !important;
+}
+
+/* Settings count */
+.js-settings-count {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-tertiary, var(--muted-color));
+}
+
+/* Flash message */
+.js-flash {
+  font-size: 0.8125rem;
 }

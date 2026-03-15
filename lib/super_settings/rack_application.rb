@@ -130,13 +130,11 @@ module SuperSettings
     def handle_request(env)
       request = Rack::Request.new(env)
       path = request.path[@path_prefix.length, request.path.length]
-      if request.head?
-        if path == "/" || path == ""
-          return handle_head_request(request)
-        end
-      elsif request.get?
+      if request.get?
         if (path == "/" || path == "") && web_ui_enabled?
           return handle_root_request(request)
+        elsif path == "/authorized"
+          return handle_authorization_request(request)
         elsif path == "/api.js"
           return handle_api_js_request(request)
         elsif path == "/settings"
@@ -163,9 +161,12 @@ module SuperSettings
       end
     end
 
-    def handle_head_request(request)
+    def handle_authorization_request(request)
       check_authorization(request) do |user|
-        [200, {}, []]
+        read_only = !allow_write?(user) || !!request.env["super_settings.read_only"]
+        permission = read_only ? "read-only" : "read-write"
+        payload = {authorized: true, permission: permission}
+        [200, {"content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache", "super-settings-permission" => permission}, [JSON.generate(payload)]]
       end
     end
 
@@ -253,10 +254,7 @@ module SuperSettings
         return json_response(403, error: "Access denied")
       end
 
-      response = yield(user)
-      read_only = !allow_write?(user) || !!request.env["super_settings.read_only"]
-      response[1]["SuperSettings-Authorization"] = read_only ? "read-only" : "read-write"
-      response
+      yield(user)
     end
 
     def json_response(status, payload)

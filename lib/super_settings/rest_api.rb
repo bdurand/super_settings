@@ -83,7 +83,7 @@ module SuperSettings
       #
       #   The response will be either
       #
-      #   {success: true}
+      #   {success: true, values: {key => value, ...}}
       #
       #   or
       #
@@ -93,7 +93,11 @@ module SuperSettings
       def update(settings_params, changed_by = nil)
         all_valid, settings = Setting.bulk_update(Array(settings_params), changed_by)
         if all_valid
-          {success: true}
+          values = {}
+          settings.each do |setting|
+            values[setting.key] = setting.value
+          end
+          {success: true, values: values}
         else
           errors = {}
           settings.each do |setting|

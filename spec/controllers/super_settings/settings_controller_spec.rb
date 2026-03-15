@@ -106,7 +106,7 @@ if defined?(SuperSettings::SettingsController)
           ]
         }
         expect(response.status).to eq 200
-        expect(JSON.parse(response.body)).to eq({"success" => true})
+        expect(JSON.parse(response.body)).to eq({"success" => true, "values" => {"string" => "new value", "integer" => nil, "newkey" => 44}})
         expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "new value"
         expect(SuperSettings::Setting.all.detect { |s| s.key == setting_2.key }.deleted?).to eq true
         expect(SuperSettings::Setting.find_by_key("newkey").value).to eq 44

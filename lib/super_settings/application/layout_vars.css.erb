@@ -1,8 +1,9 @@
-<% unless color_scheme != :dark %>
+<% unless color_scheme == :dark %>
   :root {
-    --text-color: #212529;
-    --background-color: #ffffff;
-    --link-color: #369;
+    --text-color: #111827;
+    --background-color: #f4f5f7;
+    --link-color: #0d9488;
+    --border-color: #e2e5ea;
   }
 <% end %>
 
@@ -11,9 +12,10 @@
 <% end %>
 <% if color_scheme == :system || color_scheme == :dark %>
   :root {
-    --text-color: #fff;
-    --background-color: #333;
-    --link-color: rgb(133, 179, 225);
+    --text-color: #e5e7eb;
+    --background-color: #1a1d23;
+    --link-color: #2dd4bf;
+    --border-color: #363b44;
   }
 <% end %>
 <% if color_scheme == :system %>

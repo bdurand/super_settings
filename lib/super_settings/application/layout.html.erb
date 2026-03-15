@@ -3,7 +3,7 @@
   <head>
     <title><%= application_name %> Settings</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="pinterest" content="nopin">
     <meta name="format-detection" content="telephone=no email=no date=no address=no">
     <meta name="robots" content="noindex, nofollow">
@@ -13,10 +13,10 @@
   </head>
 
   <body class="super_settings">
-    <header>
-      <h1 class="logo">
+    <header class="super-settings-page-header">
+      <div class="super-settings-page-header-inner">
         <%= application_header %>
-      </h1>
+      </div>
     </header>
     <div class="super-settings-container">
       <%= yield %>
