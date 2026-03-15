@@ -1,0 +1,128 @@
+  [1m[35m (0.6ms)[0m  [1m[35mCREATE TABLE "schema_migrations" ("version" varchar NOT NULL PRIMARY KEY)[0m
+  [1m[35m (0.1ms)[0m  [1m[35mCREATE TABLE "ar_internal_metadata" ("key" varchar NOT NULL PRIMARY KEY, "value" varchar, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL)[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.0ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = ? ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[36mActiveRecord::InternalMetadata Create (0.1ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('environment', 'development', '2026-03-06 22:28:18.606940', '2026-03-06 22:28:18.606941') RETURNING "key"[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+Migrating to CreateSuperSettings (20260306222808)
+  [1m[36mTRANSACTION (0.0ms)[0m  [1m[36mBEGIN immediate TRANSACTION[0m
+  [1m[35m (0.1ms)[0m  [1m[35mCREATE TABLE "super_settings" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "key" varchar(190) NOT NULL, "value_type" varchar(30) DEFAULT 'string' NOT NULL, "raw_value" varchar(4096), "description" varchar(4096), "updated_at" datetime NOT NULL, "created_at" datetime NOT NULL, "deleted" boolean DEFAULT FALSE)[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_super_settings_on_key" ON "super_settings" ("key")[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE INDEX "index_super_settings_on_updated_at" ON "super_settings" ("updated_at")[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE TABLE "super_settings_histories" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "key" varchar(190) NOT NULL, "changed_by" varchar(150), "value" varchar(4096), "deleted" boolean DEFAULT FALSE, "created_at" datetime NOT NULL)[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE INDEX "index_super_settings_histories_on_key" ON "super_settings_histories" ("key")[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE INDEX "index_super_settings_histories_on_changed_by" ON "super_settings_histories" ("changed_by")[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.0ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260306222808') RETURNING "version"[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[36mCOMMIT TRANSACTION[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mSuperSettings::Storage::ActiveRecordStorage::Model Load (0.0ms)[0m  [1m[34mSELECT "super_settings".* FROM "super_settings" WHERE "super_settings"."deleted" = ?[0m  [["deleted", 0]]
+  [1m[36mSuperSettings::Storage::ActiveRecordStorage::Model Load (0.0ms)[0m  [1m[34mSELECT "super_settings".* FROM "super_settings" WHERE "super_settings"."deleted" = ?[0m  [["deleted", 0]]
+  [1m[36mSuperSettings::Storage::ActiveRecordStorage::Model Load (0.0ms)[0m  [1m[34mSELECT "super_settings".* FROM "super_settings" WHERE "super_settings"."deleted" = ?[0m  [["deleted", 0]]
+  [1m[36mSuperSettings::Storage::ActiveRecordStorage::Model Load (0.0ms)[0m  [1m[34mSELECT "super_settings".* FROM "super_settings" WHERE "super_settings"."deleted" = ?[0m  [["deleted", 0]]
+  [1m[35m (0.0ms)[0m  [1m[35mDROP TABLE IF EXISTS "super_settings"[0m
+  [1m[35m (0.6ms)[0m  [1m[35mCREATE TABLE "super_settings" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "created_at" datetime NOT NULL, "deleted" boolean DEFAULT FALSE, "description" varchar(4096), "key" varchar(190) NOT NULL, "raw_value" varchar(4096), "updated_at" datetime NOT NULL, "value_type" varchar(30) DEFAULT 'string' NOT NULL)[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_super_settings_on_key" ON "super_settings" ("key")[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE INDEX "index_super_settings_on_updated_at" ON "super_settings" ("updated_at")[0m
+  [1m[35m (0.0ms)[0m  [1m[35mDROP TABLE IF EXISTS "super_settings_histories"[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE TABLE "super_settings_histories" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "changed_by" varchar(150), "created_at" datetime NOT NULL, "deleted" boolean DEFAULT FALSE, "key" varchar(190) NOT NULL, "value" varchar(4096))[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE INDEX "index_super_settings_histories_on_changed_by" ON "super_settings_histories" ("changed_by")[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE INDEX "index_super_settings_histories_on_key" ON "super_settings_histories" ("key")[0m
+  [1m[35m (0.1ms)[0m  [1m[35mCREATE TABLE "schema_migrations" ("version" varchar NOT NULL PRIMARY KEY)[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[35m (0.0ms)[0m  [1m[32mINSERT INTO "schema_migrations" (version) VALUES (20260306222808)[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE TABLE "ar_internal_metadata" ("key" varchar NOT NULL PRIMARY KEY, "value" varchar, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL)[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.0ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = ? ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[36mActiveRecord::InternalMetadata Create (0.0ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('environment', 'development', '2026-03-06 22:30:09.058539', '2026-03-06 22:30:09.058540') RETURNING "key"[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.0ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = ? ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[36mActiveRecord::InternalMetadata Load (0.0ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = ? ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "schema_sha1"]]
+  [1m[36mActiveRecord::InternalMetadata Create (0.0ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('schema_sha1', '6f2b126787d2023a8ee164a963f44c9d99b3b652', '2026-03-06 22:30:09.058788', '2026-03-06 22:30:09.058788') RETURNING "key"[0m
+  [1m[35m (0.0ms)[0m  [1m[35mDROP TABLE IF EXISTS "super_settings"[0m
+  [1m[35m (0.1ms)[0m  [1m[35mCREATE TABLE "super_settings" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "created_at" datetime NOT NULL, "deleted" boolean DEFAULT FALSE, "description" varchar(4096), "key" varchar(190) NOT NULL, "raw_value" varchar(4096), "updated_at" datetime NOT NULL, "value_type" varchar(30) DEFAULT 'string' NOT NULL)[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_super_settings_on_key" ON "super_settings" ("key")[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE INDEX "index_super_settings_on_updated_at" ON "super_settings" ("updated_at")[0m
+  [1m[35m (0.0ms)[0m  [1m[35mDROP TABLE IF EXISTS "super_settings_histories"[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE TABLE "super_settings_histories" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "changed_by" varchar(150), "created_at" datetime NOT NULL, "deleted" boolean DEFAULT FALSE, "key" varchar(190) NOT NULL, "value" varchar(4096))[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE INDEX "index_super_settings_histories_on_changed_by" ON "super_settings_histories" ("changed_by")[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE INDEX "index_super_settings_histories_on_key" ON "super_settings_histories" ("key")[0m
+  [1m[35m (0.1ms)[0m  [1m[35mCREATE TABLE "schema_migrations" ("version" varchar NOT NULL PRIMARY KEY)[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[35m (0.0ms)[0m  [1m[32mINSERT INTO "schema_migrations" (version) VALUES (20260306222808)[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE TABLE "ar_internal_metadata" ("key" varchar NOT NULL PRIMARY KEY, "value" varchar, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL)[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.0ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = ? ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[36mActiveRecord::InternalMetadata Create (0.0ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('environment', 'development', '2026-03-06 22:30:09.061498', '2026-03-06 22:30:09.061498') RETURNING "key"[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.0ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = ? ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[36mActiveRecord::InternalMetadata Update (0.0ms)[0m  [1m[33mUPDATE "ar_internal_metadata" SET "value" = 'test', "updated_at" = '2026-03-06 22:30:09.061682' WHERE "ar_internal_metadata"."key" = 'environment'[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.0ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = ? ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "schema_sha1"]]
+  [1m[36mActiveRecord::InternalMetadata Create (0.0ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('schema_sha1', '6f2b126787d2023a8ee164a963f44c9d99b3b652', '2026-03-06 22:30:09.061804', '2026-03-06 22:30:09.061805') RETURNING "key"[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mSuperSettings::Storage::ActiveRecordStorage::Model Load (0.0ms)[0m  [1m[34mSELECT "super_settings".* FROM "super_settings" WHERE "super_settings"."deleted" = ?[0m  [["deleted", 0]]
+  [1m[36mSuperSettings::Storage::ActiveRecordStorage::Model Load (0.1ms)[0m  [1m[34mSELECT "super_settings".* FROM "super_settings" WHERE "super_settings"."deleted" = ?[0m  [["deleted", 0]]
+  [1m[36mSuperSettings::Storage::ActiveRecordStorage::Model Load (0.0ms)[0m  [1m[34mSELECT "super_settings".* FROM "super_settings" WHERE "super_settings"."deleted" = ?[0m  [["deleted", 0]]
+Started GET "/favicon.ico" for ::1 at 2026-03-06 14:34:40 -0800
+  
+ActionController::RoutingError (No route matches [GET] "/favicon.ico"):
+  
+  [1m[35m (0.2ms)[0m  [1m[35mCREATE TABLE "schema_migrations" ("version" varchar NOT NULL PRIMARY KEY)[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE TABLE "ar_internal_metadata" ("key" varchar NOT NULL PRIMARY KEY, "value" varchar, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL)[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.1ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = ? ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[36mActiveRecord::InternalMetadata Create (0.0ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('environment', 'development', '2026-03-15 06:10:44.452337', '2026-03-15 06:10:44.452337') RETURNING "key"[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+Migrating to CreateSuperSettings (20210414004553)
+  [1m[36mTRANSACTION (0.0ms)[0m  [1m[36mBEGIN immediate TRANSACTION[0m
+  [1m[35m (0.1ms)[0m  [1m[35mCREATE TABLE "super_settings" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "key" varchar(190) NOT NULL, "value_type" varchar(30) DEFAULT 'string' NOT NULL, "raw_value" varchar(4096), "description" varchar(4096), "updated_at" datetime NOT NULL, "created_at" datetime NOT NULL, "deleted" boolean DEFAULT FALSE)[0m
+  [1m[35m (0.1ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_super_settings_on_key" ON "super_settings" ("key")[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE INDEX "index_super_settings_on_updated_at" ON "super_settings" ("updated_at")[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE TABLE "super_settings_histories" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "key" varchar(190) NOT NULL, "changed_by" varchar(150), "value" varchar(4096), "deleted" boolean DEFAULT FALSE, "created_at" datetime NOT NULL)[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE INDEX "index_super_settings_histories_on_key" ON "super_settings_histories" ("key")[0m
+  [1m[35m (0.0ms)[0m  [1m[35mCREATE INDEX "index_super_settings_histories_on_changed_by" ON "super_settings_histories" ("changed_by")[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.0ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20210414004553') RETURNING "version"[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[36mCOMMIT TRANSACTION[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mSuperSettings::Storage::ActiveRecordStorage::Model Load (0.1ms)[0m  [1m[34mSELECT "super_settings".* FROM "super_settings" WHERE "super_settings"."deleted" = ?[0m  [["deleted", 0]]
+  [1m[36mSuperSettings::Storage::ActiveRecordStorage::Model Load (0.1ms)[0m  [1m[34mSELECT "super_settings".* FROM "super_settings" WHERE "super_settings"."deleted" = ?[0m  [["deleted", 0]]
+Started GET "/favicon.ico" for ::1 at 2026-03-14 23:24:08 -0700
+  
+ActionController::RoutingError (No route matches [GET] "/favicon.ico"):
+  
+  [1m[36mSuperSettings::Storage::ActiveRecordStorage::Model Load (0.2ms)[0m  [1m[34mSELECT "super_settings".* FROM "super_settings" WHERE "super_settings"."deleted" = ?[0m  [["deleted", 0]]
+Started GET "/" for ::1 at 2026-03-14 23:25:35 -0700
+Processing by Rails::WelcomeController#index as HTML
+  Rendering /Users/bdurand/.rbenv/versions/4.0.0/lib/ruby/gems/4.0.0/gems/railties-8.1.2/lib/rails/templates/rails/welcome/index.html.erb
+  Rendered /Users/bdurand/.rbenv/versions/4.0.0/lib/ruby/gems/4.0.0/gems/railties-8.1.2/lib/rails/templates/rails/welcome/index.html.erb (Duration: 0.5ms | GC: 0.0ms)
+Completed 200 OK in 6ms (Views: 2.1ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/super_settings" for ::1 at 2026-03-14 23:25:53 -0700
+Processing by SuperSettings::SettingsController#root as HTML
+  Rendering layout /Users/bdurand/conductor/workspaces/super_settings/windhoek/app/views/layouts/super_settings/settings.html.erb
+  Rendering html template within layouts/super_settings/settings
+  Rendered html template within layouts/super_settings/settings (Duration: 0.0ms | GC: 0.0ms)
+  Rendering /Users/bdurand/conductor/workspaces/super_settings/windhoek/lib/super_settings/application/layout_styles.css
+  Rendered /Users/bdurand/conductor/workspaces/super_settings/windhoek/lib/super_settings/application/layout_styles.css (Duration: 0.1ms | GC: 0.0ms)
+  Rendered layout /Users/bdurand/conductor/workspaces/super_settings/windhoek/app/views/layouts/super_settings/settings.html.erb (Duration: 2.6ms | GC: 0.0ms)
+Completed 200 OK in 65ms (Views: 4.4ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/super_settings/settings" for ::1 at 2026-03-14 23:25:54 -0700
+Processing by SuperSettings::SettingsController#index as JSON
+  [1m[36mSuperSettings::Storage::ActiveRecordStorage::Model Load (1.5ms)[0m  [1m[34mSELECT "super_settings".* FROM "super_settings" WHERE "super_settings"."deleted" = ?[0m  [["deleted", 0]]
+Completed 200 OK in 3ms (Views: 0.1ms | ActiveRecord: 1.5ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/super_settings" for ::1 at 2026-03-14 23:26:59 -0700
+Processing by SuperSettings::SettingsController#root as HTML
+  Rendering layout /Users/bdurand/conductor/workspaces/super_settings/windhoek/app/views/layouts/super_settings/settings.html.erb
+  Rendering html template within layouts/super_settings/settings
+  Rendered html template within layouts/super_settings/settings (Duration: 0.0ms | GC: 0.0ms)
+  Rendering /Users/bdurand/conductor/workspaces/super_settings/windhoek/lib/super_settings/application/layout_styles.css
+  Rendered /Users/bdurand/conductor/workspaces/super_settings/windhoek/lib/super_settings/application/layout_styles.css (Duration: 0.2ms | GC: 0.0ms)
+  Rendered layout /Users/bdurand/conductor/workspaces/super_settings/windhoek/app/views/layouts/super_settings/settings.html.erb (Duration: 4.7ms | GC: 2.1ms)
+Completed 200 OK in 48ms (Views: 6.3ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 7.7ms)
+
+
+Started GET "/super_settings/settings" for ::1 at 2026-03-14 23:26:59 -0700
+Processing by SuperSettings::SettingsController#index as JSON
+  [1m[36mSuperSettings::Storage::ActiveRecordStorage::Model Load (0.1ms)[0m  [1m[34mSELECT "super_settings".* FROM "super_settings" WHERE "super_settings"."deleted" = ?[0m  [["deleted", 0]]
+Completed 200 OK in 4ms (Views: 0.1ms | ActiveRecord: 1.2ms (1 query, 0 cached) | GC: 0.5ms)
+
+

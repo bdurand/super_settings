@@ -21,6 +21,7 @@
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
   width: 100%;
   overflow: hidden;
+  scroll-margin-top: 80px;
 }
 
 .super-settings-card:hover {
