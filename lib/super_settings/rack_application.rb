@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "i18n"
-
 module SuperSettings
   # Rack middleware for serving the REST API. See SuperSettings::RestAPI for more details on usage.
   #
@@ -185,7 +183,7 @@ module SuperSettings
         locale = resolve_locale(request)
         headers = {"content-type" => "text/html; charset=utf-8", "cache-control" => "no-cache"}
         lang = request.GET["lang"] if request.respond_to?(:GET)
-        if lang && SuperSettings::I18n.available_locales.include?(lang)
+        if lang && SuperSettings::MiniI18n.available_locales.include?(lang)
           headers["set-cookie"] = "super_settings_locale=#{lang}; path=/; SameSite=Lax"
         end
         [200, headers, [Application.new(layout: :default, add_to_head: add_to_head(request), color_scheme: SuperSettings.configuration.controller.color_scheme, read_only: read_only, locale: locale).render]]
@@ -275,7 +273,7 @@ module SuperSettings
     # 3. Accept-Language header
     # 4. Default locale
     def resolve_locale(request)
-      available = SuperSettings::I18n.available_locales
+      available = SuperSettings::MiniI18n.available_locales
 
       # 1. Explicit query parameter
       lang = request.GET["lang"] if request.respond_to?(:GET)
@@ -287,7 +285,7 @@ module SuperSettings
 
       # 3. Accept-Language header
       accept = request.env["HTTP_ACCEPT_LANGUAGE"] if request.respond_to?(:env)
-      locale_from_accept_language(accept.to_s, available) || SuperSettings::I18n::DEFAULT_LOCALE
+      locale_from_accept_language(accept.to_s, available) || SuperSettings::MiniI18n::DEFAULT_LOCALE
     end
 
     # Parse the Accept-Language header and return the best matching locale.

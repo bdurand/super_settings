@@ -23,11 +23,11 @@
       <%= yield %>
     </div>
 
-    <% locales = SuperSettings::I18n.available_locales %>
+    <% locales = SuperSettings::MiniI18n.available_locales %>
     <% if locales.size > 1 %>
       <footer class="super-settings-page-footer">
-        <% locale = @locale || SuperSettings::I18n::DEFAULT_LOCALE %>
-        <% current_locale_name = SuperSettings::I18n.t("language.name", locale: locale) %>
+        <% locale = @locale || SuperSettings::MiniI18n::DEFAULT_LOCALE %>
+        <% current_locale_name = SuperSettings::MiniI18n.t("language.name", locale: locale) %>
         <details class="super-settings-language-menu" id="super-settings-language-menu">
           <summary class="super-settings-language-trigger" aria-label="<%= t('language.label') %>" aria-haspopup="menu">
             <span class="super-settings-language-trigger-icon" aria-hidden="true">
@@ -49,7 +49,7 @@
 
           <menu class="super-settings-language-popup" role="menu" aria-label="<%= t('language.label') %>">
             <% locales.each do |loc| %>
-              <% language_name = SuperSettings::I18n.t('language.name', locale: loc) %>
+              <% language_name = SuperSettings::MiniI18n.t('language.name', locale: loc) %>
               <% active = loc == locale %>
               <li>
                 <button

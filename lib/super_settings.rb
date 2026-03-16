@@ -21,6 +21,7 @@ module SuperSettings
   autoload :ControllerActions, "super_settings/controller_actions"
   autoload :HistoryItem, "super_settings/history_item"
   autoload :HttpClient, "super_settings/http_client"
+  autoload :MiniI18n, "super_settings/mini_i18n"
   autoload :VERSION, "super_settings/version"
 
   # Default number of seconds between cache refresh checks.
