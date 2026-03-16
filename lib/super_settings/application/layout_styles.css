@@ -20,7 +20,7 @@ body {
 
 .super-settings-page-header {
   border-bottom: 1px solid var(--border-color, #e2e5ea);
-  background: var(--background-color);
+  background: var(--header-background-color, #edeef1);
 }
 
 .super-settings-page-header-inner {
@@ -87,6 +87,7 @@ a.super-settings-page-header-brand:visited {
 
 .super-settings-container {
   max-width: 1280px;
+  margin: 0 auto;
   padding: 0 24px;
 }
 

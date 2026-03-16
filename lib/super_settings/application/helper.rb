@@ -136,34 +136,50 @@ module SuperSettings
       content_tag(:a, image, href: url, class: js_class, disabled: disabled, style: link_style, title: title)
     end
 
+    class << self
+      # Render the header HTML for the web pages using values set in the configuration.
+      # Uses the custom application name as the title if set, otherwise falls back to
+      # the localized brand title. Uses the gear icon if no application logo is configured.
+      #
+      # @param locale [String] the locale code for translations.
+      # @return [String] raw HTML string.
+      def application_header(locale: nil)
+        config = SuperSettings.configuration.controller
+        locale ||= SuperSettings::I18n::DEFAULT_LOCALE
+        escape = ->(text) { ERB::Util.html_escape(text) }
+
+        mark_content = if Coerce.present?(config.application_logo)
+          "<img src=\"#{escape.call(config.application_logo)}\" alt=\"\">"
+        else
+          GEAR_SVG
+        end
+        mark = "<div class=\"super-settings-page-header-mark\" aria-hidden=\"true\">" \
+          "#{mark_content}</div>"
+
+        title_text = escape.call(config.application_name || SuperSettings::I18n.t("page.brand_title", locale: locale))
+        title = "<h1 class=\"super-settings-page-header-title\">#{title_text}</h1>"
+
+        brand_content = mark + title
+        if config.application_link
+          href = escape.call(config.application_link)
+          "<a href=\"#{href}\" class=\"super-settings-page-header-brand\">" \
+            "#{brand_content}</a>"
+        else
+          "<div class=\"super-settings-page-header-brand\">#{brand_content}</div>"
+        end
+      end
+    end
+
     # Return the application name set by the configuration or a default value.
     def application_name
       html_escape(SuperSettings.configuration.controller.application_name || "Application")
     end
 
     # Render the header for the web pages using values set in the configuration.
+    #
+    # @return [String] raw HTML string.
     def application_header
-      config = SuperSettings.configuration.controller
-
-      # Build the mark (icon area)
-      mark_content = if Coerce.present?(config.application_logo)
-        tag(:img, src: config.application_logo, alt: "")
-      else
-        GEAR_SVG
-      end
-      mark = content_tag(:div, mark_content, class: "super-settings-page-header-mark", "aria-hidden": "true")
-
-      # Build title and subtitle
-      title = content_tag(:h1, html_escape(t("page.brand_title")), class: "super-settings-page-header-title")
-      subtitle = content_tag(:p, html_escape("#{application_name} #{t("page.title_suffix")}"), class: "super-settings-page-header-subtitle")
-      text = content_tag(:div, title + subtitle, class: "")
-
-      brand_content = mark + text
-      if config.application_link
-        content_tag(:a, brand_content, href: config.application_link, class: "super-settings-page-header-brand")
-      else
-        content_tag(:div, brand_content, class: "super-settings-page-header-brand")
-      end
+      Helper.application_header(locale: @locale)
     end
 
     # Render an HTML tag without any body content.

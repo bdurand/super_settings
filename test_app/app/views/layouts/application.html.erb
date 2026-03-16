@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Sample App — <%= title %></title>
+    <title>Sample App</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <%= csrf_meta_tags %>
     <style type="text/css">
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       html { font-size: 16px; }
@@ -105,9 +106,8 @@
     <header class="app-header">
       <h1>Sample Application</h1>
       <nav>
-        <a href="/">Standalone</a>
-        <a href="/embedded">Embedded</a>
-        <a href="/test_configuration">Test Config</a>
+        <a href="/configuration">Configuration</a>
+        <a href="/super_settings">Settings</a>
       </nav>
     </header>
 
@@ -115,13 +115,11 @@
       <h2>Navigation</h2>
       <ul>
         <li><a href="/">Home</a></li>
-        <li><a href="/embedded" class="<%= 'active' if title == 'Embedded Settings' %>">All Settings</a></li>
-        <li><a href="/test_configuration" class="<%= 'active' if title == 'Test Configuration' %>">Test Configuration</a></li>
       </ul>
     </aside>
 
     <main class="app-main">
-      <%= content %>
+      <%= yield %>
     </main>
 
     <footer class="app-footer">

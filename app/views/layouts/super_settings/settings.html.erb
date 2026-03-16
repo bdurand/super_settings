@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <%= content_tag :title, "#{super_settings_application_name} Settings"%>
+    <%= content_tag :title, "#{super_settings_application_name} Settings" %>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag if defined?(csp_meta_tag) %>
     <%= super_settings_layout_style_tag %>
   </head>
 
   <body class="super_settings">
-    <header>
-      <h1 class="logo">
+    <header class="super-settings-page-header">
+      <div class="super-settings-page-header-inner">
         <%= super_settings_application_header %>
-      </h1>
+      </div>
     </header>
     <div class="super-settings-container">
       <%= yield %>

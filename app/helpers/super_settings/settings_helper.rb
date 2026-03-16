@@ -13,21 +13,14 @@ module SuperSettings
 
     # Return the application name set by the configuration or a default value.
     def super_settings_application_name
-      SuperSettings.configuration.controller.application_name || "Application"
+      SuperSettings.configuration.controller.application_name
     end
 
     # Render the header for the web pages using values set in the configuration.
+    #
+    # @return [String]
     def super_settings_application_header
-      config = SuperSettings.configuration.controller
-      content = "#{super_settings_application_name} Settings"
-      if Coerce.present?(config.application_logo)
-        content = image_tag(config.application_logo, alt: "").concat(content)
-      end
-      if config.application_link
-        link_to(content, config.application_link)
-      else
-        content
-      end
+      SuperSettings::Helper.application_header.html_safe
     end
 
     private

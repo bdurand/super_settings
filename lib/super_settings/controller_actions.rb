@@ -73,6 +73,20 @@ module SuperSettings
       render json: SuperSettings::RestAPI.updated_since(params[:time])
     end
 
+    # API endpoint for checking if the user is authorized to edit settings.
+    def authorized
+      permission = super_settings_read_only? ? "read-only" : "read-write"
+      headers["super-settings-permission"] = permission
+      headers["cache-control"] = "no-cache"
+      render json: {authorized: true, permission: permission}
+    end
+
+    # Serve up the api.js file that defines a JavaScript client for the REST API.
+    def api_js
+      js = File.read(File.expand_path(File.join("application", "api.js"), __dir__))
+      render js: js.html_safe, content_type: "application/javascript; charset=utf-8"
+    end
+
     protected
 
     # Mark the current request as read-only. When read-only, the web UI will hide edit
@@ -91,6 +105,8 @@ module SuperSettings
     # By default it is only enabled on stateful requests that include Basic authorization
     # or cookies in the request so that stateless REST API calls are allowed.
     def protect_from_forgery?
+      return false if action_name == "api_js"
+
       request.cookies.present? || request.authorization.to_s.split(" ", 2).first&.match?(/\ABasic/i)
     end
   end

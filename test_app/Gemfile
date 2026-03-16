@@ -6,4 +6,5 @@ gem "sqlite3", "~> 2.9"
 
 gem "puma", "~> 7.0"
 
+gem "ultra_settings", path: "/Users/bdurand/conductor/workspaces/ultra_settings/andorra"
 gem "super_settings", path: ".."
