@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../spec_helper"
+require "spec_helper"
 
 describe SuperSettings::HttpClient do
   let(:payload) { {"a" => 1} }

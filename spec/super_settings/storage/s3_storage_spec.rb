@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../../spec_helper"
+require "spec_helper"
 
 if EXTENSIONS[:s3]
   describe SuperSettings::Storage::S3Storage do
