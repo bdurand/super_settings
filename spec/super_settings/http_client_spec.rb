@@ -8,7 +8,7 @@ describe SuperSettings::HttpClient do
 
   describe "get" do
     it "can make get requests" do
-      http = SuperSettings::HttpClient.new("https://example.com")
+      SuperSettings::HttpClient.new("https://example.com")
       stub_request(:get, "https://example.com/settings").to_return(response)
       http = SuperSettings::HttpClient.new("https://example.com")
       expect(http.get("/settings")).to eq payload

@@ -53,7 +53,7 @@ describe SuperSettings::Storage::HttpStorage do
 
   describe "updated_since" do
     it "should return settings updated since a timestamp" do
-      setting_1 = SuperSettings::Storage::HttpStorage.new(key: "setting_1", raw_value: "1", updated_at: Time.now - 100)
+      SuperSettings::Storage::HttpStorage.new(key: "setting_1", raw_value: "1", updated_at: Time.now - 100)
       setting_2 = SuperSettings::Storage::HttpStorage.new(key: "setting_2", raw_value: "2", updated_at: Time.now - 50)
       setting_3 = SuperSettings::Storage::HttpStorage.new(key: "setting_3", raw_value: "3")
       payload = {settings: [SuperSettings::Setting.new(setting_2), SuperSettings::Setting.new(setting_3)]}

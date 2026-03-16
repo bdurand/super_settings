@@ -23,7 +23,7 @@ Bundler.require(:default, :test)
 
 require "dotenv/load"
 
-EXTENSIONS = {}
+EXTENSIONS = {} unless defined?(EXTENSIONS)
 
 require_relative "../lib/super_settings/storage/test_storage"
 SuperSettings::Setting.storage = SuperSettings::Storage::TestStorage
@@ -35,11 +35,14 @@ if defined?(Rails) && !SuperSettings::Coerce.boolean(ENV["SKIP_RAILS"])
 
   require File.expand_path("dummy/config/environment", __dir__)
 
-  Dir.glob(File.expand_path("../db/migrate/*.rb", __dir__)).sort.each do |path|
-    require(path)
-    class_name = File.basename(path).sub(".rb", "").split("_", 2).last.camelcase
-    class_name.constantize.migrate(:up)
+  ActiveRecord::Migration.suppress_messages do
+    Dir.glob(File.expand_path("../db/migrate/*.rb", __dir__)).sort.each do |path|
+      require(path)
+      class_name = File.basename(path).sub(".rb", "").split("_", 2).last.camelcase
+      class_name.constantize.migrate(:up)
+    end
   end
+
   SuperSettings::Storage::ActiveRecordStorage::ApplicationRecord.connection.schema_cache.clear!
   SuperSettings::Storage::ActiveRecordStorage::Model.reset_column_information
   SuperSettings::Storage::ActiveRecordStorage::HistoryModel.reset_column_information
@@ -138,6 +141,7 @@ Capybara.register_driver(:cuprite) do |app|
   )
 end
 
+Capybara.server = :puma, {Silent: true}
 Capybara.default_driver = :cuprite
 Capybara.javascript_driver = :cuprite
 Capybara.default_max_wait_time = 5

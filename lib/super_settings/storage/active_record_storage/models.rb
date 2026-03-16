@@ -17,15 +17,13 @@ module SuperSettings
           # ActiveRecord storage is only available if the connection pool is connected and the table exists.
 
           def available?
-            begin
-              # table_exists? will attempt to retrieve a connection from the pool and load the schema_cache
-              # which is memoized per connection. If there is no database or connection, it will raise an error.
-              table_exists?
-            rescue ActiveRecord::NoDatabaseError, ActiveRecord::ConnectionNotEstablished
-              # Ignore errors so the application doesn't break if the database is not available.
-              # Otherwise things like build processes can fail.
-              false
-            end
+            # table_exists? will attempt to retrieve a connection from the pool and load the schema_cache
+            # which is memoized per connection. If there is no database or connection, it will raise an error.
+            table_exists?
+          rescue ActiveRecord::NoDatabaseError, ActiveRecord::ConnectionNotEstablished
+            # Ignore errors so the application doesn't break if the database is not available.
+            # Otherwise things like build processes can fail.
+            false
           end
         end
       end

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "i18n"
 require_relative "application/helper"
 
 module SuperSettings
@@ -13,7 +14,9 @@ module SuperSettings
     # @param api_base_url [String] the base URL for the REST API.
     # @param color_scheme [Symbol] whether to use dark mode for the application UI. If +nil+, the user's system
     #                              preference will be used.
-    def initialize(layout: nil, add_to_head: nil, api_base_url: nil, color_scheme: nil)
+    # @param read_only [Boolean] whether to render the application in read-only mode (edit controls hidden).
+    # @param locale [String] the locale code for translations (default: "en").
+    def initialize(layout: nil, add_to_head: nil, api_base_url: nil, color_scheme: nil, read_only: false, locale: nil)
       if layout
         layout = File.expand_path(File.join("application", "layout.html.erb"), __dir__) if layout == :default
         @layout = ERB.new(File.read(layout)) if layout
@@ -25,6 +28,8 @@ module SuperSettings
 
       @api_base_url = api_base_url
       @color_scheme = color_scheme&.to_sym
+      @read_only = !!read_only
+      @locale = locale || SuperSettings::I18n::DEFAULT_LOCALE
     end
 
     # Render the web UI application HTML.
@@ -32,6 +37,17 @@ module SuperSettings
     # @return [String] the rendered HTML
     def render
       template = ERB.new(File.read(File.expand_path(File.join("application", "index.html.erb"), __dir__)))
+      html = template.result(binding)
+      html = render_layout { html } if @layout
+      html = html.html_safe if html.respond_to?(:html_safe)
+      html
+    end
+
+    # Render the edit form HTML for a single setting.
+    #
+    # @return [String] the rendered HTML
+    def render_edit
+      template = ERB.new(File.read(File.expand_path(File.join("application", "edit.html.erb"), __dir__)))
       html = template.result(binding)
       html = render_layout { html } if @layout
       html = html.html_safe if html.respond_to?(:html_safe)

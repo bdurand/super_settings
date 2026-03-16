@@ -231,9 +231,9 @@ describe SuperSettings::Setting do
 
       describe "all" do
         it "should return all settings" do
-          setting_1 = SuperSettings::Setting.create!(key: "setting.1", value: "foo")
-          setting_2 = SuperSettings::Setting.create!(key: "setting.2", value: "foo", deleted: true)
-          setting_3 = SuperSettings::Setting.create!(key: "setting.3", value: "foo")
+          SuperSettings::Setting.create!(key: "setting.1", value: "foo")
+          SuperSettings::Setting.create!(key: "setting.2", value: "foo", deleted: true)
+          SuperSettings::Setting.create!(key: "setting.3", value: "foo")
           expect(SuperSettings::Setting.all.collect(&:key)).to match_array(["setting.1", "setting.2", "setting.3"])
         end
       end
@@ -241,17 +241,17 @@ describe SuperSettings::Setting do
       describe "updated_since" do
         it "should return all settings updated since a specified time" do
           setting_1 = SuperSettings::Setting.create!(key: "setting.1", value: "foo", updated_at: Time.now - 1)
-          setting_2 = SuperSettings::Setting.create!(key: "setting.2", value: "foo", deleted: true)
-          setting_3 = SuperSettings::Setting.create!(key: "setting.3", value: "foo")
+          SuperSettings::Setting.create!(key: "setting.2", value: "foo", deleted: true)
+          SuperSettings::Setting.create!(key: "setting.3", value: "foo")
           expect(SuperSettings::Setting.updated_since(setting_1.updated_at).collect(&:key)).to match_array(["setting.2", "setting.3"])
         end
       end
 
       describe "active" do
         it "should return only the active settings" do
-          setting_1 = SuperSettings::Setting.create!(key: "setting.1", value: "foo")
-          setting_2 = SuperSettings::Setting.create!(key: "setting.2", value: "foo", deleted: true)
-          setting_3 = SuperSettings::Setting.create!(key: "setting.3", value: "foo")
+          SuperSettings::Setting.create!(key: "setting.1", value: "foo")
+          SuperSettings::Setting.create!(key: "setting.2", value: "foo", deleted: true)
+          SuperSettings::Setting.create!(key: "setting.3", value: "foo")
           expect(SuperSettings::Setting.active.collect(&:key)).to match_array(["setting.1", "setting.3"])
         end
       end
@@ -277,7 +277,7 @@ describe SuperSettings::Setting do
           it "should cache the last updated timestamp" do
             cache = ActiveSupport::Cache::MemoryStore.new
             SuperSettings::Setting.cache = cache
-            setting = SuperSettings::Setting.create!(key: "test", value: "foobar", updated_at: Time.now - 10)
+            SuperSettings::Setting.create!(key: "test", value: "foobar", updated_at: Time.now - 10)
             last_updated_at = SuperSettings::Setting.last_updated_at
             expect(SuperSettings::Setting.last_updated_at).to eq last_updated_at
             expect(cache.read(SuperSettings::Setting::LAST_UPDATED_CACHE_KEY)).to eq last_updated_at
@@ -286,7 +286,7 @@ describe SuperSettings::Setting do
 
         it "should have the last updated handle deleted records" do
           setting_1 = SuperSettings::Setting.create!(key: "test1", value: "foobar", updated_at: Time.now - 10)
-          setting_2 = SuperSettings::Setting.create!(key: "test2", value: "foobar", updated_at: Time.now - 5)
+          SuperSettings::Setting.create!(key: "test2", value: "foobar", updated_at: Time.now - 5)
           t = Time.at(Time.now.to_i)
           setting_1.update!(deleted: true)
           setting_1 = SuperSettings::Setting.all.detect { |s| s.key == setting_1.key }
@@ -434,7 +434,7 @@ describe SuperSettings::Setting do
         it "should update settings in a batch" do
           setting_1 = SuperSettings::Setting.create!(key: "string", value_type: :string, value: "foobar")
           setting_2 = SuperSettings::Setting.create!(key: "integer", value_type: :integer, value: 4)
-          setting_3 = SuperSettings::Setting.create!(key: "other", value_type: :string, value: 4)
+          SuperSettings::Setting.create!(key: "other", value_type: :string, value: 4)
           success, settings = SuperSettings::Setting.bulk_update([
             {
               key: "string",
@@ -462,8 +462,8 @@ describe SuperSettings::Setting do
 
         it "should not update any settings if there is an error" do
           setting_1 = SuperSettings::Setting.create!(key: "string", value_type: :string, value: "foobar")
-          setting_2 = SuperSettings::Setting.create!(key: "integer", value_type: :integer, value: 4)
-          setting_3 = SuperSettings::Setting.create!(key: "other", value_type: :string, value: 4)
+          SuperSettings::Setting.create!(key: "integer", value_type: :integer, value: 4)
+          SuperSettings::Setting.create!(key: "other", value_type: :string, value: 4)
           success, settings = SuperSettings::Setting.bulk_update([
             {
               key: "string",
@@ -489,7 +489,7 @@ describe SuperSettings::Setting do
         end
 
         it "should create a new setting and delete the old one if the key changed" do
-          setting = SuperSettings::Setting.create!(key: "old_key", value_type: :string, value: "old value")
+          SuperSettings::Setting.create!(key: "old_key", value_type: :string, value: "old value")
           success, settings = SuperSettings::Setting.bulk_update([
             {
               key: "new_key",
@@ -510,7 +510,7 @@ describe SuperSettings::Setting do
         end
 
         it "should create a new setting and not delete the old one if the key was already updated" do
-          setting = SuperSettings::Setting.create!(key: "old_key", value_type: :string, value: "foobar")
+          SuperSettings::Setting.create!(key: "old_key", value_type: :string, value: "foobar")
           success, settings = SuperSettings::Setting.bulk_update([
             {
               key: "old_key",
@@ -537,7 +537,7 @@ describe SuperSettings::Setting do
         end
 
         it "should create a new setting and not delete the old one if the key will be updated" do
-          setting = SuperSettings::Setting.create!(key: "old_key", value_type: :string, value: "foobar")
+          SuperSettings::Setting.create!(key: "old_key", value_type: :string, value: "foobar")
           success, settings = SuperSettings::Setting.bulk_update([
             {
               key: "new_key",
@@ -564,8 +564,8 @@ describe SuperSettings::Setting do
         end
 
         it "should undelete a setting if it already existed" do
-          setting = SuperSettings::Setting.create!(key: "test", value: "oldvalue", deleted: true)
-          success, settings = SuperSettings::Setting.bulk_update([
+          SuperSettings::Setting.create!(key: "test", value: "oldvalue", deleted: true)
+          success, _ = SuperSettings::Setting.bulk_update([
             {
               key: "test",
               value: "foobar",

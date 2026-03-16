@@ -9,6 +9,8 @@ module SuperSettings
       cache[File.basename(file, ".svg")] = svg
     end.freeze
 
+    GEAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>'
+
     ICON_BUTTON_STYLE = {
       cursor: "pointer",
       width: "1.35rem",
@@ -25,10 +27,33 @@ module SuperSettings
       display: "inline-block"
     }.freeze
 
+    # Look up a translation key for the current locale.
+    #
+    # @param key [String] dotted translation key
+    # @return [String]
+    def t(key)
+      SuperSettings::I18n.t(key, locale: @locale || SuperSettings::I18n::DEFAULT_LOCALE)
+    end
+
+    # Return the text direction (+"ltr"+ or +"rtl"+) for the current locale.
+    #
+    # @return [String]
+    def text_direction
+      SuperSettings::I18n.text_direction(@locale || SuperSettings::I18n::DEFAULT_LOCALE)
+    end
+
+    # Return the full translations hash as JSON for inlining into the page.
+    #
+    # @return [String] JSON string
+    def translations_json
+      SuperSettings::I18n.translations_for(@locale || SuperSettings::I18n::DEFAULT_LOCALE).to_json
+    end
+
     # Render the scripts.js file as an inline <script> tag.
     def javascript_tag
       <<~HTML
         <script>
+          window.__superSettingsI18n = #{translations_json};
           #{File.read(File.join(__dir__, "scripts.js"))}
           #{File.read(File.join(__dir__, "api.js"))}
           #{"SuperSettingsAPI.authenticationUrl = '#{SuperSettings.authentication_url.gsub("'", "\\'")}';" if SuperSettings.authentication_url}
@@ -82,7 +107,7 @@ module SuperSettings
     # @return [String] the HTML for the icon
     def icon_image(name, options = {})
       svg = ICON_SVG[name.to_s]
-      style = (options[:style] || {})
+      style = options[:style] || {}
       css = DEFAULT_ICON_STYLE.merge(style).map { |name, value| "#{name}: #{value}" }.join("; ")
       options = options.merge(style: css, class: "super-settings-icon")
       if options[:data].is_a?(Hash)
@@ -111,23 +136,50 @@ module SuperSettings
       content_tag(:a, image, href: url, class: js_class, disabled: disabled, style: link_style, title: title)
     end
 
+    class << self
+      # Render the header HTML for the web pages using values set in the configuration.
+      # Uses the custom application name as the title if set, otherwise falls back to
+      # the localized brand title. Uses the gear icon if no application logo is configured.
+      #
+      # @param locale [String] the locale code for translations.
+      # @return [String] raw HTML string.
+      def application_header(locale: nil)
+        config = SuperSettings.configuration.controller
+        locale ||= SuperSettings::I18n::DEFAULT_LOCALE
+        escape = ->(text) { ERB::Util.html_escape(text) }
+
+        mark_content = if Coerce.present?(config.application_logo)
+          "<img src=\"#{escape.call(config.application_logo)}\" alt=\"\">"
+        else
+          GEAR_SVG
+        end
+        mark = "<div class=\"super-settings-page-header-mark\" aria-hidden=\"true\">" \
+          "#{mark_content}</div>"
+
+        title_text = escape.call(config.application_name || SuperSettings::I18n.t("page.brand_title", locale: locale))
+        title = "<h1 class=\"super-settings-page-header-title\">#{title_text}</h1>"
+
+        brand_content = mark + title
+        if config.application_link
+          href = escape.call(config.application_link)
+          "<a href=\"#{href}\" class=\"super-settings-page-header-brand\">" \
+            "#{brand_content}</a>"
+        else
+          "<div class=\"super-settings-page-header-brand\">#{brand_content}</div>"
+        end
+      end
+    end
+
     # Return the application name set by the configuration or a default value.
     def application_name
       html_escape(SuperSettings.configuration.controller.application_name || "Application")
     end
 
     # Render the header for the web pages using values set in the configuration.
+    #
+    # @return [String] raw HTML string.
     def application_header
-      config = SuperSettings.configuration.controller
-      content = html_escape("#{application_name} Settings")
-      if Coerce.present?(config.application_logo)
-        content = tag(:img, src: config.application_logo, alt: "") + content
-      end
-      if config.application_link
-        content_tag(:a, content, href: config.application_link)
-      else
-        content
-      end
+      Helper.application_header(locale: @locale)
     end
 
     # Render an HTML tag without any body content.
@@ -168,6 +220,13 @@ module SuperSettings
     # @return [Boolean, nil]
     def color_scheme
       @color_scheme if defined?(@color_scheme)
+    end
+
+    # Whether the application is in read-only mode.
+    #
+    # @return [Boolean]
+    def read_only?
+      !!@read_only
     end
   end
 end

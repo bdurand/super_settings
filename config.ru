@@ -17,6 +17,14 @@ class TestApplication < SuperSettings::RackApplication
   end
 end
 
+if ENV.fetch("BRANDED", "false") == "true"
+  SuperSettings.configuration.controller.application_name = "Customer Header Text"
+  SuperSettings.configuration.controller.application_link = "https://www.example.com"
+  svg_data = File.read(File.expand_path("test_app/public/images/logo.svg", __dir__))
+  svg_data_uri = "data:image/svg+xml;base64,#{[svg_data].pack("m0")}"
+  SuperSettings.configuration.controller.application_logo = svg_data_uri
+end
+
 SuperSettings.configuration.controller.color_scheme = ENV.fetch("COLOR_SCHEME", "light")
 
 app = TestApplication.new

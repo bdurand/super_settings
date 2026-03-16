@@ -29,6 +29,7 @@ Gem::Specification.new do |spec|
     bin/
     gemfiles/
     spec/
+    test_app/
   ]
   spec.files = Dir.chdir(File.expand_path("..", __FILE__)) do
     `git ls-files -z`.split("\x0").reject { |f| ignore_files.any? { |path| f.start_with?(path) } }
@@ -38,5 +39,5 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency "bundler"
 
-  spec.required_ruby_version = ">= 2.6"
+  spec.required_ruby_version = ">= 2.7"
 end

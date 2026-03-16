@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= @locale || 'en' %>" dir="<%= text_direction %>">
   <head>
-    <title><%= application_name %> Settings</title>
+    <title><%= application_name %> <%= t("page.title_suffix") %></title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="pinterest" content="nopin">
     <meta name="format-detection" content="telephone=no email=no date=no address=no">
     <meta name="robots" content="noindex, nofollow">
@@ -13,13 +13,64 @@
   </head>
 
   <body class="super_settings">
-    <header>
-      <h1 class="logo">
+    <header class="super-settings-page-header">
+      <div class="super-settings-page-header-inner">
         <%= application_header %>
-      </h1>
+      </div>
     </header>
+
     <div class="super-settings-container">
       <%= yield %>
     </div>
+
+    <% locales = SuperSettings::I18n.available_locales %>
+    <% if locales.size > 1 %>
+      <footer class="super-settings-page-footer">
+        <% locale = @locale || SuperSettings::I18n::DEFAULT_LOCALE %>
+        <% current_locale_name = SuperSettings::I18n.t("language.name", locale: locale) %>
+        <details class="super-settings-language-menu" id="super-settings-language-menu">
+          <summary class="super-settings-language-trigger" aria-label="<%= t('language.label') %>" aria-haspopup="menu">
+            <span class="super-settings-language-trigger-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M3.6 9h16.8"></path>
+                <path d="M3.6 15h16.8"></path>
+                <path d="M12 3a14 14 0 0 1 0 18"></path>
+                <path d="M12 3a14 14 0 0 0 0 18"></path>
+              </svg>
+            </span>
+            <span class="super-settings-language-trigger-current"><%= html_escape(current_locale_name) %></span>
+            <span class="super-settings-language-trigger-caret" aria-hidden="true">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m4 6 4 4 4-4"></path>
+              </svg>
+            </span>
+          </summary>
+
+          <menu class="super-settings-language-popup" role="menu" aria-label="<%= t('language.label') %>">
+            <% locales.each do |loc| %>
+              <% language_name = SuperSettings::I18n.t('language.name', locale: loc) %>
+              <% active = loc == locale %>
+              <li>
+                <button
+                  type="button"
+                  class="super-settings-language-option<%= ' is-active' if active %>"
+                  role="menuitemradio"
+                  aria-checked="<%= active %>"
+                  data-locale="<%= html_escape(loc) %>"
+                >
+                  <span class="super-settings-language-option-name"><%= html_escape(language_name) %></span>
+                  <span class="super-settings-language-option-check" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="m3.5 8 3 3 6-6"></path>
+                    </svg>
+                  </span>
+                </button>
+              </li>
+            <% end %>
+          </menu>
+        </details>
+      </footer>
+    <% end %>
   </body>
 </html>

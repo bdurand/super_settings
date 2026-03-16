@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Thick red circle -->
+  <circle
+    cx="100"
+    cy="100"
+    r="85"
+    fill="none"
+    stroke="red"
+    stroke-width="16"
+  />
+
+  <!-- Blue arrow (pointing right) -->
+  <!-- Arrow shaft -->
+  <line
+    x1="40"
+    y1="100"
+    x2="140"
+    y2="100"
+    stroke="blue"
+    stroke-width="12"
+    stroke-linecap="round"
+  />
+  <!-- Arrowhead -->
+  <polygon
+    points="130,72 165,100 130,128"
+    fill="blue"
+  />
+</svg>

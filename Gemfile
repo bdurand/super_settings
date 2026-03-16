@@ -25,3 +25,4 @@ gem "simplecov", "~> 0.22", require: false
 gem "nokogiri"
 gem "rake"
 gem "yard"
+gem "rdoc"

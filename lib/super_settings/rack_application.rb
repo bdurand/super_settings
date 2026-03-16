@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "i18n"
+
 module SuperSettings
   # Rack middleware for serving the REST API. See SuperSettings::RestAPI for more details on usage.
   #
@@ -133,12 +135,16 @@ module SuperSettings
       if request.get?
         if (path == "/" || path == "") && web_ui_enabled?
           return handle_root_request(request)
+        elsif path == "/authorized"
+          return handle_authorization_request(request)
+        elsif path == "/api.js"
+          return handle_api_js_request(request)
         elsif path == "/settings"
           return handle_index_request(request)
-        elsif path == "/setting"
-          return handle_show_request(request)
         elsif path == "/setting/history"
           return handle_history_request(request)
+        elsif path == "/setting"
+          return handle_show_request(request)
         elsif path == "/last_updated_at"
           return handle_last_updated_at_request(request)
         elsif path == "/updated_since"
@@ -157,9 +163,32 @@ module SuperSettings
       end
     end
 
+    def handle_authorization_request(request)
+      check_authorization(request) do |user|
+        read_only = !allow_write?(user) || !!request.env["super_settings.read_only"]
+        permission = read_only ? "read-only" : "read-write"
+        payload = {authorized: true, permission: permission}
+        [200, {"content-type" => "application/json; charset=utf-8", "cache-control" => "no-cache", "super-settings-permission" => permission}, [JSON.generate(payload)]]
+      end
+    end
+
+    def handle_api_js_request(request)
+      check_authorization(request) do |user|
+        js = File.read(File.expand_path(File.join("application", "api.js"), __dir__))
+        [200, {"content-type" => "application/javascript; charset=utf-8", "cache-control" => "no-cache"}, [js]]
+      end
+    end
+
     def handle_root_request(request)
-      response = check_authorization(request, write_required: true) do |user|
-        [200, {"content-type" => "text/html; charset=utf-8", "cache-control" => "no-cache"}, [Application.new(layout: :default, add_to_head: add_to_head(request), color_scheme: SuperSettings.configuration.controller.color_scheme).render]]
+      response = check_authorization(request) do |user|
+        read_only = !allow_write?(user) || !!request.env["super_settings.read_only"]
+        locale = resolve_locale(request)
+        headers = {"content-type" => "text/html; charset=utf-8", "cache-control" => "no-cache"}
+        lang = request.GET["lang"] if request.respond_to?(:GET)
+        if lang && SuperSettings::I18n.available_locales.include?(lang)
+          headers["set-cookie"] = "super_settings_locale=#{lang}; path=/; SameSite=Lax"
+        end
+        [200, headers, [Application.new(layout: :default, add_to_head: add_to_head(request), color_scheme: SuperSettings.configuration.controller.color_scheme, read_only: read_only, locale: locale).render]]
       end
 
       if [401, 403].include?(response.first)
@@ -229,11 +258,63 @@ module SuperSettings
       allowed = (write_required ? allow_write?(user) : allow_read?(user))
       return json_response(403, error: "Access denied") unless allowed
 
+      if write_required && request.env["super_settings.read_only"]
+        return json_response(403, error: "Access denied")
+      end
+
       yield(user)
     end
 
     def json_response(status, payload)
       [status, RESPONSE_HEADERS.dup, [payload.to_json]]
+    end
+
+    # Determine the locale for a request. Precedence:
+    # 1. ?lang= query parameter
+    # 2. super_settings_locale cookie (set by the language picker)
+    # 3. Accept-Language header
+    # 4. Default locale
+    def resolve_locale(request)
+      available = SuperSettings::I18n.available_locales
+
+      # 1. Explicit query parameter
+      lang = request.GET["lang"] if request.respond_to?(:GET)
+      return lang if lang && available.include?(lang)
+
+      # 2. Cookie
+      cookie = request.cookies["super_settings_locale"] if request.respond_to?(:cookies)
+      return cookie if cookie && available.include?(cookie)
+
+      # 3. Accept-Language header
+      accept = request.env["HTTP_ACCEPT_LANGUAGE"] if request.respond_to?(:env)
+      locale_from_accept_language(accept.to_s, available) || SuperSettings::I18n::DEFAULT_LOCALE
+    end
+
+    # Parse the Accept-Language header and return the best matching locale.
+    def locale_from_accept_language(header, available)
+      return nil if header.nil? || header.empty?
+
+      # Parse tags with optional quality values, e.g. "en-US,en;q=0.9,fr;q=0.8"
+      tags = header.split(",").map { |entry|
+        parts = entry.strip.split(";")
+        tag = parts[0].to_s.strip.downcase.tr("_", "-")
+        q = 1.0
+        parts[1..].each do |p|
+          if p.strip.start_with?("q=")
+            q = p.strip.sub("q=", "").to_f
+          end
+        end
+        [tag, q]
+      }.sort_by { |_, q| -q }
+
+      tags.each do |tag, _|
+        return tag if available.include?(tag)
+        # Try language subtag
+        lang = tag.split("-").first
+        return lang if available.include?(lang)
+      end
+
+      nil
     end
 
     def post_params(request)

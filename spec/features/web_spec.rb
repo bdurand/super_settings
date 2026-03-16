@@ -175,7 +175,6 @@ describe "web UI", type: :feature, js: true do
     it "should cancel changes" do
       visit "/"
       id = find_setting_id("key.string")
-      value_type_descriptor = "select[name=\"settings[#{id}][value_type]\"]"
       within_setting_row(id) do
         find("a.js-edit-setting").click
         find_setting_field(id, :key).fill_in(with: "newkey")
@@ -327,12 +326,40 @@ describe "web UI", type: :feature, js: true do
         find("a.js-show-history").click
       end
       within("#super-settings-modal") do
-        expect(all("#super-settings-history .super-settings-history-item").size).to eq 25
+        expect(all(".super-settings-history-item").size).to eq 25
         click_on("Older")
-        expect(all("#super-settings-history .super-settings-history-item").size).to eq 1
+        expect(all(".super-settings-history-item").size).to eq 1
         click_on("Newer")
-        expect(all("#super-settings-history .super-settings-history-item").size).to eq 25
+        expect(all(".super-settings-history-item").size).to eq 25
       end
+    end
+  end
+
+  describe "read-only mode" do
+    around do |example|
+      original_app = Capybara.app
+      read_only_wrapper = lambda do |env|
+        env["super_settings.read_only"] = true
+        original_app.call(env)
+      end
+      Capybara.app = read_only_wrapper
+      example.run
+    ensure
+      Capybara.app = original_app
+    end
+
+    it "should hide edit controls in read-only mode" do
+      visit "/"
+      expect(page).to have_content("key.string")
+      expect(page).to have_content("key.integer")
+
+      expect(page).to_not have_selector("#super-settings-add-setting", visible: true)
+      expect(page).to_not have_selector("#super-settings-save-settings", visible: true)
+      expect(page).to_not have_selector("#super-settings-discard-changes", visible: true)
+      expect(page).to_not have_selector("a.js-edit-setting", visible: true)
+      expect(page).to_not have_selector("a.js-remove-setting", visible: true)
+
+      expect(page).to have_selector("a.js-show-history", visible: true)
     end
   end
 end

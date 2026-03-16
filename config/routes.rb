@@ -11,5 +11,7 @@ SuperSettings::Engine.routes.draw do
     get "/setting/history", action: :history
     get "/settings/last_updated_at", action: :last_updated_at
     get "/settings/updated_since", action: :updated_since
+    get "/authorized", action: :authorized
+    get "/api.js", action: :api_js
   end
 end

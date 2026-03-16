@@ -17,7 +17,7 @@ module SuperSettings
 
     def self.included(base)
       base.extend(ClassMethods)
-      base.include(Attributes) unless base.instance_methods.include?(:attributes=)
+      base.include(Attributes) unless base.method_defined?(:attributes=)
 
       base.instance_variable_set(:@load_asynchronous, nil)
     end

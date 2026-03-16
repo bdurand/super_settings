@@ -19,6 +19,13 @@ if defined?(SuperSettings::SettingsController)
         expect(response.status).to eq 200
         expect(response.content_type).to include "text/html"
       end
+
+      it "should render in read-only mode when the request is marked read-only" do
+        request.env["super_settings.read_only"] = true
+        get :root
+        expect(response.status).to eq 200
+        expect(response.body).to include('data-read-only="true"')
+      end
     end
 
     describe "index" do
@@ -99,10 +106,27 @@ if defined?(SuperSettings::SettingsController)
           ]
         }
         expect(response.status).to eq 200
-        expect(JSON.parse(response.body)).to eq({"success" => true})
+        expect(JSON.parse(response.body)).to eq({"success" => true, "values" => {"string" => "new value", "integer" => nil, "newkey" => 44}})
         expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "new value"
         expect(SuperSettings::Setting.all.detect { |s| s.key == setting_2.key }.deleted?).to eq true
         expect(SuperSettings::Setting.find_by_key("newkey").value).to eq 44
+      end
+
+      it "should return forbidden when the request is marked read-only" do
+        request.env["super_settings.read_only"] = true
+        request.headers["accept"] = "application/json"
+        post_json :update, {
+          settings: [
+            {
+              key: "string",
+              value: "new value",
+              value_type: "string"
+            }
+          ]
+        }
+        expect(response.status).to eq 403
+        expect(JSON.parse(response.body)).to eq({"error" => "Access denied"})
+        expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "foobar"
       end
 
       it "should not update any settings on the REST endpoint if there is an error" do
