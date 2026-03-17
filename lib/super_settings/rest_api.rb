@@ -183,7 +183,7 @@ module SuperSettings
       #
       # @return [Hash] hash with the last updated timestamp
       def last_updated_at
-        {last_updated_at: Setting.last_updated_at.utc.iso8601(6)}
+        {last_updated_at: Setting.last_updated_at&.utc&.iso8601(6)}
       end
 
       # Return settings that have been updated since a specified timestamp.

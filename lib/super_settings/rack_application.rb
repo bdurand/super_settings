@@ -251,7 +251,7 @@ module SuperSettings
 
     def check_authorization(request, write_required: false)
       user = current_user(request)
-      return json_response(401, error: "Authentiation required") unless authenticated?(user)
+      return json_response(401, error: "Authentication required") unless authenticated?(user)
 
       allowed = (write_required ? allow_write?(user) : allow_read?(user))
       return json_response(403, error: "Access denied") unless allowed

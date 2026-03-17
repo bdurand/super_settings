@@ -133,6 +133,12 @@ describe SuperSettings::RestAPI do
       response = SuperSettings::RestAPI.last_updated_at
       expect(response).to eq({last_updated_at: time.utc.iso8601(6)})
     end
+
+    it "should return nil when there are no settings" do
+      SuperSettings::Setting.storage.destroy_all
+      response = SuperSettings::RestAPI.last_updated_at
+      expect(response).to eq({last_updated_at: nil})
+    end
   end
 
   describe "updated_since" do

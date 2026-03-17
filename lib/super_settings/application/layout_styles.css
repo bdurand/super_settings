@@ -137,7 +137,7 @@ a:visited {
   padding: 6px 12px;
   border-radius: 6px;
   border: 1px solid var(--border-color, #ccc);
-  background: #fff;
+  background: var(--background-color, #fff);
   color: var(--text-color);
   cursor: pointer;
   transition: border-color 0.15s ease, color 0.15s ease;

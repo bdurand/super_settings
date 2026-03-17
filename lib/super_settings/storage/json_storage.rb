@@ -112,7 +112,7 @@ module SuperSettings
           end
         end
 
-        # Heper method to load settings from a JSON string.
+        # Helper method to load settings from a JSON string.
         #
         # @param json [String] JSON string to parse.
         # @return [Array<SuperSettings::Storage::JSONStorage>] Array of settings.

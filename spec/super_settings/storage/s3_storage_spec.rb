@@ -4,6 +4,32 @@ require "spec_helper"
 
 if EXTENSIONS[:s3]
   describe SuperSettings::Storage::S3Storage do
+    describe "Configuration" do
+      describe "path=" do
+        it "strips a trailing slash and appends one" do
+          config = SuperSettings::Storage::S3Storage::Configuration.new
+          config.path = "my/path/"
+          expect(config.path).to eq "my/path/"
+        end
+
+        it "appends a trailing slash when none is present" do
+          config = SuperSettings::Storage::S3Storage::Configuration.new
+          config.path = "my/path"
+          expect(config.path).to eq "my/path/"
+        end
+      end
+
+      describe "url=" do
+        it "parses path from the S3 URL" do
+          config = SuperSettings::Storage::S3Storage::Configuration.new
+          config.url = "s3://key:secret@us-east-1/my-bucket/my/path"
+          expect(config.path).to eq "my/path/"
+          expect(config.bucket).to eq "my-bucket"
+          expect(config.region).to eq "us-east-1"
+        end
+      end
+    end
+
     before do
       SuperSettings::Storage::S3Storage.destroy_all
     end

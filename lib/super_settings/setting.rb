@@ -266,7 +266,7 @@ module SuperSettings
           key = setting_params["key"]
           setting = changed[key] || Setting.find_by_key(key)
           unless setting
-            next if Coerce.present?(setting_params["delete"])
+            next if Coerce.present?(setting_params["deleted"])
 
             setting = Setting.new(key: setting_params["key"])
           end

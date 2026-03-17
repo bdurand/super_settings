@@ -14,6 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `/authorized` API endpoint that returns the current user's permission level (`read-only` or `read-write`).
 - Added `/api.js` endpoint for serving the JavaScript API client separately.
 
+### Fixed
+
+- Fixed S3Storage `path=` setter which incorrectly produced a literal string containing `.chomp('/')` instead of calling the method, causing all S3 object key lookups to use a malformed path.
+- Fixed `bulk_update` silently ignoring a request to delete a non-existent setting key. Previously it would raise an `InvalidRecordError` instead of treating the operation as a no-op.
+- Fixed `RestAPI.last_updated_at` raising a `NoMethodError` when called with an empty settings store (no settings yet created).
+- Fixed `HttpClient` ignoring the `user` and `password` constructor arguments. HTTP Basic auth credentials are now correctly applied to all requests.
+- Fixed `HttpClient` producing a malformed query string (leading `&`) when the base URI includes query parameters but no per-request parameters are provided.
+- Fixed `HttpStorage#reload` making two redundant HTTP requests and discarding the result of the first.
+
 ### Changed
 
 - Minimum Ruby version is now 2.7.
