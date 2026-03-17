@@ -1,3 +1,8 @@
+.super-settings {
+  padding: 0 12px;
+  background-color: var(--bg-page, #f4f5f7);
+}
+
 .super-settings-container {
   padding-left: 24px;
   padding-right: 24px;
