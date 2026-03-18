@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "i18n"
 require_relative "application/helper"
 
 module SuperSettings
@@ -29,7 +28,7 @@ module SuperSettings
       @api_base_url = api_base_url
       @color_scheme = color_scheme&.to_sym
       @read_only = !!read_only
-      @locale = locale || SuperSettings::I18n::DEFAULT_LOCALE
+      @locale = locale || SuperSettings::MiniI18n::DEFAULT_LOCALE
     end
 
     # Render the web UI application HTML.

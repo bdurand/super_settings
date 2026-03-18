@@ -2,26 +2,24 @@
 
 require "json"
 
-# These classes are required for the gem to function.
-require_relative "super_settings/attributes"
-require_relative "super_settings/coerce"
-require_relative "super_settings/configuration"
-require_relative "super_settings/context"
-require_relative "super_settings/local_cache"
-require_relative "super_settings/setting"
-require_relative "super_settings/storage"
-require_relative "super_settings/time_precision"
-
 # This is the main interface to the access settings.
 module SuperSettings
-  # These classes are autoloaded when they are needed.
-  autoload :Application, "super_settings/application"
-  autoload :RestAPI, "super_settings/rest_api"
-  autoload :RackApplication, "super_settings/rack_application"
-  autoload :ControllerActions, "super_settings/controller_actions"
-  autoload :HistoryItem, "super_settings/history_item"
-  autoload :HttpClient, "super_settings/http_client"
-  autoload :VERSION, "super_settings/version"
+  autoload :Application, File.join(__dir__, "super_settings/application")
+  autoload :Attributes, File.join(__dir__, "super_settings/attributes")
+  autoload :Coerce, File.join(__dir__, "super_settings/coerce")
+  autoload :Configuration, File.join(__dir__, "super_settings/configuration")
+  autoload :Context, File.join(__dir__, "super_settings/context")
+  autoload :ControllerActions, File.join(__dir__, "super_settings/controller_actions")
+  autoload :HistoryItem, File.join(__dir__, "super_settings/history_item")
+  autoload :HttpClient, File.join(__dir__, "super_settings/http_client")
+  autoload :LocalCache, File.join(__dir__, "super_settings/local_cache")
+  autoload :MiniI18n, File.join(__dir__, "super_settings/mini_i18n")
+  autoload :RackApplication, File.join(__dir__, "super_settings/rack_application")
+  autoload :RestAPI, File.join(__dir__, "super_settings/rest_api")
+  autoload :Setting, File.join(__dir__, "super_settings/setting")
+  autoload :Storage, File.join(__dir__, "super_settings/storage")
+  autoload :TimePrecision, File.join(__dir__, "super_settings/time_precision")
+  autoload :VERSION, File.join(__dir__, "super_settings/version")
 
   # Default number of seconds between cache refresh checks.
   DEFAULT_REFRESH_INTERVAL = 5.0

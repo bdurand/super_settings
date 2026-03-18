@@ -32,21 +32,21 @@ module SuperSettings
     # @param key [String] dotted translation key
     # @return [String]
     def t(key)
-      SuperSettings::I18n.t(key, locale: @locale || SuperSettings::I18n::DEFAULT_LOCALE)
+      SuperSettings::MiniI18n.t(key, locale: @locale || SuperSettings::MiniI18n::DEFAULT_LOCALE)
     end
 
     # Return the text direction (+"ltr"+ or +"rtl"+) for the current locale.
     #
     # @return [String]
     def text_direction
-      SuperSettings::I18n.text_direction(@locale || SuperSettings::I18n::DEFAULT_LOCALE)
+      SuperSettings::MiniI18n.text_direction(@locale || SuperSettings::MiniI18n::DEFAULT_LOCALE)
     end
 
     # Return the full translations hash as JSON for inlining into the page.
     #
     # @return [String] JSON string
     def translations_json
-      SuperSettings::I18n.translations_for(@locale || SuperSettings::I18n::DEFAULT_LOCALE).to_json
+      SuperSettings::MiniI18n.translations_for(@locale || SuperSettings::MiniI18n::DEFAULT_LOCALE).to_json
     end
 
     # Render the scripts.js file as an inline <script> tag.
@@ -145,7 +145,7 @@ module SuperSettings
       # @return [String] raw HTML string.
       def application_header(locale: nil)
         config = SuperSettings.configuration.controller
-        locale ||= SuperSettings::I18n::DEFAULT_LOCALE
+        locale ||= SuperSettings::MiniI18n::DEFAULT_LOCALE
         escape = ->(text) { ERB::Util.html_escape(text) }
 
         mark_content = if Coerce.present?(config.application_logo)
@@ -156,7 +156,7 @@ module SuperSettings
         mark = "<div class=\"super-settings-page-header-mark\" aria-hidden=\"true\">" \
           "#{mark_content}</div>"
 
-        title_text = escape.call(config.application_name || SuperSettings::I18n.t("page.brand_title", locale: locale))
+        title_text = escape.call(config.application_name || SuperSettings::MiniI18n.t("page.brand_title", locale: locale))
         title = "<h1 class=\"super-settings-page-header-title\">#{title_text}</h1>"
 
         brand_content = mark + title

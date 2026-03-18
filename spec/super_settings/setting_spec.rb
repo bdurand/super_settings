@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../spec_helper"
+require "spec_helper"
 
 describe SuperSettings::Setting do
   storage_engines = [SuperSettings::Storage::TestStorage] + EXTENSIONS.values
@@ -576,6 +576,17 @@ describe SuperSettings::Setting do
           new_setting = SuperSettings::Setting.find_by_key("test")
           expect(new_setting.value).to eq "foobar"
           expect(new_setting.deleted).to be(false)
+        end
+
+        it "should silently skip deleting a key that does not exist" do
+          success, settings = SuperSettings::Setting.bulk_update([
+            {
+              key: "nonexistent",
+              deleted: true
+            }
+          ])
+          expect(success).to eq true
+          expect(settings).to be_empty
         end
       end
 

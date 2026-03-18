@@ -19,7 +19,7 @@ module SuperSettings
 
     # Render the HTML application for managing settings.
     def root
-      html = SuperSettings::Application.new(read_only: super_settings_read_only?).render
+      html = SuperSettings::Application.new(read_only: super_settings_read_only?, locale: I18n.locale).render
       render html: html.html_safe, layout: true
     end
 

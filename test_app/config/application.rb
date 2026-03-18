@@ -38,5 +38,7 @@ module TestApp
 
     # Don't generate system test files.
     config.generators.system_tests = nil
+
+    I18n.available_locales = %i[ar cs da de el en es fa fr gd he hi it ja ko lt nb nl pl pt-BR pt ru sv ta tr uk ur vi zh-CN zh-TW]
   end
 end

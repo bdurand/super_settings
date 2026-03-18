@@ -6,7 +6,7 @@ module SuperSettings
     # This storage engine is read only. It is intended to allow microservices to read settings from a
     # central application that exposes the SuperSettings::RestAPI.
     #
-    # You must the the base_url class attribute to the base URL of a SuperSettings REST API endpoint.
+    # You must set the base_url class attribute to the base URL of a SuperSettings REST API endpoint.
     # You can also set the timeout, headers, and query_params used in reqeusts to the API.
     class HttpStorage < StorageAttributes
       include Storage
@@ -135,7 +135,6 @@ module SuperSettings
       end
 
       def reload
-        self.class.find_by_key(key)
         self.attributes = self.class.find_by_key(key).attributes
         self
       end

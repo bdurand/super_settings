@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../spec_helper"
+require "spec_helper"
 
 describe "web UI", type: :feature, js: true do
   let!(:string_setting) { SuperSettings::Setting.create!(key: "key.string", value: "foo", value_type: "string", description: "string description") }

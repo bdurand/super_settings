@@ -135,6 +135,7 @@ module SuperSettings
     end
 
     def set_headers(request)
+      request.basic_auth(@user, @password) if @user
       @headers.each do |name, value|
         name = name.to_s
         values = Array(value)
@@ -148,7 +149,7 @@ module SuperSettings
     def request_uri(path, params = nil)
       uri = URI.join(@base_uri, path.delete_prefix("/"))
       if (params && !params.empty?) || (@base_uri.query && !@base_uri.query.empty?)
-        uri.query = [uri.query, query_string(params)].join("&")
+        uri.query = [uri.query, query_string(params)].compact.join("&")
       end
       uri
     end

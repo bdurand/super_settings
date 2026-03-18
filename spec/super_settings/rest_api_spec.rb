@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../spec_helper"
+require "spec_helper"
 
 describe SuperSettings::RestAPI do
   let!(:setting_1) { SuperSettings::Setting.create!(key: "string", value_type: :string, value: "foobar") }
@@ -132,6 +132,12 @@ describe SuperSettings::RestAPI do
       setting_1.save!
       response = SuperSettings::RestAPI.last_updated_at
       expect(response).to eq({last_updated_at: time.utc.iso8601(6)})
+    end
+
+    it "should return nil when there are no settings" do
+      SuperSettings::Setting.storage.destroy_all
+      response = SuperSettings::RestAPI.last_updated_at
+      expect(response).to eq({last_updated_at: nil})
     end
   end
 

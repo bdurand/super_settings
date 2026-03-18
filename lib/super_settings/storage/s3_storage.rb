@@ -61,7 +61,7 @@ module SuperSettings
         end
 
         def path=(value)
-          @path = "#{value}.chomp('/')/"
+          @path = "#{value.chomp("/")}/"
         end
 
         def hash

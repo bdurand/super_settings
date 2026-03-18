@@ -1,3 +1,8 @@
+.super-settings {
+  padding: 0 12px;
+  background-color: var(--bg-page, #f4f5f7);
+}
+
 .super-settings-container {
   padding-left: 24px;
   padding-right: 24px;
@@ -535,7 +540,6 @@ select.super-settings-form-control:not([size]):not([multiple]) {
   line-height: 1.5;
   user-select: none;
   cursor: pointer;
-  transition: all 0.15s ease;
   box-shadow: var(--shadow-card, none);
 }
 
@@ -587,4 +591,20 @@ select.super-settings-form-control:not([size]):not([multiple]) {
 /* Flash message */
 .js-flash {
   font-size: 0.8125rem;
+}
+
+/* Card reveal animation */
+@keyframes super-settings-card-reveal {
+  from {
+    opacity: 0.2;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.super-settings-card-reveal {
+  animation: super-settings-card-reveal 0.25s ease-out;
 }

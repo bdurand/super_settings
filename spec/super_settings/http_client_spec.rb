@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../spec_helper"
+require "spec_helper"
 
 describe SuperSettings::HttpClient do
   let(:payload) { {"a" => 1} }
@@ -55,6 +55,28 @@ describe SuperSettings::HttpClient do
     it "adds query parameters to the request" do
       http = SuperSettings::HttpClient.new("https://example.com", params: {foo: "bar"})
       stub_request(:get, "https://example.com/settings").with(query: {foo: "bar"}).to_return(response)
+      expect(http.get("/settings")).to eq payload
+    end
+
+    it "does not produce a leading ampersand when base URI has query params and no per-request params" do
+      http = SuperSettings::HttpClient.new("https://example.com", params: {token: "abc"})
+      stub_request(:get, "https://example.com/settings").with(query: {token: "abc"}).to_return(response)
+      expect(http.get("/settings")).to eq payload
+    end
+
+    it "merges base URI query params with per-request params" do
+      http = SuperSettings::HttpClient.new("https://example.com", params: {token: "abc"})
+      stub_request(:get, "https://example.com/settings").with(query: {token: "abc", extra: "1"}).to_return(response)
+      expect(http.get("/settings", extra: "1")).to eq payload
+    end
+  end
+
+  describe "basic auth" do
+    it "sends HTTP Basic auth credentials when user and password are provided" do
+      http = SuperSettings::HttpClient.new("https://example.com", user: "myuser", password: "mypassword")
+      stub_request(:get, "https://example.com/settings")
+        .with(basic_auth: ["myuser", "mypassword"])
+        .to_return(response)
       expect(http.get("/settings")).to eq payload
     end
   end

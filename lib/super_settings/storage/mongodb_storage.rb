@@ -119,6 +119,7 @@ module SuperSettings
 
         def save_all(changes)
           upserts = changes.collect { |setting| upsert(setting) }
+          return true if upserts.empty?
           settings_collection.bulk_write(upserts)
           true
         end
