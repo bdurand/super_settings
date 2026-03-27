@@ -8,14 +8,16 @@ module SuperSettings
     include Helper
 
     # @param layout [String, Symbol] path to an ERB template to use as the layout around the application UI. You can
-    #                                pass the symbol +:default+ to use the default layout that ships with the gem.
+    #   pass the symbol +:default+ to use the default layout that ships with the gem.
     # @param add_to_head [String] HTML code to add to the <head> element on the page.
     # @param api_base_url [String] the base URL for the REST API.
     # @param color_scheme [Symbol] whether to use dark mode for the application UI. If +nil+, the user's system
-    #                              preference will be used.
+    #   preference will be used.
+    # @param dark_mode_selector [String] a CSS selector that sets dark mode when it matches an element in the page.
+    #   This is an alternative to using the color_scheme option.
     # @param read_only [Boolean] whether to render the application in read-only mode (edit controls hidden).
     # @param locale [String] the locale code for translations (default: "en").
-    def initialize(layout: nil, add_to_head: nil, api_base_url: nil, color_scheme: nil, read_only: false, locale: nil)
+    def initialize(layout: nil, add_to_head: nil, api_base_url: nil, color_scheme: nil, dark_mode_selector: nil, read_only: false, locale: nil)
       if layout
         layout = File.expand_path(File.join("application", "layout.html.erb"), __dir__) if layout == :default
         @layout = ERB.new(File.read(layout)) if layout
@@ -27,6 +29,7 @@ module SuperSettings
 
       @api_base_url = api_base_url
       @color_scheme = color_scheme&.to_sym
+      @dark_mode_selector = dark_mode_selector
       @read_only = !!read_only
       @locale = locale || SuperSettings::MiniI18n::DEFAULT_LOCALE
     end

@@ -19,8 +19,13 @@ module SuperSettings
 
     # Render the HTML application for managing settings.
     def root
-      html = SuperSettings::Application.new(read_only: super_settings_read_only?, locale: I18n.locale).render
-      render html: html.html_safe, layout: true
+      application = SuperSettings::Application.new(
+        read_only: super_settings_read_only?,
+        locale: I18n.locale,
+        color_scheme: SuperSettings.configuration.controller.color_scheme,
+        dark_mode_selector: SuperSettings.configuration.controller.resolved_dark_mode_selector
+      )
+      render html: application.render.html_safe, layout: true
     end
 
     # API endpoint for getting active settings. See SuperSettings::RestAPI for details.

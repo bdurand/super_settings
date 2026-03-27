@@ -104,9 +104,9 @@ module SuperSettings
     # Subclasses can override this method to return the path to an ERB file to use as the layout
     # for the HTML application. The layout can use any of the methods defined in SuperSettings::Application::Helper.
     #
-    # @return [String]
+    # @return [String, Symbol]
     def layout
-      "layout.html.erb"
+      :default
     end
 
     # Subclasses can override this method to add custom HTML to the <head> element in the HTML application.
@@ -186,7 +186,15 @@ module SuperSettings
         if lang && SuperSettings::MiniI18n.available_locales.include?(lang)
           headers["set-cookie"] = "super_settings_locale=#{lang}; path=/; SameSite=Lax"
         end
-        [200, headers, [Application.new(layout: :default, add_to_head: add_to_head(request), color_scheme: SuperSettings.configuration.controller.color_scheme, read_only: read_only, locale: locale).render]]
+        application = Application.new(
+          layout: layout,
+          add_to_head: add_to_head(request),
+          color_scheme: SuperSettings.configuration.controller.color_scheme,
+          dark_mode_selector: SuperSettings.configuration.controller.resolved_dark_mode_selector,
+          read_only: read_only,
+          locale: locale
+        )
+        [200, headers, [application.render]]
       end
 
       if [401, 403].include?(response.first)

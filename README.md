@@ -308,6 +308,13 @@ SuperSettings.configure do |config|
   # Set the color scheme to use for the Web UI. Options are :light (default), :dark, or :system.
   config.controller.color_scheme = :dark
 
+  # Set a CSS selector for enabling dark mode. When the selector matches an element on the page,
+  # dark mode styles will be applied. A theme toggle button will also be rendered in the header
+  # allowing users to switch between light and dark modes (persisted via localStorage).
+  # This is an alternative to the color_scheme option. If neither color_scheme nor dark_mode_selector
+  # is set, it defaults to "[data-theme=dark]" which enables the toggle automatically.
+  config.controller.dark_mode_selector = "[data-theme=dark]"
+
   # Add additional code to the controller. In this case we are adding code to ensure only
   # admins can access the functionality and changing the layout to use one defined by the application.
   config.controller.enhance do
@@ -463,12 +470,6 @@ This will work out of the box with the defaults for the storage engines when run
 - `REST_API_URL` - `http://localhost:3000/settings` (this is the default URL for the Rails application)
 - `S3_URL` - `s3://accesskey:secretkey@region-1/settings/settings.json` (the S3 endpoint will be set to `http://localhost:9000`)
 - `MONGODB_URL` - `mongodb://localhost:27017/super_settings`
-
-Finally, you can run the application in dark mode by setting the `COLOR_SCHEME` environment variable.
-
-```bash
-COLOR_SCHEME=dark bundle exec rackup
-```
 
 ## License
 

@@ -6,12 +6,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <%= csrf_meta_tags %>
     <style type="text/css">
+      :root {
+        --page-bg: #f0f2f5;
+        --text-main: #1f2937;
+        --header-bg: #1e293b;
+        --header-text: #f8fafc;
+        --header-link: rgba(248,250,252,0.7);
+        --panel-bg: #ffffff;
+        --panel-border: #e5e7eb;
+        --sidebar-title: #9ca3af;
+        --link-main: #374151;
+        --link-hover-bg: #f3f4f6;
+        --link-active-bg: #eff6ff;
+        --link-active: #2563eb;
+        --heading-main: #111827;
+        --subtitle-main: #6b7280;
+        --footer-text: #9ca3af;
+        --switch-bg: #475569;
+        --switch-knob: #ffffff;
+      }
+
+      body[data-theme="dark"] {
+        --page-bg: #0f172a;
+        --text-main: #e2e8f0;
+        --header-bg: #020617;
+        --header-text: #f8fafc;
+        --header-link: rgba(226,232,240,0.82);
+        --panel-bg: #111827;
+        --panel-border: #1f2937;
+        --sidebar-title: #94a3b8;
+        --link-main: #e2e8f0;
+        --link-hover-bg: #1f2937;
+        --link-active-bg: #172554;
+        --link-active: #93c5fd;
+        --heading-main: #f1f5f9;
+        --subtitle-main: #cbd5e1;
+        --footer-text: #94a3b8;
+        --switch-bg: #1d4ed8;
+        --switch-knob: #f8fafc;
+      }
+
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       html { font-size: 16px; }
       body {
         font-family: system-ui, -apple-system, sans-serif;
-        background: #f0f2f5;
-        color: #1f2937;
+        background: var(--page-bg);
+        color: var(--text-main);
         line-height: 1.6;
         -webkit-font-smoothing: antialiased;
         display: grid;
@@ -25,8 +65,8 @@
       }
       .app-header {
         grid-area: header;
-        background: #1e293b;
-        color: #f8fafc;
+        background: var(--header-bg);
+        color: var(--header-text);
         padding: 0 24px;
         height: 56px;
         display: flex;
@@ -36,19 +76,64 @@
         z-index: 10;
       }
       .app-header h1 { font-size: 1.125rem; font-weight: 600; letter-spacing: -0.01em; }
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
       .app-header nav { display: flex; gap: 20px; }
       .app-header nav a {
-        color: rgba(248,250,252,0.7);
+        color: var(--header-link);
         text-decoration: none;
         font-size: 0.875rem;
         font-weight: 500;
         transition: color 0.15s;
       }
-      .app-header nav a:hover { color: #f8fafc; }
+      .app-header nav a:hover { color: var(--header-text); }
+      .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--header-text);
+      }
+      .theme-toggle input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+      }
+      .theme-toggle-track {
+        position: relative;
+        width: 38px;
+        height: 22px;
+        border-radius: 999px;
+        background: var(--switch-bg);
+        transition: background 0.2s ease;
+      }
+      .theme-toggle-track::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--switch-knob);
+        transition: transform 0.2s ease;
+      }
+      .theme-toggle input[type="checkbox"]:checked + .theme-toggle-track::after {
+        transform: translateX(16px);
+      }
+      .theme-toggle input[type="checkbox"]:focus-visible + .theme-toggle-track {
+        outline: 2px solid #93c5fd;
+        outline-offset: 2px;
+      }
       .app-sidebar {
         grid-area: sidebar;
-        background: #ffffff;
-        border-right: 1px solid #e5e7eb;
+        background: var(--panel-bg);
+        border-right: 1px solid var(--panel-border);
         padding: 24px 16px;
         overflow-y: auto;
       }
@@ -57,7 +142,7 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #9ca3af;
+        color: var(--sidebar-title);
         margin-bottom: 12px;
       }
       .app-sidebar ul { list-style: none; }
@@ -66,14 +151,14 @@
         display: block;
         padding: 8px 12px;
         border-radius: 6px;
-        color: #374151;
+        color: var(--link-main);
         text-decoration: none;
         font-size: 0.875rem;
         font-weight: 500;
         transition: background 0.15s;
       }
-      .app-sidebar a:hover { background: #f3f4f6; }
-      .app-sidebar a.active { background: #eff6ff; color: #2563eb; }
+      .app-sidebar a:hover { background: var(--link-hover-bg); }
+      .app-sidebar a.active { background: var(--link-active-bg); color: var(--link-active); }
       .app-main {
         grid-area: main;
         padding: 32px;
@@ -82,33 +167,40 @@
       .app-main h2 {
         font-size: 1.375rem;
         font-weight: 700;
-        color: #111827;
+        color: var(--heading-main);
         margin-bottom: 8px;
       }
       .app-main .subtitle {
-        color: #6b7280;
+        color: var(--subtitle-main);
         font-size: 0.9375rem;
         margin-bottom: 24px;
       }
       .app-footer {
         grid-area: footer;
-        background: #ffffff;
-        border-top: 1px solid #e5e7eb;
+        background: var(--panel-bg);
+        border-top: 1px solid var(--panel-border);
         padding: 12px 24px;
         font-size: 0.8125rem;
-        color: #9ca3af;
+        color: var(--footer-text);
         display: flex;
         justify-content: space-between;
       }
     </style>
   </head>
-  <body>
+  <body data-theme="light">
     <header class="app-header">
       <h1>Sample Application</h1>
-      <nav>
-        <a href="/configuration">Configuration</a>
-        <a href="/super_settings">Settings</a>
-      </nav>
+      <div class="header-actions">
+        <nav>
+          <a href="/configuration">Configuration</a>
+          <a href="/super_settings">Settings</a>
+        </nav>
+        <label class="theme-toggle" for="theme-toggle">
+          <span>Dark mode</span>
+          <input id="theme-toggle" type="checkbox" role="switch" aria-label="Enable dark mode">
+          <span class="theme-toggle-track" aria-hidden="true"></span>
+        </label>
+      </div>
     </header>
 
     <aside class="app-sidebar">
@@ -126,5 +218,38 @@
       <span>&copy; 2026 Sample Application</span>
       <span>Powered by SuperSettings</span>
     </footer>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        const toggle = document.getElementById("theme-toggle");
+        const storageKey = "sample-app-theme";
+
+        if (!toggle) {
+          return;
+        }
+
+        function applyTheme(theme) {
+          const resolvedTheme = theme === "dark" ? "dark" : "light";
+          document.body.setAttribute("data-theme", resolvedTheme);
+          toggle.checked = resolvedTheme === "dark";
+        }
+
+        try {
+          const savedTheme = window.localStorage.getItem(storageKey);
+          applyTheme(savedTheme);
+        } catch (error) {
+          applyTheme("light");
+        }
+
+        toggle.addEventListener("change", function(event) {
+          const nextTheme = event.target.checked ? "dark" : "light";
+          applyTheme(nextTheme);
+
+          try {
+            window.localStorage.setItem(storageKey, nextTheme);
+          } catch (error) {
+          }
+        });
+      });
+    </script>
   </body>
 </html>
