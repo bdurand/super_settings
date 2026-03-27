@@ -6,6 +6,6 @@ gem "sqlite3", "~> 2.9"
 
 gem "puma", "~> 7.0"
 
-gem "ultra_settings"
+gem "ultra_settings", path: "../../ultra_settings"
 
 gem "super_settings", path: ".."

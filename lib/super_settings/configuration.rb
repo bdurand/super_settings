@@ -12,6 +12,8 @@ module SuperSettings
 
     # Configuration for the controller.
     class Controller
+      VALID_COLOR_SCHEMES = [:light, :dark, :system].freeze
+
       # @api private
       attr_reader :enhancement
 
@@ -25,12 +27,13 @@ module SuperSettings
       def initialize
         @superclass = nil
         @web_ui_enabled = true
-        @color_scheme = false
+        @color_scheme = nil
         @changed_by_block = nil
         @enhancement = nil
         @application_name = nil
         @application_logo = nil
         @application_link = nil
+        @dark_mode_selector = nil
       end
 
       def superclass
@@ -41,10 +44,10 @@ module SuperSettings
         end
       end
 
-      # Optinal name of the application displayed in the view.
+      # Optional name of the application displayed in the view.
       attr_accessor :application_name
 
-      # Optional mage URL for the application logo.
+      # Optional image URL for the application logo.
       attr_accessor :application_logo
 
       # Optional URL for a link back to the rest of the application.
@@ -69,11 +72,30 @@ module SuperSettings
       end
 
       # Set dark mode for the web UI. Possible values are :light, :dark, or :system.
-      # The default value is :light.
+      # When the value is not set (or is invalid), theme selection is left dynamic.
       attr_writer :color_scheme
 
+      # Return the configured color scheme.
+      #
+      # @return [Symbol, nil]
       def color_scheme
-        (@color_scheme ||= :light).to_sym
+        scheme = @color_scheme&.to_sym
+        VALID_COLOR_SCHEMES.include?(scheme) ? scheme : nil
+      end
+
+      # Set a CSS selector that sets dark mode. This is an alternative to using the color_scheme
+      # option and can be used if you have a custom implementation for dark mode in your application.
+      # Dark mode will be enabled in the settings web UI when the selector matches an element in the page.
+      attr_accessor :dark_mode_selector
+
+      # Return the selector used to enable dark mode from host page state.
+      #
+      # @return [String, nil]
+      def resolved_dark_mode_selector
+        return @dark_mode_selector if @dark_mode_selector
+        return "[data-theme=dark]" if color_scheme.nil?
+
+        nil
       end
 
       # Enhance the controller. You can define methods or call controller class methods like

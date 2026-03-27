@@ -8,6 +8,18 @@
     <meta name="format-detection" content="telephone=no email=no date=no address=no">
     <meta name="robots" content="noindex, nofollow">
     <meta name="referrer" content="no-referrer-when-downgrade">
+    <% if dark_mode_selector %>
+    <script>
+      (function() {
+        try {
+          if (localStorage.getItem("super_settings_theme") === "dark") {
+            document.documentElement.setAttribute("data-theme", "dark");
+          }
+        } catch (e) {
+        }
+      })();
+    </script>
+    <% end %>
     <%= layout_style_tag %>
     <%= add_to_head %>
   </head>
@@ -16,6 +28,24 @@
     <header class="super-settings-page-header">
       <div class="super-settings-page-header-inner">
         <%= application_header %>
+        <% if dark_mode_selector %>
+        <button type="button" class="super-settings-theme-toggle" id="super-settings-theme-toggle" aria-label="Toggle dark mode">
+          <svg class="super-settings-theme-icon super-settings-theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2"></path>
+            <path d="M12 20v2"></path>
+            <path d="m4.93 4.93 1.41 1.41"></path>
+            <path d="m17.66 17.66 1.41 1.41"></path>
+            <path d="M2 12h2"></path>
+            <path d="M20 12h2"></path>
+            <path d="m6.34 17.66-1.41 1.41"></path>
+            <path d="m19.07 4.93-1.41 1.41"></path>
+          </svg>
+          <svg class="super-settings-theme-icon super-settings-theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+          </svg>
+        </button>
+        <% end %>
       </div>
     </header>
 
@@ -71,6 +101,32 @@
           </menu>
         </details>
       </footer>
+    <% end %>
+    <% if dark_mode_selector %>
+    <script>
+      (function() {
+        var toggle = document.getElementById("super-settings-theme-toggle");
+        if (!toggle) return;
+
+        var html = document.documentElement;
+        toggle.addEventListener("click", function() {
+          var isDark = html.getAttribute("data-theme") === "dark";
+          if (isDark) {
+            html.removeAttribute("data-theme");
+            try {
+              localStorage.removeItem("super_settings_theme");
+            } catch (e) {
+            }
+          } else {
+            html.setAttribute("data-theme", "dark");
+            try {
+              localStorage.setItem("super_settings_theme", "dark");
+            } catch (e) {
+            }
+          }
+        });
+      })();
+    </script>
     <% end %>
   </body>
 </html>

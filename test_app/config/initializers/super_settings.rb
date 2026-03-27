@@ -4,6 +4,7 @@ SuperSettings.configure do |config|
   config.controller.application_name = "Sample Application"
   config.controller.application_link = "/"
   config.controller.application_logo = "/images/logo.svg"
+  config.controller.dark_mode_selector = "[data-theme=dark]"
 
   config.controller.define_changed_by do
     "system user"

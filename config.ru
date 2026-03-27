@@ -25,8 +25,6 @@ if ENV.fetch("BRANDED", "false") == "true"
   SuperSettings.configuration.controller.application_logo = svg_data_uri
 end
 
-SuperSettings.configuration.controller.color_scheme = ENV.fetch("COLOR_SCHEME", "light")
-
 app = TestApplication.new
 
 storage = ENV.fetch("STORAGE", "redis")

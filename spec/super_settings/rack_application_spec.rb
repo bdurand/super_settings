@@ -38,6 +38,32 @@ describe SuperSettings::RackApplication do
   end
 
   describe "root" do
+    around do |example|
+      original_color_scheme = SuperSettings.configuration.controller.color_scheme
+      original_dark_mode_selector = SuperSettings.configuration.controller.dark_mode_selector
+      example.run
+      SuperSettings.configuration.controller.color_scheme = original_color_scheme
+      SuperSettings.configuration.controller.dark_mode_selector = original_dark_mode_selector
+    end
+
+    it "should render the theme toggle when color_scheme is not configured" do
+      SuperSettings.configuration.controller.color_scheme = nil
+      SuperSettings.configuration.controller.dark_mode_selector = nil
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix")
+      expect(response[0]).to eq 200
+      expect(response[2].first).to include('id="super-settings-theme-toggle"')
+      expect(response[2].first).to include("super_settings_theme")
+      expect(response[2].first).to include("[data-theme=dark]")
+    end
+
+    it "should not render the theme toggle when color_scheme is explicitly configured" do
+      SuperSettings.configuration.controller.color_scheme = :dark
+      SuperSettings.configuration.controller.dark_mode_selector = nil
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix")
+      expect(response[0]).to eq 200
+      expect(response[2].first).not_to include('id="super-settings-theme-toggle"')
+    end
+
     it "should return the application HTML page" do
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix")
       expect(response[0]).to eq 200

@@ -222,6 +222,14 @@ module SuperSettings
       @color_scheme if defined?(@color_scheme)
     end
 
+    # A CSS selector that sets dark mode when it matches an element in the page.
+    # This is an alternative to using the color_scheme option.
+    #
+    # @return [String, nil]
+    def dark_mode_selector
+      @dark_mode_selector if defined?(@dark_mode_selector)
+    end
+
     # Whether the application is in read-only mode.
     #
     # @return [Boolean]

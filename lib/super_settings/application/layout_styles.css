@@ -112,6 +112,43 @@ a:visited {
   justify-content: flex-end;
 }
 
+.super-settings-theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.super-settings-theme-toggle:hover {
+  color: var(--link-color);
+  border-color: var(--link-color);
+}
+
+.super-settings-theme-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.super-settings-theme-icon-moon {
+  display: none;
+}
+
+[data-theme="dark"] .super-settings-theme-icon-sun {
+  display: none;
+}
+
+[data-theme="dark"] .super-settings-theme-icon-moon {
+  display: block;
+}
+
 /* ══════════════════════════════════════════
    LANGUAGE MENU (in footer)
    ══════════════════════════════════════════ */
