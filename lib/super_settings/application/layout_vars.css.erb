@@ -13,7 +13,11 @@
 <% end %>
 <% if color_scheme == :system || color_scheme == :dark %>
   :root {
-    --text-color: #e5e7eb;
+<% elsif dark_mode_selector %>
+  :root<%= dark_mode_selector %> {
+<% end %>
+<% if color_scheme == :system || color_scheme == :dark || dark_mode_selector %>
+    --text-color: #eef0f8;
     --background-color: #1a1d23;
     --header-background-color: #21252b;
     --link-color: #2dd4bf;

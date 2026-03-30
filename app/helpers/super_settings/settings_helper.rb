@@ -29,6 +29,7 @@ module SuperSettings
       application_dir = File.expand_path(File.join("..", "..", "..", "lib", "super_settings", "application"), __dir__)
       erb = ERB.new(File.read(File.join(application_dir, "layout_vars.css.erb")))
       color_scheme = SuperSettings.configuration.controller.color_scheme
+      dark_mode_selector = SuperSettings.configuration.controller.dark_mode_selector
       erb.result(binding).html_safe
     end
   end

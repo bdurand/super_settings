@@ -17,6 +17,20 @@ describe SuperSettings::Application do
     expect(html).to include("<head")
   end
 
+  it "should render the theme toggle when dark_mode_selector is provided" do
+    application = SuperSettings::Application.new(layout: :default, dark_mode_selector: "[data-theme=dark]")
+    html = application.render
+    expect(html).to include('id="super-settings-theme-toggle"')
+    expect(html).to include("super_settings_theme")
+  end
+
+  it "should not render the theme toggle when dark_mode_selector is not provided" do
+    application = SuperSettings::Application.new(layout: :default, color_scheme: :light)
+    html = application.render
+    expect(html).not_to include('id="super-settings-theme-toggle"')
+    expect(html).not_to include("super_settings_theme")
+  end
+
   it "should render in read-only mode" do
     application = SuperSettings::Application.new(read_only: true)
     html = application.render

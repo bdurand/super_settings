@@ -71,8 +71,10 @@
 
 <% if color_scheme == :system %>
   @media (prefers-color-scheme: dark) {
+<% elsif dark_mode_selector %>
+  <%= dark_mode_selector %> {
 <% end %>
-<% if color_scheme == :system || color_scheme == :dark %>
+<% if color_scheme == :system || color_scheme == :dark || dark_mode_selector %>
   .super-settings {
     /* Canvas */
     --bg-page: #1a1d23;
@@ -128,6 +130,6 @@
     --icon-disabled-color: #4b5563;
   }
 <% end %>
-<% if color_scheme == :system %>
+<% if color_scheme == :system || dark_mode_selector %>
   }
 <% end %>
