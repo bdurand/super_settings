@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added `SuperSettings::Application#dark_mode_selector` configuration option that allows you to specify a CSS selector that sets dark mode when it matches an element in the page. This is an alternative to using the `color_scheme` option and allows for more flexible control of when dark mode is enabled.
+- Added `SuperSettings.to_h` method that returns a hash of all the settings with their values cast to strings.
 
 ## 2.5.0
 

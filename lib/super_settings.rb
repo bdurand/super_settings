@@ -253,6 +253,13 @@ module SuperSettings
     # to set authorization credentials stored client side to access the settings API.
     attr_accessor :web_ui_javascript
 
+    # Return a hash of all the settings as a hash. Values will all be cast to strings.
+    #
+    # @return [Hash<String, String>]
+    def to_h
+      local_cache.to_h.transform_values { |v| v&.to_s }
+    end
+
     private
 
     attr_reader :local_cache

@@ -247,4 +247,12 @@ describe SuperSettings do
       expect(SuperSettings::Setting.find_by_key("foo").value).to eq "bip"
     end
   end
+
+  describe ".to_h" do
+    it "returns a hash of all settings with values cast to strings" do
+      SuperSettings.set("foo", "bar")
+      SuperSettings.set("baz", 123)
+      expect(SuperSettings.to_h).to eq({"foo" => "bar", "baz" => "123"})
+    end
+  end
 end
