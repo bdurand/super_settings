@@ -14,7 +14,9 @@ end
 
 ENV["RAILS_ENV"] = "test"
 db_file = File.expand_path("dummy/db/test.sqlite3", __dir__)
-File.unlink(db_file) if File.exist?(db_file)
+[db_file, "#{db_file}-wal", "#{db_file}-shm"].each do |file|
+  File.unlink(file) if File.exist?(file)
+end
 
 # Needed for loading Rails 6.x and 7.0
 require "logger"

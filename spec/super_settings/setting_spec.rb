@@ -328,6 +328,15 @@ describe SuperSettings::Setting do
           expect { setting.save! }.to raise_error(SuperSettings::Setting::InvalidRecordError)
           expect(FakeLogger.instance.messages).to eq []
         end
+
+        it "should not save the record if nothing has changed" do
+          setting = SuperSettings::Setting.create!(key: "foo", value: "bar")
+          updated_at = setting.updated_at
+          expect(setting.changes).to eq({})
+          setting.save!
+          expect(setting.updated_at).to eq updated_at
+          expect(SuperSettings::Setting.find_by_key("foo").updated_at).to eq updated_at
+        end
       end
 
       describe "changes" do
@@ -588,6 +597,17 @@ describe SuperSettings::Setting do
           expect(success).to eq true
           expect(settings).to be_empty
         end
+
+        it "should return false if the storage fails to save the settings" do
+          allow_any_instance_of(SuperSettings::Setting).to receive(:save!).and_raise(SuperSettings::Setting::InvalidRecordError.new("save failed"))
+          success, _settings = SuperSettings::Setting.bulk_update([
+            {
+              key: "string",
+              value: "new value"
+            }
+          ])
+          expect(success).to eq false
+        end
       end
 
       describe "set" do
@@ -605,6 +625,23 @@ describe SuperSettings::Setting do
             expect(SuperSettings.get("foo")).to eq "bar"
           end
           expect(SuperSettings.get("foo")).to eq nil
+        end
+      end
+    end
+  end
+
+  if EXTENSIONS.include?(:active_record)
+    describe "default storage" do
+      it "should be able to save settings with the implicit ActiveRecord storage when no storage has been set" do
+        original_storage = SuperSettings::Setting.instance_variable_get(:@storage)
+        begin
+          SuperSettings::Setting.instance_variable_set(:@storage, SuperSettings::Setting.const_get(:NOT_SET))
+          expect(SuperSettings::Setting.storage).to eq SuperSettings::Storage::ActiveRecordStorage
+          setting = SuperSettings::Setting.create!(key: "default.storage.test", value: "1")
+          expect(setting.persisted?).to eq true
+        ensure
+          SuperSettings::Setting.instance_variable_set(:@storage, original_storage)
+          SuperSettings::Storage::ActiveRecordStorage.destroy_all
         end
       end
     end

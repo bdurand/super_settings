@@ -163,7 +163,7 @@ module SuperSettings
         end
 
         payload[:histories] = histories.collect do |history|
-          history_values = {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at.utc.iso8601(6)}
+          history_values = {value: history.value, changed_by: history.changed_by_display, created_at: history.created_at&.utc&.iso8601(6)}
           history_values[:deleted] = true if history.deleted?
           history_values
         end
@@ -209,9 +209,15 @@ module SuperSettings
       #     ...
       #   ]
       #
-      # @return [Hash] hash with settings array
+      # @return [Hash, nil] hash with settings array or nil if the time is missing or unparseable
       def updated_since(time)
-        time = Coerce.time(time)
+        time = begin
+          Coerce.time(time)
+        rescue ArgumentError
+          nil
+        end
+        return nil if time.nil?
+
         settings = Setting.updated_since(time).reject(&:deleted?)
         {settings: settings.collect(&:as_json)}
       end

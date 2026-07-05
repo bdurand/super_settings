@@ -115,8 +115,8 @@ module SuperSettings
         private
 
         def s3_bucket
-          if configuration.hash != @bucket_hash
-            @bucket_hash = configuration.hash
+          config_hash = configuration.hash
+          if config_hash != @bucket_hash
             options = {
               endpoint: configuration.endpoint,
               access_key_id: configuration.access_key_id,
@@ -126,7 +126,10 @@ module SuperSettings
             options[:force_path_style] = true if configuration.endpoint
             options.compact!
 
+            # Set the bucket before the hash so a concurrent thread that sees the new
+            # hash cannot read a stale bucket.
             @bucket = Aws::S3::Resource.new(options).bucket(configuration.bucket)
+            @bucket_hash = config_hash
           end
           @bucket
         end

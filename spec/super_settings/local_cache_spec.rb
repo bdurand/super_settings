@@ -68,6 +68,15 @@ describe SuperSettings::LocalCache do
       expect(cache.loaded?).to eq false
     end
 
+    it "should pick up new settings even when the cache was loaded with no settings" do
+      SuperSettings::Setting.storage.destroy_all
+      cache.load_settings
+      expect(cache.size).to eq 0
+      SuperSettings::Setting.create!(key: "key.new", value: 1, value_type: :integer)
+      cache.refresh
+      expect(cache.to_h).to eq("key.new" => 1)
+    end
+
     it "should load updated records" do
       cache.load_settings
       SuperSettings::Setting.find_by_key("key.1").update!(value: 10)
@@ -107,6 +116,12 @@ describe SuperSettings::LocalCache do
       cache["key.5"]
       cache.wait_for_load
       expect(cache.to_h).to eq("key.1" => 1, "key.4" => nil)
+    end
+
+    it "should return array values as arrays" do
+      SuperSettings::Setting.create!(key: "key.list", value: ["a", "b"], value_type: :array)
+      cache.load_settings
+      expect(cache.to_h["key.list"]).to eq ["a", "b"]
     end
   end
 end

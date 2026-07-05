@@ -33,6 +33,7 @@ describe SuperSettings::Coerce do
     it "should cast blank to nil" do
       expect(SuperSettings::Coerce.boolean(nil)).to eq nil
       expect(SuperSettings::Coerce.boolean("")).to eq nil
+      expect(SuperSettings::Coerce.boolean(" ")).to eq nil
     end
   end
 

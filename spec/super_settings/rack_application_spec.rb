@@ -253,6 +253,16 @@ describe SuperSettings::RackApplication do
       response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/updated_since")
       expect(response[0]).to eq 403
     end
+
+    it "should return a bad request response if the time parameter is missing" do
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/updated_since", "rack.input" => StringIO.new)
+      expect(response[0]).to eq 400
+    end
+
+    it "should return a bad request response if the time parameter cannot be parsed" do
+      response = middleware.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/prefix/updated_since", "QUERY_STRING" => "time=garbage", "rack.input" => StringIO.new)
+      expect(response[0]).to eq 400
+    end
   end
 
   describe "update" do
@@ -325,6 +335,43 @@ describe SuperSettings::RackApplication do
       response = middleware.call("REQUEST_METHOD" => "POST", "SCRIPT_NAME" => "/prefix/settings", "CONTENT_TYPE" => "application/json", "rack.input" => StringIO.new(request_body), "super_settings.read_only" => true)
       expect(response[0]).to eq 403
       expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "foobar"
+    end
+
+    it "should return a bad request response if the JSON body is malformed" do
+      response = middleware.call("REQUEST_METHOD" => "POST", "SCRIPT_NAME" => "/prefix/settings", "CONTENT_TYPE" => "application/json", "rack.input" => StringIO.new("{not json"))
+      expect(response[0]).to eq 400
+    end
+
+    it "should return a bad request response if the JSON body is not an object" do
+      response = middleware.call("REQUEST_METHOD" => "POST", "SCRIPT_NAME" => "/prefix/settings", "CONTENT_TYPE" => "application/json", "rack.input" => StringIO.new("[1, 2]"))
+      expect(response[0]).to eq 400
+    end
+  end
+
+  describe "mounted under a path" do
+    let(:mounted_app) do
+      SuperSettings::RackApplication.new do
+        def current_user(request)
+          "user@example.com"
+        end
+      end
+    end
+
+    it "should serve the root page when the mount point is in SCRIPT_NAME" do
+      response = mounted_app.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/mounted", "PATH_INFO" => "/", "rack.input" => StringIO.new)
+      expect(response[0]).to eq 200
+      expect(response[1]).to include("content-type" => "text/html; charset=utf-8")
+    end
+
+    it "should serve API endpoints when the mount point is in SCRIPT_NAME" do
+      response = mounted_app.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/mounted", "PATH_INFO" => "/settings", "rack.input" => StringIO.new)
+      expect(response[0]).to eq 200
+      expect(JSON.parse(response[2].first)["settings"]).to be_a(Array)
+    end
+
+    it "should return a not found response for unknown paths when there is no downstream app" do
+      response = mounted_app.call("REQUEST_METHOD" => "GET", "SCRIPT_NAME" => "/mounted", "PATH_INFO" => "/unknown", "rack.input" => StringIO.new)
+      expect(response[0]).to eq 404
     end
   end
 

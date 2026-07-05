@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
+require "time"
 
 # This is the main interface to the access settings.
 module SuperSettings

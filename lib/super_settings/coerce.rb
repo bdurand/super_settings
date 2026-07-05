@@ -23,7 +23,7 @@ module SuperSettings
       def boolean(value)
         if value == false
           false
-        elsif blank?(value)
+        elsif blank?(value) || (value.is_a?(String) && value.strip.empty?)
           nil
         else
           !FALSE_VALUES.include?(value.to_s.downcase)

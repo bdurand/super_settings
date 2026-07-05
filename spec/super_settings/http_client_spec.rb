@@ -41,6 +41,27 @@ describe SuperSettings::HttpClient do
       stub_request(:get, "https://example.com/api/settings").to_return(response)
       expect(http.get("/settings")).to eq payload
     end
+
+    it "preserves a query string in the base url" do
+      http = SuperSettings::HttpClient.new("https://example.com/api?token=abc")
+      stub_request(:get, "https://example.com/api/settings").with(query: {token: "abc"}).to_return(response)
+      expect(http.get("/settings")).to eq payload
+    end
+  end
+
+  describe "retries" do
+    it "retries a GET request after a connection error" do
+      http = SuperSettings::HttpClient.new("https://example.com")
+      stub_request(:get, "https://example.com/settings").to_raise(Errno::ECONNRESET).then.to_return(response)
+      expect(http.get("/settings")).to eq payload
+    end
+
+    it "does not retry a POST request after a connection error" do
+      http = SuperSettings::HttpClient.new("https://example.com")
+      stub_request(:post, "https://example.com/settings").to_raise(Errno::ECONNRESET).then.to_return(response)
+      expect { http.post("/settings") }.to raise_error(Errno::ECONNRESET)
+      expect(a_request(:post, "https://example.com/settings")).to have_been_made.once
+    end
   end
 
   describe "headers" do

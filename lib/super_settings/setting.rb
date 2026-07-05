@@ -164,12 +164,16 @@ module SuperSettings
       def bulk_update(params, changed_by = nil)
         all_valid, settings = update_settings(params, changed_by)
         if all_valid
-          storage.with_connection do
-            transaction do |_changes|
-              settings.each do |setting|
-                setting.save!
+          begin
+            storage.with_connection do
+              transaction do |_changes|
+                settings.each do |setting|
+                  setting.save!
+                end
               end
             end
+          rescue InvalidRecordError
+            return [false, settings]
           end
           clear_last_updated_cache
         end
@@ -214,7 +218,7 @@ module SuperSettings
         Thread.current[:super_settings_transaction] = changes
 
         begin
-          @storage.transaction(&block)
+          storage.transaction(&block)
 
           clear_last_updated_cache
 
@@ -484,11 +488,11 @@ module SuperSettings
         raise InvalidRecordError.new(errors.values.join("; "))
       end
 
+      return if @changes.empty?
+
       timestamp = Time.now
       self.created_at ||= timestamp
       self.updated_at = timestamp if updated_at.nil? || !changed?(:updated_at)
-
-      return if @changes.empty?
 
       self.class.storage.with_connection do
         self.class.transaction do

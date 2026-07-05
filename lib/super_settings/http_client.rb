@@ -27,8 +27,8 @@ module SuperSettings
     end
 
     def initialize(base_url, headers: nil, params: nil, timeout: nil, user: nil, password: nil)
-      base_url = "#{base_url}/" unless base_url.end_with?("/")
       @base_uri = URI(base_url)
+      @base_uri.path = "#{@base_uri.path}/" unless @base_uri.path.end_with?("/")
       @base_uri.query = query_string(params) if params
       @headers = headers ? DEFAULT_HEADERS.merge(headers) : DEFAULT_HEADERS
       @timeout = timeout || DEFAULT_TIMEOUT
@@ -74,9 +74,11 @@ module SuperSettings
         rescue JSON::JSONError => e
           raise Error.new(e.message)
         end
-      rescue IOError, Errno::ECONNRESET => connection_error
+      rescue IOError, Errno::ECONNRESET, Errno::EPIPE => connection_error
+        # Only retry idempotent requests; a POST may have already been processed by
+        # the server before the connection failed.
         attempts += 1
-        retry if attempts <= 1
+        retry if attempts <= 1 && request.is_a?(Net::HTTP::Get)
         raise connection_error
       end
 

@@ -12,10 +12,6 @@ module SuperSettings
     NOT_DEFINED = Object.new.freeze
     private_constant :NOT_DEFINED
 
-    # @private
-    DRIFT_FACTOR = 10
-    private_constant :DRIFT_FACTOR
-
     # Number of seconds that the cache will be considered fresh. The database will only be
     # checked for changed settings at most this often.
     attr_reader :refresh_interval
@@ -52,8 +48,10 @@ module SuperSettings
           # the database rather than run out of memory.
           if setting || @cache.size < 100_000
             @lock.synchronize do
-              # For case where one thread could be iterating over the cache while it's updated causing an error
-              @cache = @cache.merge(key => value).freeze
+              # Don't overwrite an entry added by a concurrent refresh; it is at least as
+              # fresh as the value read here. A new hash is set so that one thread can
+              # iterate over the cache while it's updated without causing an error.
+              @cache = @cache.merge(key => value).freeze unless @cache.include?(key)
             end
           end
         end
@@ -91,8 +89,7 @@ module SuperSettings
     def to_h
       ensure_cache_up_to_date!
       hash = {}
-      @cache.each do |key, data|
-        value, _ = data
+      @cache.each do |key, value|
         hash[key] = value unless value == NOT_DEFINED
       end
       hash
@@ -150,8 +147,6 @@ module SuperSettings
         return if @refreshing
 
         @next_check_at = Time.now + @refresh_interval
-        return if @cache.empty?
-
         @refreshing = true
       end
 
@@ -248,14 +243,6 @@ module SuperSettings
         @refreshing = false
         @cache = block.call.freeze
       end
-    end
-
-    # Recursively freeze a hash.
-    def deep_freeze_hash(hash)
-      hash.each_value do |value|
-        deep_freeze_hash(value) if value.is_a?(Hash)
-      end
-      hash.freeze
     end
   end
 end

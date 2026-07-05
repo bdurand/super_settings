@@ -24,6 +24,14 @@ describe SuperSettings do
     end
   end
 
+  describe "configure" do
+    it "should run configuration blocks immediately once deferred configuration has run" do
+      called = false
+      SuperSettings.configure { |config| called = true }
+      expect(called).to eq true
+    end
+  end
+
   describe "get" do
     it "should get a string value" do
       SuperSettings::Setting.create!(key: "key", value: "foo", value_type: :string)

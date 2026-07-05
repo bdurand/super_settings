@@ -65,9 +65,12 @@ module SuperSettings
           if @mongodb.nil? || @url_hash != @url.hash
             @mutex.synchronize do
               unless @url_hash == @url.hash
+                client = Mongo::Client.new(@url)
+                create_indexes!(client)
+                # Only record the URL hash after the client is set up so that a
+                # failure here will be retried on the next call.
+                @mongodb = client
                 @url_hash = @url.hash
-                @mongodb = Mongo::Client.new(@url)
-                create_indexes!(@mongodb)
               end
             end
           end
@@ -100,8 +103,12 @@ module SuperSettings
             key: key,
             deleted: false
           }
-          record = settings_collection.find(query).projection(history: 0).first
-          new(record) if record
+          attributes = settings_collection.find(query).projection(history: 0).first
+          if attributes
+            record = new(attributes)
+            record.persisted = true
+            record
+          end
         end
 
         def last_updated_at
