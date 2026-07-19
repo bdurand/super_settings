@@ -21,7 +21,7 @@ module SuperSettings
               yield(changes)
 
               if save_all(changes) == false
-                raise SuperSettings::Setting::InvalidRecordError.new("Settings could not be saved")
+                raise SuperSettings::Setting::PersistenceError.new("Settings could not be saved")
               end
 
               changes.each do |object|

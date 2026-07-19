@@ -599,6 +599,17 @@ describe SuperSettings::Setting do
         end
 
         it "should return false if the storage fails to save the settings" do
+          allow_any_instance_of(SuperSettings::Setting).to receive(:save!).and_raise(SuperSettings::Setting::PersistenceError.new("save failed"))
+          success, _settings = SuperSettings::Setting.bulk_update([
+            {
+              key: "string",
+              value: "new value"
+            }
+          ])
+          expect(success).to eq false
+        end
+
+        it "should return false if a setting raises an invalid record error" do
           allow_any_instance_of(SuperSettings::Setting).to receive(:save!).and_raise(SuperSettings::Setting::InvalidRecordError.new("save failed"))
           success, _settings = SuperSettings::Setting.bulk_update([
             {

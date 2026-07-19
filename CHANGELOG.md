@@ -17,8 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `Setting#save!` always updating the `updated_at` timestamp (and triggering a write) even when nothing had changed, which caused unnecessary cache invalidation across processes.
 - Fixed a race condition in `LocalCache` where a value read on a cache miss could overwrite a fresher value written by a concurrent refresh.
 - Fixed `LocalCache#refresh` never picking up newly added settings if the cache had been loaded while the data store was empty.
+- Fixed `LocalCache` returning mutable array values for settings added by a cache refresh or a cache miss. All cached values are now frozen so callers cannot mutate the shared cache.
+- Fixed the web UI history view failing to render when a history record has no timestamp.
 - Fixed a duplicate-key race in `ActiveRecordStorage#save!` that raised an unhandled `ActiveRecord::RecordNotUnique` when the same key was created concurrently. The conflict is now retried and merged.
-- Fixed a bulk update against `HttpStorage` silently reporting success when the remote API rejected the changes. `bulk_update` now returns `false` and `save!` raises an error in this case.
+- Fixed a bulk update against `HttpStorage` silently reporting success when the remote API rejected the changes. `bulk_update` now returns `false` and `save!` raises a `SuperSettings::Setting::PersistenceError` in this case so storage failures can be distinguished from validation errors.
 - Fixed thread-safety issues in the cached S3 and MongoDB clients that could expose a stale client or permanently cache a `nil` client after a transient connection failure.
 - Fixed `MongoDBStorage.find_by_key` returning records that reported `persisted?` as `false`.
 - Fixed the escaping of `SuperSettings.authentication_url` when injected into the inline web UI JavaScript. URLs containing single quotes previously produced corrupted or invalid JavaScript.
@@ -26,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `HttpClient` corrupting base URLs that include a query string when appending the trailing path separator.
 - Fixed `HttpClient` retrying non-idempotent POST requests after a connection error, which could apply an update twice.
 - Fixed the `/settings/updated_since` endpoint returning a 500 (or a misleading empty success) when the `time` parameter was missing or unparseable. It now returns a 400 Bad Request.
-- Fixed the web UI POST endpoint returning a 500 for malformed JSON request bodies instead of a 400 Bad Request.
+- Fixed the web UI POST endpoint returning a 500 for malformed JSON request bodies instead of a 400 Bad Request. The endpoint now also returns a 400 Bad Request when the `settings` parameter is missing or is not an array of hashes.
 - Fixed an authenticated but unauthorized user being redirected to the login page (a potential redirect loop) instead of receiving a 403 Forbidden.
 - Fixed the Rails layout helper using the raw dark mode selector instead of the resolved value, which could render a page with mismatched light/dark styling.
 - Fixed `Coerce.boolean` returning `true` for a whitespace-only string.

@@ -30,6 +30,10 @@ module SuperSettings
     class InvalidRecordError < StandardError
     end
 
+    # Exception raised if the storage engine could not persist valid changes.
+    class PersistenceError < StandardError
+    end
+
     include Attributes
 
     # The changed_by attribute is used to temporarily store an identifier for the user
@@ -172,7 +176,7 @@ module SuperSettings
                 end
               end
             end
-          rescue InvalidRecordError
+          rescue InvalidRecordError, PersistenceError
             return [false, settings]
           end
           clear_last_updated_cache

@@ -93,6 +93,21 @@ describe SuperSettings::LocalCache do
       expect(cache["key.3"]).to eq nil
       expect(cache["key.4"]).to eq 4
     end
+
+    it "should freeze array values added by a refresh" do
+      cache.load_settings
+      SuperSettings::Setting.create!(key: "key.array", value: ["a", "b"], value_type: :array)
+      cache.refresh
+      expect(cache["key.array"]).to eq ["a", "b"]
+      expect(cache["key.array"]).to be_frozen
+    end
+
+    it "should freeze array values loaded on a cache miss" do
+      cache.load_settings
+      SuperSettings::Setting.create!(key: "key.array", value: ["a", "b"], value_type: :array)
+      expect(cache["key.array"]).to eq ["a", "b"]
+      expect(cache["key.array"]).to be_frozen
+    end
   end
 
   describe "reset" do

@@ -237,9 +237,10 @@ module SuperSettings
     def handle_update_request(request)
       check_authorization(request, write_required: true) do |user|
         params = post_params(request)
-        next json_response(400, error: "Invalid request") unless params
+        settings = params["settings"] if params
+        next json_response(400, error: "Invalid request") unless valid_settings_params?(settings)
 
-        result = SuperSettings::RestAPI.update(params["settings"], changed_by(user))
+        result = SuperSettings::RestAPI.update(settings, changed_by(user))
         if result[:success]
           json_response(200, result)
         else
@@ -355,6 +356,11 @@ module SuperSettings
       end
     rescue JSON::ParserError
       nil
+    end
+
+    # The settings parameter in an update request must be an array of hashes.
+    def valid_settings_params?(settings)
+      settings.is_a?(Array) && settings.all? { |setting| setting.is_a?(Hash) }
     end
   end
 end

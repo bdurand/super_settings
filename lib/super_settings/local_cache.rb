@@ -43,7 +43,7 @@ module SuperSettings
           value = NOT_DEFINED
         else
           setting = Setting.find_by_key(key)
-          value = (setting ? setting.value : NOT_DEFINED)
+          value = (setting ? setting.value.freeze : NOT_DEFINED)
           # Guard against caching too many cache missees; at some point it's better to slam
           # the database rather than run out of memory.
           if setting || @cache.size < 100_000
@@ -194,7 +194,7 @@ module SuperSettings
       return if Coerce.blank?(setting.key)
 
       @lock.synchronize do
-        @cache = @cache.merge(setting.key => setting.value)
+        @cache = @cache.merge(setting.key => setting.value.freeze).freeze
       end
     end
 
@@ -215,7 +215,7 @@ module SuperSettings
       changed_settings = {}
       start_time = Time.now
       Setting.updated_since(last_refresh_time - 1).each do |setting|
-        value = (setting.deleted? ? NOT_DEFINED : setting.value)
+        value = (setting.deleted? ? NOT_DEFINED : setting.value.freeze)
         changed_settings[setting.key] = value
       end
       set_cache_values(start_time) { @cache.merge(changed_settings) }

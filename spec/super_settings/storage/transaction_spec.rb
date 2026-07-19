@@ -66,7 +66,7 @@ describe SuperSettings::Storage::Transaction do
         object1.save!
         object2.save!
       end
-    }.to raise_error(SuperSettings::Setting::InvalidRecordError)
+    }.to raise_error(SuperSettings::Setting::PersistenceError)
     expect(object1.persisted?).to eq false
     expect(object2.persisted?).to eq false
   end

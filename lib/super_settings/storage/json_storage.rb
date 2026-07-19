@@ -11,6 +11,11 @@ module SuperSettings
     # This class can be used as the base for any storage class where the settings are all stored
     # together in a single JSON payload.
     #
+    # Writes are serialized within a process, but there is no coordination between processes.
+    # If multiple processes write settings at the same time, the last write wins and can
+    # overwrite changes made by another process. Storage backends based on this class are best
+    # suited for setups where settings are updated from a single process at a time.
+    #
     # Subclasses must implement the following methods:
     # - self.all
     # - self.last_updated_at

@@ -105,16 +105,19 @@ module SuperSettings
         # that record instead and delete the current one.
         attempts = 0
         begin
-          duplicate = @model.class.find_by(key: @model.key)
-          if duplicate.nil? || duplicate == @model
-            @model.save!
-          else
-            duplicate.raw_value = @model.raw_value
-            duplicate.value_type = @model.value_type
-            duplicate.description = @model.description
-            duplicate.deleted = @model.deleted
+          # Each attempt runs in a savepoint so a duplicate key failure can be rolled back
+          # and retried; otherwise the surrounding transaction would be left in an aborted
+          # state on PostgreSQL.
+          @model.class.transaction(requires_new: true) do
+            duplicate = @model.class.find_by(key: @model.key)
+            if duplicate.nil? || duplicate == @model
+              @model.save!
+            else
+              duplicate.raw_value = @model.raw_value
+              duplicate.value_type = @model.value_type
+              duplicate.description = @model.description
+              duplicate.deleted = @model.deleted
 
-            @model.transaction do
               if @model.persisted?
                 begin
                   @model.reload.update!(deleted: true)
@@ -122,8 +125,8 @@ module SuperSettings
                 end
               end
               duplicate.save!
+              @model = duplicate
             end
-            @model = duplicate
           end
         rescue ActiveRecord::RecordNotUnique
           # A record with the same key was inserted concurrently; retry so it is

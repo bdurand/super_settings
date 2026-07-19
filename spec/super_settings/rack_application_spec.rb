@@ -346,6 +346,24 @@ describe SuperSettings::RackApplication do
       response = middleware.call("REQUEST_METHOD" => "POST", "SCRIPT_NAME" => "/prefix/settings", "CONTENT_TYPE" => "application/json", "rack.input" => StringIO.new("[1, 2]"))
       expect(response[0]).to eq 400
     end
+
+    it "should return a bad request response if the settings parameter is missing" do
+      response = middleware.call("REQUEST_METHOD" => "POST", "SCRIPT_NAME" => "/prefix/settings", "CONTENT_TYPE" => "application/json", "rack.input" => StringIO.new("{}"))
+      expect(response[0]).to eq 400
+    end
+
+    it "should return a bad request response if the settings parameter is not an array" do
+      request_body = {settings: {key: "string", value: "new value"}}.to_json
+      response = middleware.call("REQUEST_METHOD" => "POST", "SCRIPT_NAME" => "/prefix/settings", "CONTENT_TYPE" => "application/json", "rack.input" => StringIO.new(request_body))
+      expect(response[0]).to eq 400
+      expect(SuperSettings::Setting.find_by_key(setting_1.key).value).to eq "foobar"
+    end
+
+    it "should return a bad request response if the settings parameter contains non-hash elements" do
+      request_body = {settings: ["string"]}.to_json
+      response = middleware.call("REQUEST_METHOD" => "POST", "SCRIPT_NAME" => "/prefix/settings", "CONTENT_TYPE" => "application/json", "rack.input" => StringIO.new(request_body))
+      expect(response[0]).to eq 400
+    end
   end
 
   describe "mounted under a path" do

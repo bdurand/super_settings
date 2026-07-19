@@ -81,6 +81,31 @@ if EXTENSIONS[:active_record]
       end
     end
 
+    describe "save!" do
+      it "retries and merges the record if the same key is inserted concurrently" do
+        existing = SuperSettings::Storage::ActiveRecordStorage::Model.create!(key: "setting", raw_value: "1", value_type: "string", updated_at: Time.now, created_at: Time.now)
+        setting = SuperSettings::Storage::ActiveRecordStorage.new(key: "setting", raw_value: "2", value_type: "string")
+
+        # Simulate a concurrent insert by hiding the existing record from the duplicate
+        # check on the first attempt so the insert fails with a duplicate key error.
+        calls = 0
+        allow(SuperSettings::Storage::ActiveRecordStorage::Model).to receive(:find_by).and_wrap_original do |original, *args|
+          calls += 1
+          (calls == 1) ? nil : original.call(*args)
+        end
+
+        SuperSettings::Storage::ActiveRecordStorage.transaction do
+          setting.save!
+        end
+
+        expect(calls).to eq 2
+        records = SuperSettings::Storage::ActiveRecordStorage::Model.where(key: "setting")
+        expect(records.count).to eq 1
+        expect(records.first.id).to eq existing.id
+        expect(records.first.raw_value).to eq "2"
+      end
+    end
+
     describe "last_updated_at" do
       it "should return the last time a setting was updated" do
         setting_1 = SuperSettings::Storage::ActiveRecordStorage.new(key: "setting_1", raw_value: "1", updated_at: Time.now - 100)

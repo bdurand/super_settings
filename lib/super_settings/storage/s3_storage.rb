@@ -69,6 +69,9 @@ module SuperSettings
         end
       end
 
+      BUCKET_MUTEX = Mutex.new
+      private_constant :BUCKET_MUTEX
+
       @bucket = nil
       @bucket_hash = nil
 
@@ -115,23 +118,26 @@ module SuperSettings
         private
 
         def s3_bucket
-          config_hash = configuration.hash
-          if config_hash != @bucket_hash
-            options = {
-              endpoint: configuration.endpoint,
-              access_key_id: configuration.access_key_id,
-              secret_access_key: configuration.secret_access_key,
-              region: configuration.region
-            }
-            options[:force_path_style] = true if configuration.endpoint
-            options.compact!
+          # The mutex ensures the bucket and the configuration hash it was built from
+          # are always published together so a concurrent reconfiguration cannot
+          # expose a bucket that does not match the current configuration.
+          BUCKET_MUTEX.synchronize do
+            config_hash = configuration.hash
+            if config_hash != @bucket_hash
+              options = {
+                endpoint: configuration.endpoint,
+                access_key_id: configuration.access_key_id,
+                secret_access_key: configuration.secret_access_key,
+                region: configuration.region
+              }
+              options[:force_path_style] = true if configuration.endpoint
+              options.compact!
 
-            # Set the bucket before the hash so a concurrent thread that sees the new
-            # hash cannot read a stale bucket.
-            @bucket = Aws::S3::Resource.new(options).bucket(configuration.bucket)
-            @bucket_hash = config_hash
+              @bucket = Aws::S3::Resource.new(options).bucket(configuration.bucket)
+              @bucket_hash = config_hash
+            end
+            @bucket
           end
-          @bucket
         end
 
         def s3_object(filename)
