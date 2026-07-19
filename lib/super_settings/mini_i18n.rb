@@ -103,7 +103,7 @@ module SuperSettings
       end
 
       def development_mode?
-        env = ENV["RAILS_ENV"] || ENV["RACK_ENV"] || ENV["APP_ENV"]
+        env = ENV["RAILS_ENV"] || ENV["RACK_ENV"] || ENV["APP_ENV"] || "development"
         env == "development"
       end
     end
