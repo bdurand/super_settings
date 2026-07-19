@@ -118,22 +118,28 @@ module SuperSettings
         private
 
         def s3_bucket
-          # The mutex ensures the bucket and the configuration hash it was built from
-          # are always published together so a concurrent reconfiguration cannot
-          # expose a bucket that does not match the current configuration.
+          # The mutex ensures the bucket and the configuration hash it was built from are
+          # always published together. The bucket and the hash are derived from a single
+          # read of the configuration attributes so that a concurrent configuration change
+          # cannot cache a bucket built from mixed values under the settled configuration
+          # hash; a torn read produces a hash that will not match the settled configuration,
+          # so the bucket gets rebuilt on the next call.
           BUCKET_MUTEX.synchronize do
-            config_hash = configuration.hash
+            config = configuration
+            options = {
+              endpoint: config.endpoint,
+              access_key_id: config.access_key_id,
+              secret_access_key: config.secret_access_key,
+              region: config.region
+            }
+            bucket_name = config.bucket
+            config_hash = [options, bucket_name, config.path].hash
+
             if config_hash != @bucket_hash
-              options = {
-                endpoint: configuration.endpoint,
-                access_key_id: configuration.access_key_id,
-                secret_access_key: configuration.secret_access_key,
-                region: configuration.region
-              }
-              options[:force_path_style] = true if configuration.endpoint
+              options[:force_path_style] = true if options[:endpoint]
               options.compact!
 
-              @bucket = Aws::S3::Resource.new(options).bucket(configuration.bucket)
+              @bucket = Aws::S3::Resource.new(options).bucket(bucket_name)
               @bucket_hash = config_hash
             end
             @bucket
