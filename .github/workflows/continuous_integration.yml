@@ -12,6 +12,7 @@ on:
 env:
   TEST_REDIS_URL: default
   TEST_S3_URL: default
+  S3_PORT: "24456"
   TEST_MONGODB_URL: default
   FERRUM_PROCESS_TIMEOUT: "30"
 
@@ -29,18 +30,18 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      minio:
-        image: minio/minio:edge-cicd
+      s3mock:
+        image: adobe/s3mock:latest
         ports:
-          - 9000:9000
+          - 24456:9090
         env:
-          MINIO_ROOT_USER: accesskey
-          MINIO_ROOT_PASSWORD: secretkey
+          COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: settings
         options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live"
-          --health-interval 10s
+          --health-cmd "wget -q -O /dev/null http://localhost:9090/favicon.ico"
+          --health-interval 5s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
+          --health-start-period 5s
       mongodb:
         image: mongo
         ports:

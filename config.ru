@@ -44,7 +44,7 @@ elsif storage == "s3"
 
   if storage_url.nil?
     storage_url = "s3://accesskey:secretkey@region-1/settings/settings.json"
-    endpoint = "http://localhost:#{ENV.fetch("S3_PORT", "9000")}"
+    endpoint = "http://localhost:#{ENV.fetch("S3_PORT", "24456")}"
     create_bucket = true
   end
 

@@ -468,7 +468,7 @@ This will work out of the box with the defaults for the storage engines when run
 
 - `REDIS_URL` - `redis://localhost:6379/0`
 - `REST_API_URL` - `http://localhost:3000/settings` (this is the default URL for the Rails application)
-- `S3_URL` - `s3://accesskey:secretkey@region-1/settings/settings.json` (the S3 endpoint will be set to `http://localhost:9000`)
+- `S3_URL` - `s3://accesskey:secretkey@region-1/settings/settings.json` (the S3 endpoint will be set to `http://localhost:24456`)
 - `MONGODB_URL` - `mongodb://localhost:27017/super_settings`
 
 ## License

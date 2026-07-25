@@ -72,7 +72,7 @@ end
 if defined?(Aws)
   if ENV["TEST_S3_URL"] == "default"
     storage_url = "s3://accesskey:secretkey@region-1/settings/test_settings.json"
-    endpoint = "http://localhost:#{ENV.fetch("S3_PORT", "9000")}"
+    endpoint = "http://localhost:#{ENV.fetch("S3_PORT", "24456")}"
     config = SuperSettings::Storage::S3Storage.configuration
     config.endpoint = endpoint
     config.url = storage_url
