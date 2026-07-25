@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe SuperSettings::Setting do
+RSpec.describe SuperSettings::Setting do
   storage_engines = [SuperSettings::Storage::TestStorage] + EXTENSIONS.values
   if ENV["TEST_STORAGE"].to_s != ""
     storage_engines = [EXTENSIONS[ENV["TEST_STORAGE"].to_sym]]

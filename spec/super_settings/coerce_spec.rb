@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe SuperSettings::Coerce do
+RSpec.describe SuperSettings::Coerce do
   describe "boolean" do
     it "should translate false values" do
       expect(SuperSettings::Coerce.boolean(false)).to eq false

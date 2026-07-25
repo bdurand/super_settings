@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe SuperSettings::Application do
+RSpec.describe SuperSettings::Application do
   it "should render the application HTML" do
     application = SuperSettings::Application.new
     html = application.render

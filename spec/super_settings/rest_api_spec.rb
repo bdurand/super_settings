@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe SuperSettings::RestAPI do
+RSpec.describe SuperSettings::RestAPI do
   let!(:setting_1) { SuperSettings::Setting.create!(key: "string", value_type: :string, value: "foobar") }
   let!(:setting_2) { SuperSettings::Setting.create!(key: "integer", value_type: :integer, value: 4) }
   let!(:setting_3) { SuperSettings::Setting.create!(key: "float", value_type: :float, value: 12.5) }

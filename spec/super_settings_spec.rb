@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe SuperSettings do
+RSpec.describe SuperSettings do
   describe "load_settings" do
     it "should load the cache" do
       expect_any_instance_of(SuperSettings::LocalCache).to receive(:load_settings)

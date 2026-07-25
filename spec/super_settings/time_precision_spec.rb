@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe SuperSettings::TimePrecision do
+RSpec.describe SuperSettings::TimePrecision do
   it "should return a UTC time with microsecond precision" do
     time = SuperSettings::TimePrecision.new(1728485976.123456, :microsecond).time
     expect(time.usec).to eq 123456

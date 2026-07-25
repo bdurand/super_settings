@@ -3,7 +3,7 @@
 require "spec_helper"
 
 if EXTENSIONS[:mongodb]
-  describe SuperSettings::Storage::MongoDBStorage do
+  RSpec.describe SuperSettings::Storage::MongoDBStorage do
     before do
       SuperSettings::Storage::MongoDBStorage.destroy_all
     end

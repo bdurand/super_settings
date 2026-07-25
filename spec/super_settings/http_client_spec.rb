@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe SuperSettings::HttpClient do
+RSpec.describe SuperSettings::HttpClient do
   let(:payload) { {"a" => 1} }
   let(:response) { {body: JSON.dump(payload), headers: {"content-type" => "application/json"}} }
 

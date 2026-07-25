@@ -47,7 +47,10 @@ module SuperSettings
 
     private
 
-    def render_layout
+    # The block is not called directly here; it is yielded to from the `<%= yield %>` call
+    # in the layout template which is evaluated with this method's binding. The block argument
+    # must be declared so that Ruby doesn't warn that the block may be ignored.
+    def render_layout(&block)
       @layout&.result(binding)
     end
   end

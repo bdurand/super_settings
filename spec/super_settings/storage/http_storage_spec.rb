@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe SuperSettings::Storage::HttpStorage do
+RSpec.describe SuperSettings::Storage::HttpStorage do
   describe "http settings" do
     it "should add query parameters on a GET request" do
       SuperSettings::Storage::HttpStorage.query_params[:foo] = "bar"

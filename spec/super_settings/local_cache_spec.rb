@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe SuperSettings::LocalCache do
+RSpec.describe SuperSettings::LocalCache do
   let(:cache) { SuperSettings::LocalCache.new(refresh_interval: 5) }
 
   before do

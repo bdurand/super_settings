@@ -14,7 +14,7 @@ class TestTransactionStorage
   end
 end
 
-describe SuperSettings::Storage::Transaction do
+RSpec.describe SuperSettings::Storage::Transaction do
   it "enqueues all changes in a transaction and calls save_all" do
     object_1 = TestTransactionStorage.new
     object_2 = TestTransactionStorage.new

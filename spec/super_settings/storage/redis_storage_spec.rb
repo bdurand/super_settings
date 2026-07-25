@@ -3,7 +3,7 @@
 require "spec_helper"
 
 if EXTENSIONS[:redis]
-  describe SuperSettings::Storage::RedisStorage do
+  RSpec.describe SuperSettings::Storage::RedisStorage do
     before do
       SuperSettings::Storage::RedisStorage.destroy_all
     end

@@ -3,7 +3,7 @@
 require "spec_helper"
 
 if defined?(SuperSettings::SettingsController)
-  describe SuperSettings::SettingsController, type: :controller do
+  RSpec.describe SuperSettings::SettingsController, type: :controller do
     routes { SuperSettings::Engine.routes }
 
     let!(:setting_1) { SuperSettings::Setting.create!(key: "string", value_type: :string, value: "foobar") }

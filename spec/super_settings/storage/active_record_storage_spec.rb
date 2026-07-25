@@ -3,7 +3,7 @@
 require "spec_helper"
 
 if EXTENSIONS[:active_record]
-  describe SuperSettings::Storage::ActiveRecordStorage do
+  RSpec.describe SuperSettings::Storage::ActiveRecordStorage do
     before do
       SuperSettings::Storage::ActiveRecordStorage.destroy_all
     end

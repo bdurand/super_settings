@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe SuperSettings::RackApplication do
+RSpec.describe SuperSettings::RackApplication do
   let(:app) { lambda { |env| [200, {}, ["OK"]] } }
   let(:middleware) do
     SuperSettings::RackApplication.new(app, "/prefix") do

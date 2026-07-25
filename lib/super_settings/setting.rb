@@ -390,7 +390,7 @@ module SuperSettings
     # @param val [String]
     def description=(val)
       val = val&.to_s
-      val = nil if val&.empty?
+      val = nil if val && val.empty?
       will_change!(:description, val) unless description == val
       @record.description = val
     end
@@ -672,7 +672,7 @@ module SuperSettings
 
     def raw_value=(val)
       val = val&.to_s
-      val = nil if val&.empty?
+      val = nil if val && val.empty?
       will_change!(:raw_value, val) unless raw_value == val
       @raw_value = val
       @record.raw_value = val
