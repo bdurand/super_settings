@@ -74,6 +74,7 @@ module SuperSettings
       def blank?(value)
         return true if value.nil?
 
+        value = value.strip if value.is_a?(String)
         if value.respond_to?(:empty?)
           value.empty?
         else
