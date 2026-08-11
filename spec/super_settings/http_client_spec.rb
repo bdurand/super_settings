@@ -56,6 +56,19 @@ RSpec.describe SuperSettings::HttpClient do
       expect(http.get("/settings")).to eq payload
     end
 
+    it "discards the failed connection so the retry opens a new one" do
+      http = SuperSettings::HttpClient.new("https://example.com")
+      stub_request(:get, "https://example.com/settings").to_raise(Errno::ECONNRESET).then.to_return(response)
+      connections = []
+      allow(Net::HTTP).to receive(:new).and_wrap_original do |original, *args|
+        connection = original.call(*args)
+        connections << connection
+        connection
+      end
+      expect(http.get("/settings")).to eq payload
+      expect(connections.size).to eq 2
+    end
+
     it "does not retry a POST request after a connection error" do
       http = SuperSettings::HttpClient.new("https://example.com")
       stub_request(:post, "https://example.com/settings").to_raise(Errno::ECONNRESET).then.to_return(response)

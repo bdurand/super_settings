@@ -176,7 +176,14 @@ module SuperSettings
                 end
               end
             end
-          rescue InvalidRecordError, PersistenceError
+          rescue InvalidRecordError, PersistenceError => e
+            # Validation failures detected by save! are already recorded on the setting that
+            # failed. A storage level failure isn't attributable to any single setting, so
+            # record it on all of them; otherwise callers would get a failure with no
+            # explanation of what went wrong.
+            if settings.none? { |setting| setting.errors.any? }
+              settings.each { |setting| setting.send(:add_base_error, e.message) }
+            end
             return [false, settings]
           end
           clear_last_updated_cache
@@ -712,6 +719,17 @@ module SuperSettings
         @errors[attribute] = attribute_errors
       end
       attribute_errors << "#{attribute.tr("_", " ")} #{message}"
+    end
+
+    # Record an error that applies to the record as a whole rather than to one attribute.
+    # The message is used verbatim since there is no attribute name to prefix it with.
+    def add_base_error(message)
+      base_errors = @errors["base"]
+      unless base_errors
+        base_errors = []
+        @errors["base"] = base_errors
+      end
+      base_errors << message
     end
 
     def call_after_save_callbacks

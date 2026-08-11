@@ -53,26 +53,27 @@ module SuperSettings
 
     def send_request(request)
       set_headers(request)
-      response_payload = nil
       attempts = 0
 
-      with_connection do |http|
-        http.start unless http.started?
-        response = http.request(request)
+      begin
+        with_connection do |http|
+          http.start unless http.started?
+          response = http.request(request)
 
-        begin
-          response.value # raises exception unless response is a success
-          response_payload = JSON.parse(response.body)
-        rescue Net::ProtocolError
-          if [404, 410].include?(response.code.to_i)
-            raise NotFoundError.new("#{response.code} #{response.message}")
-          elsif response.code.to_i == 422
-            raise InvalidRecordError.new("#{response.code} #{response.message}", errors: JSON.parse(response.body)["errors"])
-          else
-            raise Error.new("#{response.code} #{response.message}")
+          begin
+            response.value # raises exception unless response is a success
+            JSON.parse(response.body)
+          rescue Net::ProtocolError
+            if [404, 410].include?(response.code.to_i)
+              raise NotFoundError.new("#{response.code} #{response.message}")
+            elsif response.code.to_i == 422
+              raise InvalidRecordError.new("#{response.code} #{response.message}", errors: JSON.parse(response.body)["errors"])
+            else
+              raise Error.new("#{response.code} #{response.message}")
+            end
+          rescue JSON::JSONError => e
+            raise Error.new(e.message)
           end
-        rescue JSON::JSONError => e
-          raise Error.new(e.message)
         end
       rescue IOError, Errno::ECONNRESET, Errno::EPIPE => connection_error
         # Only retry idempotent requests; a POST may have already been processed by
@@ -81,8 +82,6 @@ module SuperSettings
         retry if attempts <= 1 && request.is_a?(Net::HTTP::Get)
         raise connection_error
       end
-
-      response_payload
     end
 
     def with_connection(&block)

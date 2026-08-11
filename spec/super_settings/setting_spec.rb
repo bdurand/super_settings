@@ -497,6 +497,23 @@ RSpec.describe SuperSettings::Setting do
           expect(SuperSettings::Setting.find_by_key("newkey")).to eq nil
         end
 
+        it "should report an error on the settings if the storage engine cannot persist the changes" do
+          SuperSettings::Setting.create!(key: "string", value_type: :string, value: "foobar")
+          allow(SuperSettings::Setting.storage).to receive(:transaction).and_raise(
+            SuperSettings::Setting::PersistenceError.new("storage is unavailable")
+          )
+          success, settings = SuperSettings::Setting.bulk_update([
+            {
+              key: "string",
+              value: "new value",
+              value_type: "string"
+            }
+          ])
+          expect(success).to eq false
+          expect(settings.collect { |setting| setting.errors.values.flatten }).to eq [["storage is unavailable"]]
+          expect(SuperSettings::Setting.find_by_key("string").value).to eq "foobar"
+        end
+
         it "should create a new setting and delete the old one if the key changed" do
           SuperSettings::Setting.create!(key: "old_key", value_type: :string, value: "old value")
           success, settings = SuperSettings::Setting.bulk_update([
