@@ -20,10 +20,12 @@ module SuperSettings
 
               yield(changes)
 
-              if save_all(changes) != false
-                changes.each do |object|
-                  object.persisted = true if object.respond_to?(:persisted=)
-                end
+              if save_all(changes) == false
+                raise SuperSettings::Setting::PersistenceError.new("Settings could not be saved")
+              end
+
+              changes.each do |object|
+                object.persisted = true if object.respond_to?(:persisted=)
               end
             ensure
               Thread.current[transaction_key] = nil

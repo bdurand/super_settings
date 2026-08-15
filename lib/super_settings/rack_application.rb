@@ -52,8 +52,10 @@ module SuperSettings
     def call(env)
       if @path_prefix.empty? || "#{env["SCRIPT_NAME"]}#{env["PATH_INFO"]}".start_with?(@path_prefix)
         handle_request(env)
-      else
+      elsif @app
         @app.call(env)
+      else
+        [404, {"content-type" => "text/plain"}, ["Not found"]]
       end
     end
 
@@ -129,7 +131,16 @@ module SuperSettings
 
     def handle_request(env)
       request = Rack::Request.new(env)
-      path = request.path[@path_prefix.length, request.path.length]
+      script_name = env["SCRIPT_NAME"].to_s
+      full_path = "#{script_name}#{env["PATH_INFO"]}"
+      path = if !@path_prefix.empty? && full_path.start_with?(@path_prefix)
+        full_path[@path_prefix.length, full_path.length]
+      elsif @path_prefix.empty? && !script_name.empty?
+        # The application is mounted at SCRIPT_NAME, which the router has already consumed.
+        env["PATH_INFO"].to_s
+      else
+        full_path
+      end
       if request.get?
         if (path == "/" || path == "") && web_ui_enabled?
           return handle_root_request(request)
@@ -197,10 +208,10 @@ module SuperSettings
         [200, headers, [application.render]]
       end
 
-      if [401, 403].include?(response.first)
-        if SuperSettings.authentication_url
-          response = [302, {"location" => SuperSettings.authentication_url}, []]
-        end
+      # Only unauthenticated requests are redirected to the login page. An authenticated
+      # user who is denied access would just be bounced back here in a redirect loop.
+      if response.first == 401 && SuperSettings.authentication_url
+        response = [302, {"location" => SuperSettings.authentication_url}, []]
       end
 
       response
@@ -225,7 +236,11 @@ module SuperSettings
 
     def handle_update_request(request)
       check_authorization(request, write_required: true) do |user|
-        result = SuperSettings::RestAPI.update(post_params(request)["settings"], changed_by(user))
+        params = post_params(request)
+        settings = params["settings"] if params
+        next json_response(400, error: "Invalid request") unless valid_settings_params?(settings)
+
+        result = SuperSettings::RestAPI.update(settings, changed_by(user))
         if result[:success]
           json_response(200, result)
         else
@@ -253,7 +268,12 @@ module SuperSettings
 
     def handle_updated_since_request(request)
       check_authorization(request) do |user|
-        json_response(200, RestAPI.updated_since(request.params["time"]))
+        result = RestAPI.updated_since(request.params["time"])
+        if result
+          json_response(200, result)
+        else
+          json_response(400, error: "Invalid time parameter")
+        end
       end
     end
 
@@ -323,12 +343,24 @@ module SuperSettings
       nil
     end
 
+    # Returns the request parameters merged with any JSON request body. Returns nil
+    # if the request body is not valid JSON.
     def post_params(request)
       if request.content_type.to_s.match?(/\Aapplication\/json/i) && request.body
-        request.params.merge(JSON.parse(request.body.read))
+        body = JSON.parse(request.body.read)
+        return nil unless body.is_a?(Hash)
+
+        request.params.merge(body)
       else
         request.params
       end
+    rescue JSON::ParserError
+      nil
+    end
+
+    # The settings parameter in an update request must be an array of hashes.
+    def valid_settings_params?(settings)
+      settings.is_a?(Array) && settings.all? { |setting| setting.is_a?(Hash) }
     end
   end
 end

@@ -3,7 +3,7 @@
 require "spec_helper"
 
 if EXTENSIONS[:s3]
-  describe SuperSettings::Storage::S3Storage do
+  RSpec.describe SuperSettings::Storage::S3Storage do
     describe "Configuration" do
       describe "path=" do
         it "strips a trailing slash and appends one" do

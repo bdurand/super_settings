@@ -14,7 +14,9 @@ end
 
 ENV["RAILS_ENV"] = "test"
 db_file = File.expand_path("dummy/db/test.sqlite3", __dir__)
-File.unlink(db_file) if File.exist?(db_file)
+[db_file, "#{db_file}-wal", "#{db_file}-shm"].each do |file|
+  File.unlink(file) if File.exist?(file)
+end
 
 # Needed for loading Rails 6.x and 7.0
 require "logger"
@@ -70,7 +72,7 @@ end
 if defined?(Aws)
   if ENV["TEST_S3_URL"] == "default"
     storage_url = "s3://accesskey:secretkey@region-1/settings/test_settings.json"
-    endpoint = "http://localhost:#{ENV.fetch("S3_PORT", "9000")}"
+    endpoint = "http://localhost:#{ENV.fetch("S3_PORT", "24456")}"
     config = SuperSettings::Storage::S3Storage.configuration
     config.endpoint = endpoint
     config.url = storage_url
@@ -149,9 +151,11 @@ Capybara.default_max_wait_time = 5
 WebMock.disable_net_connect!(allow_localhost: true)
 
 RSpec.configure do |config|
-  config.expect_with :rspec do |c|
-    c.syntax = :expect
-  end
+  config.warnings = true
+  config.disable_monkey_patching!
+  config.default_formatter = "doc" if config.files_to_run.one?
+  config.order = :random
+  Kernel.srand config.seed
 
   config.before do
     if defined?(Rails)

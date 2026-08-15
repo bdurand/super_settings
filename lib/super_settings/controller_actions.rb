@@ -75,7 +75,12 @@ module SuperSettings
 
     # API endpoint for getting settings that have changed since specified time. See SuperSettings::RestAPI for details.
     def updated_since
-      render json: SuperSettings::RestAPI.updated_since(params[:time])
+      result = SuperSettings::RestAPI.updated_since(params[:time])
+      if result
+        render json: result
+      else
+        render json: {error: "Invalid time parameter"}, status: 400
+      end
     end
 
     # API endpoint for checking if the user is authorized to edit settings.

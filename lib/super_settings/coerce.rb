@@ -21,13 +21,10 @@ module SuperSettings
       # @param value [Object]
       # @return [Boolean]
       def boolean(value)
-        if value == false
-          false
-        elsif blank?(value)
-          nil
-        else
-          !FALSE_VALUES.include?(value.to_s.downcase)
-        end
+        return false if value == false
+        return nil if blank?(value)
+
+        !FALSE_VALUES.include?(value.to_s.downcase)
       end
 
       # Cast a value to a Time object.

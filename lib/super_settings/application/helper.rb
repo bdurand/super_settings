@@ -56,7 +56,7 @@ module SuperSettings
           window.__superSettingsI18n = #{translations_json};
           #{File.read(File.join(__dir__, "scripts.js"))}
           #{File.read(File.join(__dir__, "api.js"))}
-          #{"SuperSettingsAPI.authenticationUrl = '#{SuperSettings.authentication_url.gsub("'", "\\'")}';" if SuperSettings.authentication_url}
+          #{"SuperSettingsAPI.authenticationUrl = #{SuperSettings.authentication_url.to_s.to_json.gsub("</", "<\\/")};" if SuperSettings.authentication_url}
           #{SuperSettings.web_ui_javascript}
         </script>
       HTML

@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe SuperSettings::Storage::NullStorage do
+RSpec.describe SuperSettings::Storage::NullStorage do
   describe "all" do
     it "should return an empty array" do
       settings = SuperSettings::Storage::NullStorage.all

@@ -30,6 +30,10 @@ module SuperSettings
     class InvalidRecordError < StandardError
     end
 
+    # Exception raised if the storage engine could not persist valid changes.
+    class PersistenceError < StandardError
+    end
+
     include Attributes
 
     # The changed_by attribute is used to temporarily store an identifier for the user
@@ -164,12 +168,23 @@ module SuperSettings
       def bulk_update(params, changed_by = nil)
         all_valid, settings = update_settings(params, changed_by)
         if all_valid
-          storage.with_connection do
-            transaction do |_changes|
-              settings.each do |setting|
-                setting.save!
+          begin
+            storage.with_connection do
+              transaction do |_changes|
+                settings.each do |setting|
+                  setting.save!
+                end
               end
             end
+          rescue InvalidRecordError, PersistenceError => e
+            # Validation failures detected by save! are already recorded on the setting that
+            # failed. A storage level failure isn't attributable to any single setting, so
+            # record it on all of them; otherwise callers would get a failure with no
+            # explanation of what went wrong.
+            if settings.none? { |setting| setting.errors.any? }
+              settings.each { |setting| setting.send(:add_base_error, e.message) }
+            end
+            return [false, settings]
           end
           clear_last_updated_cache
         end
@@ -214,7 +229,7 @@ module SuperSettings
         Thread.current[:super_settings_transaction] = changes
 
         begin
-          @storage.transaction(&block)
+          storage.transaction(&block)
 
           clear_last_updated_cache
 
@@ -382,7 +397,7 @@ module SuperSettings
     # @param val [String]
     def description=(val)
       val = val&.to_s
-      val = nil if val&.empty?
+      val = nil if val && val.empty?
       will_change!(:description, val) unless description == val
       @record.description = val
     end
@@ -484,11 +499,11 @@ module SuperSettings
         raise InvalidRecordError.new(errors.values.join("; "))
       end
 
+      return if @changes.empty?
+
       timestamp = Time.now
       self.created_at ||= timestamp
       self.updated_at = timestamp if updated_at.nil? || !changed?(:updated_at)
-
-      return if @changes.empty?
 
       self.class.storage.with_connection do
         self.class.transaction do
@@ -664,7 +679,7 @@ module SuperSettings
 
     def raw_value=(val)
       val = val&.to_s
-      val = nil if val&.empty?
+      val = nil if val && val.empty?
       will_change!(:raw_value, val) unless raw_value == val
       @raw_value = val
       @record.raw_value = val
@@ -704,6 +719,17 @@ module SuperSettings
         @errors[attribute] = attribute_errors
       end
       attribute_errors << "#{attribute.tr("_", " ")} #{message}"
+    end
+
+    # Record an error that applies to the record as a whole rather than to one attribute.
+    # The message is used verbatim since there is no attribute name to prefix it with.
+    def add_base_error(message)
+      base_errors = @errors["base"]
+      unless base_errors
+        base_errors = []
+        @errors["base"] = base_errors
+      end
+      base_errors << message
     end
 
     def call_after_save_callbacks

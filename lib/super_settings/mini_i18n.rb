@@ -78,21 +78,21 @@ module SuperSettings
       # Load every JSON file from the locales directory, keyed by filename
       # stem (e.g. "en").
       def load_all_locales
-        if development_mode?
-          @mutex.synchronize { @cache = {} }
-        end
-
-        return @cache unless @cache.empty?
+        return @cache unless @cache.empty? || development_mode?
 
         @mutex.synchronize do
-          return @cache unless @cache.empty?
+          return @cache unless @cache.empty? || development_mode?
 
+          # Build into a new hash so that other threads never see a partially
+          # loaded cache.
+          cache = {}
           Dir.glob(File.join(locales_dir, "*.json")).each do |path|
             code = File.basename(path, ".json").downcase
-            @cache[code] = JSON.parse(File.read(path))
+            cache[code] = JSON.parse(File.read(path))
           rescue JSON::ParserError
             # Skip malformed locale files
           end
+          @cache = cache
         end
 
         @cache
@@ -103,7 +103,8 @@ module SuperSettings
       end
 
       def development_mode?
-        ENV.fetch("RACK_ENV", ENV.fetch("RAILS_ENV", "development")) == "development"
+        env = ENV["RAILS_ENV"] || ENV["RACK_ENV"] || ENV["APP_ENV"] || "development"
+        env == "development"
       end
     end
   end

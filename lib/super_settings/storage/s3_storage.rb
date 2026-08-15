@@ -69,6 +69,9 @@ module SuperSettings
         end
       end
 
+      BUCKET_MUTEX = Mutex.new
+      private_constant :BUCKET_MUTEX
+
       @bucket = nil
       @bucket_hash = nil
 
@@ -115,20 +118,32 @@ module SuperSettings
         private
 
         def s3_bucket
-          if configuration.hash != @bucket_hash
-            @bucket_hash = configuration.hash
+          # The mutex ensures the bucket and the configuration hash it was built from are
+          # always published together. The bucket and the hash are derived from a single
+          # read of the configuration attributes so that a concurrent configuration change
+          # cannot cache a bucket built from mixed values under the settled configuration
+          # hash; a torn read produces a hash that will not match the settled configuration,
+          # so the bucket gets rebuilt on the next call.
+          BUCKET_MUTEX.synchronize do
+            config = configuration
             options = {
-              endpoint: configuration.endpoint,
-              access_key_id: configuration.access_key_id,
-              secret_access_key: configuration.secret_access_key,
-              region: configuration.region
+              endpoint: config.endpoint,
+              access_key_id: config.access_key_id,
+              secret_access_key: config.secret_access_key,
+              region: config.region
             }
-            options[:force_path_style] = true if configuration.endpoint
-            options.compact!
+            bucket_name = config.bucket
+            config_hash = [options, bucket_name, config.path].hash
 
-            @bucket = Aws::S3::Resource.new(options).bucket(configuration.bucket)
+            if config_hash != @bucket_hash
+              options[:force_path_style] = true if options[:endpoint]
+              options.compact!
+
+              @bucket = Aws::S3::Resource.new(options).bucket(bucket_name)
+              @bucket_hash = config_hash
+            end
+            @bucket
           end
-          @bucket
         end
 
         def s3_object(filename)

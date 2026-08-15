@@ -103,22 +103,37 @@ module SuperSettings
       def save!
         # Check if another record with the same key exists. If it does, then we need to update
         # that record instead and delete the current one.
-        duplicate = @model.class.find_by(key: @model.key)
-        if duplicate.nil? || duplicate == @model
-          @model.save!
-        else
-          duplicate.raw_value = @model.raw_value
-          duplicate.value_type = @model.value_type
-          duplicate.description = @model.description
-          duplicate.deleted = @model.deleted
+        attempts = 0
+        begin
+          # Each attempt runs in a savepoint so a duplicate key failure can be rolled back
+          # and retried; otherwise the surrounding transaction would be left in an aborted
+          # state on PostgreSQL.
+          @model.class.transaction(requires_new: true) do
+            duplicate = @model.class.find_by(key: @model.key)
+            if duplicate.nil? || duplicate == @model
+              @model.save!
+            else
+              duplicate.raw_value = @model.raw_value
+              duplicate.value_type = @model.value_type
+              duplicate.description = @model.description
+              duplicate.deleted = @model.deleted
 
-          @model.transaction do
-            if @model.persisted?
-              @model.reload.update!(deleted: true)
+              if @model.persisted?
+                begin
+                  @model.reload.update!(deleted: true)
+                rescue ActiveRecord::RecordNotFound
+                end
+              end
+              duplicate.save!
+              @model = duplicate
             end
-            duplicate.save!
           end
-          @model = duplicate
+        rescue ActiveRecord::RecordNotUnique
+          # A record with the same key was inserted concurrently; retry so it is
+          # found as a duplicate and merged.
+          attempts += 1
+          retry if attempts <= 1
+          raise
         end
       end
 

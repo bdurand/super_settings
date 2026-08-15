@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe SuperSettings::LocalCache do
+RSpec.describe SuperSettings::LocalCache do
   let(:cache) { SuperSettings::LocalCache.new(refresh_interval: 5) }
 
   before do
@@ -68,6 +68,15 @@ describe SuperSettings::LocalCache do
       expect(cache.loaded?).to eq false
     end
 
+    it "should pick up new settings even when the cache was loaded with no settings" do
+      SuperSettings::Setting.storage.destroy_all
+      cache.load_settings
+      expect(cache.size).to eq 0
+      SuperSettings::Setting.create!(key: "key.new", value: 1, value_type: :integer)
+      cache.refresh
+      expect(cache.to_h).to eq("key.new" => 1)
+    end
+
     it "should load updated records" do
       cache.load_settings
       SuperSettings::Setting.find_by_key("key.1").update!(value: 10)
@@ -83,6 +92,21 @@ describe SuperSettings::LocalCache do
       expect(cache["key.2"]).to eq 2
       expect(cache["key.3"]).to eq nil
       expect(cache["key.4"]).to eq 4
+    end
+
+    it "should freeze array values added by a refresh" do
+      cache.load_settings
+      SuperSettings::Setting.create!(key: "key.array", value: ["a", "b"], value_type: :array)
+      cache.refresh
+      expect(cache["key.array"]).to eq ["a", "b"]
+      expect(cache["key.array"]).to be_frozen
+    end
+
+    it "should freeze array values loaded on a cache miss" do
+      cache.load_settings
+      SuperSettings::Setting.create!(key: "key.array", value: ["a", "b"], value_type: :array)
+      expect(cache["key.array"]).to eq ["a", "b"]
+      expect(cache["key.array"]).to be_frozen
     end
   end
 
@@ -107,6 +131,12 @@ describe SuperSettings::LocalCache do
       cache["key.5"]
       cache.wait_for_load
       expect(cache.to_h).to eq("key.1" => 1, "key.4" => nil)
+    end
+
+    it "should return array values as arrays" do
+      SuperSettings::Setting.create!(key: "key.list", value: ["a", "b"], value_type: :array)
+      cache.load_settings
+      expect(cache.to_h["key.list"]).to eq ["a", "b"]
     end
   end
 end

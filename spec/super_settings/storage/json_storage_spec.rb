@@ -39,7 +39,7 @@ class TestJsonStorage < SuperSettings::Storage::JSONStorage
   end
 end
 
-describe SuperSettings::Storage::JSONStorage do
+RSpec.describe SuperSettings::Storage::JSONStorage do
   let(:setting_1) do
     TestJsonStorage.new(
       key: "setting_1",

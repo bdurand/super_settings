@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe SuperSettings do
+RSpec.describe SuperSettings do
   describe "load_settings" do
     it "should load the cache" do
       expect_any_instance_of(SuperSettings::LocalCache).to receive(:load_settings)
@@ -21,6 +21,14 @@ describe SuperSettings do
     it "should refresh the cache" do
       expect_any_instance_of(SuperSettings::LocalCache).to receive(:reset)
       SuperSettings.clear_cache
+    end
+  end
+
+  describe "configure" do
+    it "should run configuration blocks immediately once deferred configuration has run" do
+      called = false
+      SuperSettings.configure { |config| called = true }
+      expect(called).to eq true
     end
   end
 

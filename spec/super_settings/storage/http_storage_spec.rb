@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe SuperSettings::Storage::HttpStorage do
+RSpec.describe SuperSettings::Storage::HttpStorage do
   describe "http settings" do
     it "should add query parameters on a GET request" do
       SuperSettings::Storage::HttpStorage.query_params[:foo] = "bar"
@@ -112,7 +112,7 @@ describe SuperSettings::Storage::HttpStorage do
 
       payload = {settings: [{key: "key", value: "1", value_type: "integer", description: "text"}]}
       stub_request(:post, "https://example.com/super_settings/settings").with(body: payload.to_json).to_return(status: 422, body: {success: false, errors: {key: ["failed"]}}.to_json, headers: {"content-type" => "application/json"})
-      setting.save!
+      expect { setting.save! }.to raise_error(SuperSettings::Setting::PersistenceError)
 
       expect(setting.persisted?).to eq false
     end

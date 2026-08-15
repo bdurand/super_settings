@@ -11,12 +11,23 @@ module SuperSettings
     # This class can be used as the base for any storage class where the settings are all stored
     # together in a single JSON payload.
     #
+    # Writes are serialized within a process, but there is no coordination between processes.
+    # If multiple processes write settings at the same time, the last write wins and can
+    # overwrite changes made by another process. Storage backends based on this class are best
+    # suited for setups where settings are updated from a single process at a time.
+    #
     # Subclasses must implement the following methods:
     # - self.all
     # - self.last_updated_at
     # - save!
     class JSONStorage < StorageAttributes
       include Transaction
+
+      # Mutex used to serialize the read-modify-write cycle in save_all within a process.
+      # Note that this cannot protect against concurrent writes from multiple processes;
+      # in that situation the last writer wins and can overwrite another process's changes.
+      SAVE_MUTEX = Mutex.new
+      private_constant :SAVE_MUTEX
 
       class HistoryStorage < HistoryAttributes
         class << self
@@ -65,50 +76,52 @@ module SuperSettings
         end
 
         def save_all(changes)
-          existing = {}
-          parse_settings(settings_json_payload).each do |setting|
-            existing[setting.key] = setting
-          end
-
-          history_items = []
-          changes.each do |record|
-            if record.is_a?(HistoryStorage)
-              history_items << record
-            else
-              existing[record.key] = record
+          SAVE_MUTEX.synchronize do
+            existing = {}
+            parse_settings(settings_json_payload).each do |setting|
+              existing[setting.key] = setting
             end
-          end
 
-          settings = existing.values.sort_by(&:key)
-
-          changed_histories = {}
-          history_items.each do |history_item|
-            setting = existing[history_item.key]
-            next unless setting
-
-            history = changed_histories[history_item.key]
-            unless history
-              history = setting.history.dup
-              changed_histories[history_item.key] = history
+            history_items = []
+            changes.each do |record|
+              if record.is_a?(HistoryStorage)
+                history_items << record
+              else
+                existing[record.key] = record
+              end
             end
-            history.unshift(history_item)
-          end
 
-          settings_json = JSON.dump(settings.collect(&:as_json))
-          save_settings_json(settings_json)
+            settings = existing.values.sort_by(&:key)
 
-          changed_histories.each do |setting_key, setting_history|
-            ordered_history = setting_history.sort_by { |history_item| history_item.created_at }.reverse
-            payload = ordered_history.collect do |history_item|
-              {
-                value: history_item.value,
-                changed_by: history_item.changed_by,
-                created_at: history_item.created_at.iso8601(6),
-                deleted: history_item.deleted?
-              }
+            changed_histories = {}
+            history_items.each do |history_item|
+              setting = existing[history_item.key]
+              next unless setting
+
+              history = changed_histories[history_item.key]
+              unless history
+                history = setting.history.dup
+                changed_histories[history_item.key] = history
+              end
+              history.unshift(history_item)
             end
-            history_json = JSON.dump(payload)
-            save_history_json(setting_key, history_json)
+
+            settings_json = JSON.dump(settings.collect(&:as_json))
+            save_settings_json(settings_json)
+
+            changed_histories.each do |setting_key, setting_history|
+              ordered_history = setting_history.sort_by { |history_item| history_item.created_at }.reverse
+              payload = ordered_history.collect do |history_item|
+                {
+                  value: history_item.value,
+                  changed_by: history_item.changed_by,
+                  created_at: history_item.created_at.iso8601(6),
+                  deleted: history_item.deleted?
+                }
+              end
+              history_json = JSON.dump(payload)
+              save_history_json(setting_key, history_json)
+            end
           end
         end
 

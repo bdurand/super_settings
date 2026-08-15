@@ -10,8 +10,8 @@ module SuperSettings
     initializer("SuperSettings") do
       Rails.configuration.middleware.unshift(SuperSettings::Context::RackMiddleware)
 
-      if defined?(ActiveJob::Base.around_perform)
-        ActiveJob::Base.around_perform do |job, block|
+      ActiveSupport.on_load(:active_job) do
+        around_perform do |job, block|
           SuperSettings.context(&block)
         end
       end

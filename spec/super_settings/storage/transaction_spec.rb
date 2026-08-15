@@ -14,7 +14,7 @@ class TestTransactionStorage
   end
 end
 
-describe SuperSettings::Storage::Transaction do
+RSpec.describe SuperSettings::Storage::Transaction do
   it "enqueues all changes in a transaction and calls save_all" do
     object_1 = TestTransactionStorage.new
     object_2 = TestTransactionStorage.new
@@ -55,16 +55,18 @@ describe SuperSettings::Storage::Transaction do
     expect(object2.persisted?).to eq true
   end
 
-  it "does not set the persisted flag if save_all fails" do
+  it "raises an error and does not set the persisted flag if save_all fails" do
     object1 = TestTransactionStorage.new
     object2 = TestTransactionStorage.new
     expect(object1.persisted?).to eq false
     expect(object2.persisted?).to eq false
     expect(TestTransactionStorage).to receive(:save_all).and_return(false)
-    TestTransactionStorage.transaction do
-      object1.save!
-      object2.save!
-    end
+    expect {
+      TestTransactionStorage.transaction do
+        object1.save!
+        object2.save!
+      end
+    }.to raise_error(SuperSettings::Setting::PersistenceError)
     expect(object1.persisted?).to eq false
     expect(object2.persisted?).to eq false
   end

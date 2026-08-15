@@ -27,8 +27,8 @@ module SuperSettings
     end
 
     def initialize(base_url, headers: nil, params: nil, timeout: nil, user: nil, password: nil)
-      base_url = "#{base_url}/" unless base_url.end_with?("/")
       @base_uri = URI(base_url)
+      @base_uri.path = "#{@base_uri.path}/" unless @base_uri.path.end_with?("/")
       @base_uri.query = query_string(params) if params
       @headers = headers ? DEFAULT_HEADERS.merge(headers) : DEFAULT_HEADERS
       @timeout = timeout || DEFAULT_TIMEOUT
@@ -53,34 +53,35 @@ module SuperSettings
 
     def send_request(request)
       set_headers(request)
-      response_payload = nil
       attempts = 0
 
-      with_connection do |http|
-        http.start unless http.started?
-        response = http.request(request)
+      begin
+        with_connection do |http|
+          http.start unless http.started?
+          response = http.request(request)
 
-        begin
-          response.value # raises exception unless response is a success
-          response_payload = JSON.parse(response.body)
-        rescue Net::ProtocolError
-          if [404, 410].include?(response.code.to_i)
-            raise NotFoundError.new("#{response.code} #{response.message}")
-          elsif response.code.to_i == 422
-            raise InvalidRecordError.new("#{response.code} #{response.message}", errors: JSON.parse(response.body)["errors"])
-          else
-            raise Error.new("#{response.code} #{response.message}")
+          begin
+            response.value # raises exception unless response is a success
+            JSON.parse(response.body)
+          rescue Net::ProtocolError
+            if [404, 410].include?(response.code.to_i)
+              raise NotFoundError.new("#{response.code} #{response.message}")
+            elsif response.code.to_i == 422
+              raise InvalidRecordError.new("#{response.code} #{response.message}", errors: JSON.parse(response.body)["errors"])
+            else
+              raise Error.new("#{response.code} #{response.message}")
+            end
+          rescue JSON::JSONError => e
+            raise Error.new(e.message)
           end
-        rescue JSON::JSONError => e
-          raise Error.new(e.message)
         end
-      rescue IOError, Errno::ECONNRESET => connection_error
+      rescue IOError, Errno::ECONNRESET, Errno::EPIPE => connection_error
+        # Only retry idempotent requests; a POST may have already been processed by
+        # the server before the connection failed.
         attempts += 1
-        retry if attempts <= 1
+        retry if attempts <= 1 && request.is_a?(Net::HTTP::Get)
         raise connection_error
       end
-
-      response_payload
     end
 
     def with_connection(&block)

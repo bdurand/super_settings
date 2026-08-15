@@ -107,6 +107,7 @@ module SuperSettings
           self.class.settings.delete(@original_key)
         end
         self.class.settings[key] = attributes
+        @original_key = nil
         set_persisted!
         true
       end

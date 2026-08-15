@@ -206,21 +206,28 @@ module SuperSettings
       @model = Model.new
       @controller = Controller.new
       @deferred_configs = []
+      @called = false
     end
 
     # Defer the execution of a block that will be yielded to with the config object. This
     # is needed in a Rails environment during initialization so that all the frameworks can
-    # load before loading the settings.
+    # load before loading the settings. If the deferred configuration has already been run
+    # (i.e. the application has finished initializing), the block is called immediately.
     #
     # @api private
     def defer(&block)
-      @deferred_configs << block
+      if @called
+        block.call(self)
+      else
+        @deferred_configs << block
+      end
     end
 
     # Call the block deferred during initialization.
     #
     # @api private
     def call
+      @called = true
       while (block = @deferred_configs.shift)
         block&.call(self)
       end

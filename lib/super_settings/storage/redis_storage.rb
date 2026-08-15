@@ -123,7 +123,7 @@ module SuperSettings
         end
 
         def last_updated_at
-          result = with_redis { |redis| redis.zrevrange(UPDATED_KEY, 0, 1, withscores: true).first }
+          result = with_redis { |redis| redis.zrevrange(UPDATED_KEY, 0, 0, withscores: true).first }
           return nil unless result
 
           time_at_microseconds(result[1])
